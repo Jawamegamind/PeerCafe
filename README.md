@@ -96,9 +96,9 @@ cd frontend
 npm install OR npm i
 ```
 
-<!-- ### 4. Database Setup (Supabase)
+### 4. Database Setup (Supabase)
 
-1. Create a new project at [supabase.com](https://supabase.com)
+<!-- 1. Create a new project at [supabase.com](https://supabase.com)
 2. Go to **Settings** → **API** to find your project credentials
 3. Create the required tables in your Supabase dashboard:
 
@@ -117,7 +117,8 @@ CREATE TABLE "Users" (
 );
 ```
 
-#### Additional tables as needed...
+#### Additional tables as needed... -->
+Database access available to only team members
 
 ## 🔐 Environment Variables
 
@@ -129,13 +130,10 @@ Create a `.env` file in the `backend/` directory:
 # Supabase Configuration
 PROJECT_URL=https://your-project-id.supabase.co
 API_KEY=your-supabase-anon-key
-
-# Optional: Database direct connection (if needed)
-# DATABASE_URL=your-database-url
-
-# Optional: JWT Secret (if implementing custom JWT)
-# JWT_SECRET=your-jwt-secret-key
 ```
+Both the variables and their values can be found in the project setting. Navigate to API keys and copy the anon public key as the API_KEY
+
+The PROJECT_URL can be found in the General tab in the Settings. Simply copy the ID and replace with the your-project-id
 
 ### Frontend Environment Variables
 
@@ -148,7 +146,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 
 # Optional: API Base URL (if different from default)
 # NEXT_PUBLIC_API_URL=http://localhost:8000
-``` -->
+```
+
+Same variables as being used in the backend
 
 ## 🏃‍♂️ Running the Application
 
