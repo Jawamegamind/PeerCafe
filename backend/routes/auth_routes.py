@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from database.supabase_db import create_supabase_client
 from models.user_model import User
-# from models.login_model import LoginRequestModel
+from models.login_model import LoginRequestModel
 import bcrypt
 
 auth_router = APIRouter()
@@ -46,3 +46,24 @@ def create_user(user: User):
     except Exception as e:
         print("Error:", e)
         return {"message": "User creation failed"}
+
+@auth_router.post("/login")
+def login_user(login_request: LoginRequestModel):
+    print("Login attempt for:", login_request.Email)
+    try:
+        user_email = login_request.Email.lower()
+        response = supabase.from_("Users").select("*").eq("Email", user_email).execute()
+
+        if not response.data:
+            return {"message": "User not found"}
+
+        db_user = response.data[0]
+
+        if bcrypt.checkpw(login_request.Password.encode('utf-8'), db_user['Password'].encode('utf-8')):
+            return {"message": "Login successful", "user": db_user}
+        else:
+            return {"message": "Invalid password"}
+
+    except Exception as e:
+        print("Error:", e)
+        return {"message": "Login failed"}

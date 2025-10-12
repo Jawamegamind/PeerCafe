@@ -35,8 +35,8 @@ export async function login(formData: FormData) {
         // Now basically signing in using our backend to retireve the user details
         const response = await axios.post('http://localhost:8000/api/login', {
             user_id: data.user?.id ?? '',
-            email: formdata.email,
-            password: formdata.password
+            Email: formdata.email,
+            Password: formdata.password
         })
         console.log("The backend's response to signing in user is",response.data)
 
@@ -44,15 +44,25 @@ export async function login(formData: FormData) {
         const userObject = response.data.user
         console.log("The user object is",userObject)
 
-        if (userObject.role == "admin") {
-            console.log("The user is admin")
+        // Redirect based on the boolean flags
+        if (userObject.IsAdmin) {
             redirect('/admin/dashboard')
         }
-        else if (userObject.role == "user") {
+        else {
             // Sign in successful so we redirect to the dashboard
             revalidatePath('/', 'layout')
             redirect('/user/dashboard')
         }
+
+        // if (userObject.role == "admin") {
+        //     console.log("The user is admin")
+        //     redirect('/admin/dashboard')
+        // }
+        // else if (userObject.role == "user") {
+        //     // Sign in successful so we redirect to the dashboard
+        //     revalidatePath('/', 'layout')
+        //     redirect('/user/dashboard')
+        // }
     }
   }
 
