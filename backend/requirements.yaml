@@ -9,3 +9,5 @@ dependencies:
     - fastapi[all]
     - uvicorn[standard]
     - supabase
+    - bcrypt
+    - pydantic

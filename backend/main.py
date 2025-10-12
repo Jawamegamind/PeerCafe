@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database.supabase_db import create_supabase_client
 
+from routes.auth_routes import auth_router
+
 # Initializing the FastAPI app
 app = FastAPI()
 
@@ -16,6 +18,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Setting up the imported routers
+app.include_router(auth_router, prefix="/api")
 
 # Basic root endpoint
 @app.get("/")
