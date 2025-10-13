@@ -1,4 +1,4 @@
-name: Frontend CI
+name: Frontend
 
 # Only run when frontend files (or shared configs) change
 on:
