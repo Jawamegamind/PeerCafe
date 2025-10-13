@@ -1,6 +1,6 @@
 [![Frontend CI](https://github.com/Jawamegamind/PeerCafe/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/Jawamegamind/PeerCafe/actions/workflows/frontend-ci.yml)
 [![Backend CI](https://github.com/Jawamegamind/PeerCafe/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/Jawamegamind/PeerCafe/actions/workflows/backend-ci.yml)
-![Dependencies](https://img.shields.io/david/Jawamegamind/PeerCafe?path=frontend)
+[![Dependabot](https://img.shields.io/github/dependabot/Jawamegamind/PeerCafe?path=frontend&style=flat-square)](https://github.com/Jawamegamind/PeerCafe/security/dependabot)
 ![Issues](https://img.shields.io/github/issues/Jawamegamind/PeerCafe)
 
 # PeerCafe 🚀
