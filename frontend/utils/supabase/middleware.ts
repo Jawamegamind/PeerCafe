@@ -5,8 +5,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 const protectedRoutes = [
   '/user/dashboard', 
   '/admin/dashboard', 
-  '/admin/create_course',
-  'admin/view_courses',
+  '/admin/restaurants',
+  '/admin/restaurants/add',
 ]
 
 export async function updateSession(request: NextRequest) {

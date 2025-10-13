@@ -1,3 +1,6 @@
 # Ignore the __pycache directory in the backend and the .env file
 backend/__pycache__/
 backend/.env
+
+# Ignore the .vscode settings directory
+.vscode/*
