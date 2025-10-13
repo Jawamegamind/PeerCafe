@@ -82,7 +82,7 @@ cd backend
 
 # Create and activate conda environment with dependencies using the provide requirements file
 conda env create -f requirements.yaml
-conda activate peercafe-backend
+conda activate backend
 
 ```
 
