@@ -1,95 +1,95 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import Link from "next/link";
+import { Button, Container, Typography, Box, Card, CardContent } from "@mui/material";
+import { Restaurant, Person, AdminPanelSettings } from "@mui/icons-material";
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <Container maxWidth="lg" sx={{ py: 8 }}>
+      <Box textAlign="center" mb={8}>
+        <Typography variant="h2" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+          Welcome to PeerCafe
+        </Typography>
+        <Typography variant="h5" component="h2" gutterBottom color="text.secondary">
+          Your Ultimate Restaurant Discovery Platform
+        </Typography>
+        <Typography variant="body1" sx={{ maxWidth: 600, mx: 'auto', mb: 4 }}>
+          Discover amazing restaurants, read reviews, and connect with fellow food enthusiasts. 
+          Whether you're looking for your next dining experience or want to share your culinary adventures, 
+          PeerCafe is your go-to platform.
+        </Typography>
+      </Box>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          gap: 4, 
+          mb: 6,
+          justifyContent: 'center'
+        }}
+      >
+        <Card sx={{ minWidth: 280, maxWidth: 320, textAlign: 'center', p: 2 }}>
+          <CardContent>
+            <Restaurant sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+            <Typography variant="h6" gutterBottom>
+              Discover Restaurants
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Explore a wide variety of restaurants in your area and beyond. 
+              Find your perfect dining experience.
+            </Typography>
+          </CardContent>
+        </Card>
+        
+        <Card sx={{ minWidth: 280, maxWidth: 320, textAlign: 'center', p: 2 }}>
+          <CardContent>
+            <Person sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+            <Typography variant="h6" gutterBottom>
+              User Dashboard
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Manage your profile, save favorite restaurants, and track your dining history 
+              in your personalized dashboard.
+            </Typography>
+          </CardContent>
+        </Card>
+        
+        <Card sx={{ minWidth: 280, maxWidth: 320, textAlign: 'center', p: 2 }}>
+          <CardContent>
+            <AdminPanelSettings sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+            <Typography variant="h6" gutterBottom>
+              Admin Portal
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Restaurant owners and administrators can manage listings, 
+              view analytics, and oversee platform operations.
+            </Typography>
+          </CardContent>
+        </Card>
+      </Box>
+
+      <Box textAlign="center">
+        <Box sx={{ '& > *': { m: 1 } }}>
+          <Button 
+            component={Link} 
+            href="/register" 
+            variant="contained" 
+            size="large"
+            sx={{ px: 4, py: 1.5 }}
           >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
+            Get Started
+          </Button>
+          <Button 
+            component={Link} 
+            href="/login" 
+            variant="outlined" 
+            size="large"
+            sx={{ px: 4, py: 1.5 }}
           >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+            Sign In
+          </Button>
+        </Box>
+      </Box>
+    </Container>
   );
 }

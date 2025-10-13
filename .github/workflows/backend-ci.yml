@@ -1,74 +1,79 @@
-name: Backend
+name: Backend Test Suite 
 
+# Run on PRs to main and pushes to main (server-side post-commit)
 on:
   pull_request:
     branches: ["main"]
     paths:
       - 'backend/**'
-      - '.github/workflows/backend-ci.yml'
-      - 'requirements.*'
+      - '.github/workflows/backend-windows-conda.yml'
+      - 'backend/requirements.yaml'
   push:
     branches: ["main"]
     paths:
       - 'backend/**'
-      - '.github/workflows/backend-ci.yml'
-      - 'requirements.*'
+      - '.github/workflows/backend-windows-conda.yml'
+      - 'backend/requirements.yaml'
 
 permissions:
   contents: read
 
 concurrency:
-  group: backend-ci-${{ github.sha }}
+  group: backend-windows-conda-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  backend-tests:
-    name: Backend - pytest (Python)
-    runs-on: ubuntu-latest
+  backend-pytest-windows:
+    name: Backend - pytest (Windows, Conda)
+    runs-on: windows-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Install Miniconda
+        uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: "3.11"
+          auto-update-conda: true
+          python-version: 3.11
+          activate-environment: backend-env
+          environment-file: backend/requirements.yaml
+          use-mamba: true
+          mamba-options: "-y"
 
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: pip-cache-${{ runner.os }}-${{ hashFiles('**/backend/requirements.*') }}
-          restore-keys: |
-            pip-cache-${{ runner.os }}-
-
-      - name: Install backend dependencies
+      - name: Confirm conda env
+        shell: pwsh
         run: |
-          python -m pip install --upgrade pip
-          # If you use requirements.txt:
-          if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
-          # If you use conda/requirements.yaml the repo uses conda in README; this example uses pip for CI.
-          pip install pytest pytest-cov
-        shell: bash
+          conda info
+          conda list
 
       - name: Run pytest with coverage
-        run: |
-          mkdir -p backend/test-output || true
-          pytest backend --maxfail=1 --disable-warnings --cov=backend --cov-report=xml:backend/coverage.xml
-        shell: bash
+        shell: pwsh
         env:
           CI: true
+        run: |
+          # Create output folder
+          New-Item -ItemType Directory -Force -Path ./backend/test-output | Out-Null
+          # Run tests
+          pytest backend --maxfail=1 --disable-warnings --junitxml=./backend/test-output/junit.xml --cov=backend --cov-report=xml:./backend/coverage.xml
 
-      - name: Upload pytest logs
+      - name: Upload pytest artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: backend-pytest-logs
-          path: backend/coverage.xml || backend/.pytest_cache || backend/test-output
+          name: backend-test-reports
+          path: |
+            backend/test-output/junit.xml
+            backend/coverage.xml
+            backend/.pytest_cache
 
       - name: Upload coverage to Codecov
         if: always()
         uses: codecov/codecov-action@v5
         with:
           files: backend/coverage.xml
-          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Fail if tests failed
+        if: failure()
+        shell: pwsh
+        run: Write-Error "One or more tests failed. See artifacts or logs for details."

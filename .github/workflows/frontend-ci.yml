@@ -69,11 +69,10 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           files: frontend/coverage/lcov.info
-          token: ${{ secrets.CODECOV_TOKEN }}
-
+          
   # Playwright E2E for Windows
   e2e-windows:
-    name: Frontend: Playwright E2E (Windows)
+    name: Frontend - Playwright E2E (Windows)
     runs-on: windows-latest
     needs: unit
     steps:
