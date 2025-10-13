@@ -27,7 +27,7 @@ concurrency:
 jobs:
   # Unit tests + coverage on Linux + Windows
   unit:
-    name: Frontend: Unit & Coverage (${{ matrix.os }})
+    name: Frontend - Unit & Coverage (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
