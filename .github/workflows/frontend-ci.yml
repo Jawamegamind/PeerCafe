@@ -1,4 +1,4 @@
-name: Frontend
+name: Frontend Test Suite 🚀
 
 # Only run when frontend files (or shared configs) change
 on:
