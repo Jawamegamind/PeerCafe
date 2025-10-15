@@ -2,6 +2,7 @@ name: Backend Test Suite
 
 # Run on PRs to main and pushes to main (server-side post-commit)
 on:
+  workflow_dispatch:   # allows manual triggering
   pull_request:
     branches: ["main"]
     paths:
