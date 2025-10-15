@@ -12,3 +12,4 @@ dependencies:
     - bcrypt
     - pydantic
     - pytest
+    - pytest-cov
