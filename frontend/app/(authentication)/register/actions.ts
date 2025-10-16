@@ -51,12 +51,9 @@ export async function register(formData: FormData) {
         //     role: 'user'        
         // })
 
+        const access_token = data.session?.access_token // may be null if email confirmation required
+
         const response = await axios.post('http://localhost:8000/api/register', {
-            // user_id: data.user?.id ?? '',
-            // name: formdata.name,
-            // email: formdata.email,
-            // password: formdata.password,
-            // role: 'user'
             user_id: data.user?.id ?? '',
             FirstName: formdata.name.split(' ')[0] || '',
             LastName: formdata.name.split(' ')[1] || '',
@@ -65,6 +62,8 @@ export async function register(formData: FormData) {
             IsAdmin: false,
             IsActive: true,
             Password: formdata.password
+        }, {
+            headers: access_token ? { Authorization: `Bearer ${access_token}` } : {}
         })
 
         console.log("The backend's response to signing up new user is",response.data)
