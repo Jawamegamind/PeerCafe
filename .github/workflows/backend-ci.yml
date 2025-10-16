@@ -51,6 +51,8 @@ jobs:
         shell: pwsh
         env:
           CI: true
+          PROJECT_URL: ${{secrets.PROJECT_URL}}
+          API_KEY: ${{secrets.API_KEY}}
         run: |
           # Create output folder
           New-Item -ItemType Directory -Force -Path ./backend/test-output | Out-Null
