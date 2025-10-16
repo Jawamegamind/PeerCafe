@@ -104,3 +104,18 @@ async def delete_restaurant(restaurant_id: int):
     except Exception as e:
         print(f"Error deleting restaurant: {e}")
         raise HTTPException(status_code=500, detail="Failed to delete restaurant")
+
+@restaurant_router.patch("/restaurants/{restaurant_id}/restore")
+async def restore_restaurant(restaurant_id: int):
+    """Restore a deleted restaurant (Admin only)"""
+    try:
+        # Restore by setting IsActive to True
+        result = supabase.from_("Restaurants").update({"IsActive": True}).eq("RestaurantId", restaurant_id).execute()
+        
+        if result.data:
+            return {"success": True, "message": "Restaurant restored successfully"}
+        else:
+            raise HTTPException(status_code=404, detail="Restaurant not found")
+    except Exception as e:
+        print(f"Error restoring restaurant: {e}")
+        raise HTTPException(status_code=500, detail="Failed to restore restaurant")
