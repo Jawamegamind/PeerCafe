@@ -32,6 +32,8 @@ import {
   Star as StarIcon
 } from '@mui/icons-material';
 import Navbar from "../../../_components/navbar";
+import { getRestaurants } from './actions';
+import { get } from 'http';
 
 interface Restaurant {
   RestaurantId: number;
@@ -79,11 +81,11 @@ export default function RestaurantsPage() {
 
   const fetchRestaurants = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/restaurants');
-      if (response.ok) {
-        const data = await response.json();
-        // Only show active restaurants to users
-        const activeRestaurants = data.filter((restaurant: Restaurant) => restaurant.IsActive);
+      const response = await getRestaurants();
+      if (response) {
+        const activeRestaurants = response.filter(
+          (restaurant: Restaurant) => restaurant.IsActive
+        );
         setRestaurants(activeRestaurants);
       } else {
         console.error('Failed to fetch restaurants');
