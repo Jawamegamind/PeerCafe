@@ -157,7 +157,7 @@ https://www.contributor-covenant.org/translations.
 For questions about this Code of Conduct, please:
 - Open an issue on GitHub (for public discussion)
 - Contact maintainers directly for sensitive matters
-- Email: [Insert your preferred contact email]
+- Email: [jsaeed@ncsu.edu]
 
 ---
 
