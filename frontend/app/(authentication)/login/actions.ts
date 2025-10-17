@@ -33,10 +33,21 @@ export async function login(formData: FormData) {
         console.log('Data:', data)
 
         // Now basically signing in using our backend to retireve the user details
+        // const response = await axios.post('http://localhost:8000/api/login', {
+        //     user_id: data.user?.id ?? '',
+        //     Email: formdata.email,
+        //     Password: formdata.password
+        // })
+        const access_token = data.session.access_token
+
         const response = await axios.post('http://localhost:8000/api/login', {
             user_id: data.user?.id ?? '',
             Email: formdata.email,
             Password: formdata.password
+        }, {
+            headers: {
+                Authorization: `Bearer ${access_token}`
+            }
         })
         console.log("The backend's response to signing in user is",response.data)
 

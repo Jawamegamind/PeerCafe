@@ -11,3 +11,5 @@ dependencies:
     - supabase
     - bcrypt
     - pydantic
+    - pytest
+    - pytest-cov

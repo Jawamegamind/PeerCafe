@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from fastapi import Header, Request
 from database.supabase_db import create_supabase_client
 from models.user_model import User
 from models.login_model import LoginRequestModel
@@ -12,9 +13,19 @@ def user_exists(key: str = "Email", value: str = None):
     return len(user.data) > 0
 
 @auth_router.post("/register")
-def create_user(user: User):
+def create_user(user: User, authorization: str = Header(None)):
     print("Creating user:", user)
     try:
+        # Extract the Supabase token if sent
+        token = None
+        if authorization and authorization.startswith("Bearer "):
+            token = authorization.split(" ")[1]
+        
+        if token:
+            # print("Received token:", token)
+            # Here you can add logic to validate the token if needed
+            supabase.postgrest.auth(token)
+
         user_email = user.Email.lower()
         hased_password = bcrypt.hashpw(user.Password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
@@ -48,9 +59,19 @@ def create_user(user: User):
         return {"message": "User creation failed"}
 
 @auth_router.post("/login")
-def login_user(login_request: LoginRequestModel):
+def login_user(login_request: LoginRequestModel, authorization: str = Header(None)):
     print("Login attempt for:", login_request.Email)
     try:
+        # Extract the token from Authorization header
+        token = None
+        if authorization and authorization.startswith("Bearer "):
+            token = authorization.split(" ")[1]
+        
+        if token:
+            # print("Received token:", token)
+            # Here you can add logic to validate the token if needed
+            supabase.postgrest.auth(token)
+
         user_email = login_request.Email.lower()
         response = supabase.from_("Users").select("*").eq("Email", user_email).execute()
 

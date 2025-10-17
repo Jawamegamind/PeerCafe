@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Box,
   Container,
@@ -32,6 +33,7 @@ import {
   Star as StarIcon
 } from '@mui/icons-material';
 import Navbar from "../../../_components/navbar";
+import { getRestaurants } from './actions';
 
 interface Restaurant {
   RestaurantId: number;
@@ -63,6 +65,7 @@ const cuisineColors: Record<string, string> = {
 };
 
 export default function RestaurantsPage() {
+  const router = useRouter();
   const [restaurants, setRestaurants] = React.useState<Restaurant[]>([]);
   const [filteredRestaurants, setFilteredRestaurants] = React.useState<Restaurant[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -79,11 +82,11 @@ export default function RestaurantsPage() {
 
   const fetchRestaurants = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/restaurants');
-      if (response.ok) {
-        const data = await response.json();
-        // Only show active restaurants to users
-        const activeRestaurants = data.filter((restaurant: Restaurant) => restaurant.IsActive);
+      const response = await getRestaurants();
+      if (response) {
+        const activeRestaurants = response.filter(
+          (restaurant: Restaurant) => restaurant.IsActive
+        );
         setRestaurants(activeRestaurants);
       } else {
         console.error('Failed to fetch restaurants');
@@ -232,8 +235,7 @@ export default function RestaurantsPage() {
           fullWidth
           startIcon={<RestaurantIcon />}
           onClick={() => {
-            // TODO: Navigate to restaurant menu or order page
-            console.log('View menu for:', restaurant.Name);
+            router.push(`/user/restaurants/${restaurant.RestaurantId}`);
           }}
         >
           View Menu
