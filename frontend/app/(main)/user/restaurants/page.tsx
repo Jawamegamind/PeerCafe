@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Box,
   Container,
@@ -33,7 +34,6 @@ import {
 } from '@mui/icons-material';
 import Navbar from "../../../_components/navbar";
 import { getRestaurants } from './actions';
-import { get } from 'http';
 
 interface Restaurant {
   RestaurantId: number;
@@ -65,6 +65,7 @@ const cuisineColors: Record<string, string> = {
 };
 
 export default function RestaurantsPage() {
+  const router = useRouter();
   const [restaurants, setRestaurants] = React.useState<Restaurant[]>([]);
   const [filteredRestaurants, setFilteredRestaurants] = React.useState<Restaurant[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -234,8 +235,7 @@ export default function RestaurantsPage() {
           fullWidth
           startIcon={<RestaurantIcon />}
           onClick={() => {
-            // TODO: Navigate to restaurant menu or order page
-            console.log('View menu for:', restaurant.Name);
+            router.push(`/user/restaurants/${restaurant.RestaurantId}`);
           }}
         >
           View Menu
