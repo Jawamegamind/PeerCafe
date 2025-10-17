@@ -34,7 +34,8 @@ import {
   Edit as EditIcon, 
   Delete as DeleteIcon,
   Restaurant as RestaurantIcon,
-  Restore as RestoreIcon
+  Restore as RestoreIcon,
+  MenuBook as MenuBookIcon
 } from '@mui/icons-material';
 import Navbar from "../../../_components/navbar";
 import { useRouter } from 'next/navigation';
@@ -345,6 +346,14 @@ export default function RestaurantsPage() {
                             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
                             {restaurant.IsActive ? (
                                 <>
+                                <IconButton 
+                                    size="small" 
+                                    color="info"
+                                    title="Manage Menu"
+                                    onClick={() => router.push(`/admin/restaurants/${restaurant.RestaurantId}`)}
+                                >
+                                    <MenuBookIcon />
+                                </IconButton>
                                 <IconButton 
                                     size="small" 
                                     color="primary"
