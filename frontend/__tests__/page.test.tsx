@@ -2,14 +2,11 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Home from '../app/page';
 
-// Mock the Next.js Image component
-jest.mock('next/image', () => ({
+// Mock Next.js Link component
+jest.mock('next/link', () => ({
   __esModule: true,
-  default: (props: any) => {
-    // Remove Next.js specific props that don't belong on img elements
-    const { priority, ...imgProps } = props;
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img {...imgProps} alt={props.alt} />;
+  default: ({ children, href }: { children: React.ReactNode; href: string }) => {
+    return <a href={href}>{children}</a>;
   },
 }));
 
@@ -19,32 +16,46 @@ describe('Home Page', () => {
     expect(document.body).toBeTruthy();
   });
 
-  it('should display the main content elements', () => {
+  it('should display the main heading and welcome content', () => {
     render(<Home />);
     
-    // Check for the Next.js logo
-    expect(screen.getByAltText('Next.js logo')).toBeInTheDocument();
+    // Check for the main heading
+    expect(screen.getByRole('heading', { name: /Welcome to PeerCafe/i })).toBeInTheDocument();
     
-    // Check for the main instructional text
-    expect(screen.getByText(/Get started by editing/)).toBeInTheDocument();
-    expect(screen.getByText('app/page.tsx')).toBeInTheDocument();
+    // Check for the subtitle
+    expect(screen.getByRole('heading', { name: /Your Ultimate Restaurant Discovery Platform/i })).toBeInTheDocument();
     
-    // Check for the "Save and see your changes instantly" text
-    expect(screen.getByText('Save and see your changes instantly.')).toBeInTheDocument();
+    // Check for the description text
+    expect(screen.getByText(/Discover amazing restaurants, read reviews/i)).toBeInTheDocument();
   });
 
-  it('should have the expected navigation links', () => {
+  it('should display all three feature cards', () => {
     render(<Home />);
     
-    // Check for the "Deploy now" link
-    expect(screen.getByRole('link', { name: /Deploy now/ })).toBeInTheDocument();
+    // Check for "Discover Restaurants" card
+    expect(screen.getByRole('heading', { name: /Discover Restaurants/i })).toBeInTheDocument();
+    expect(screen.getByText(/Explore a wide variety of restaurants/i)).toBeInTheDocument();
     
-    // Check for the "Read our docs" link
-    expect(screen.getByRole('link', { name: /Read our docs/ })).toBeInTheDocument();
+    // Check for "User Dashboard" card
+    expect(screen.getByRole('heading', { name: /User Dashboard/i })).toBeInTheDocument();
+    expect(screen.getByText(/Manage your profile, save favorite restaurants/i)).toBeInTheDocument();
     
-    // Check for footer links
-    expect(screen.getByRole('link', { name: /Learn/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Examples/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Go to nextjs.org/ })).toBeInTheDocument();
+    // Check for "Admin Portal" card
+    expect(screen.getByRole('heading', { name: /Admin Portal/i })).toBeInTheDocument();
+    expect(screen.getByText(/Restaurant owners and administrators can manage listings/i)).toBeInTheDocument();
+  });
+
+  it('should have navigation buttons to register and login', () => {
+    render(<Home />);
+    
+    // Check for "Get Started" button (links to register)
+    const getStartedButton = screen.getByRole('link', { name: /Get Started/i });
+    expect(getStartedButton).toBeInTheDocument();
+    expect(getStartedButton).toHaveAttribute('href', '/register');
+    
+    // Check for "Sign In" button (links to login)
+    const signInButton = screen.getByRole('link', { name: /Sign In/i });
+    expect(signInButton).toBeInTheDocument();
+    expect(signInButton).toHaveAttribute('href', '/login');
   });
 });
