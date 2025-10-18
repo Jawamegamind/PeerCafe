@@ -107,7 +107,14 @@ export default function AdminRestaurantMenuPage() {
   const fetchRestaurantInfo = async () => {
     try {
       // Mock data for now - replace with actual API call later
-      setRestaurantName("Mario's Italian Restaurant");
+    //   setRestaurantName("Mario's Italian Restaurant");
+        // Send API request to get restaurant info by ID
+        const response = await fetch(`http://localhost:8000/api/restaurants/${restaurantId}`);
+        const data = await response.json();
+        console.log("Restaurant data:", data);
+
+        // Set restaurant name from fetched data
+        setRestaurantName(data.Name);
     } catch (error) {
       console.error('Error fetching restaurant info:', error);
     }
@@ -116,34 +123,16 @@ export default function AdminRestaurantMenuPage() {
   const fetchMenuItems = async () => {
     try {
       setLoading(true);
-      // Mock data for now - replace with actual API call later
-      const mockData: MenuItem[] = [
-        {
-          ItemId: 1,
-          RestaurantId: parseInt(restaurantId as string),
-          ItemName: "Margherita Pizza",
-          Description: "Classic pizza with tomato sauce, mozzarella, and fresh basil",
-          IsAvailable: true,
-          Image: "",
-          Price: 12.99,
-          CreatedAt: "2024-01-15T10:30:00Z",
-          UpdatedAt: "2024-01-15T10:30:00Z",
-          Quantity: 50
-        },
-        {
-          ItemId: 2,
-          RestaurantId: parseInt(restaurantId as string),
-          ItemName: "Caesar Salad",
-          Description: "Fresh romaine lettuce with parmesan cheese and caesar dressing",
-          IsAvailable: false,
-          Image: "",
-          Price: 9.99,
-          CreatedAt: "2024-01-15T10:30:00Z",
-          UpdatedAt: "2024-01-15T10:30:00Z",
-          Quantity: 0
-        }
-      ];
-      setMenuItems(mockData);
+      // Fetch menu items from the API
+      const response = await fetch(`http://localhost:8000/api/restaurants/${restaurantId}/menu`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch menu items: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("Menu items data:", data);
+      setMenuItems(data);
     } catch (error) {
       console.error('Error fetching menu items:', error);
       setAlert({ type: 'error', message: 'Failed to load menu items' });
@@ -196,8 +185,8 @@ export default function AdminRestaurantMenuPage() {
       const price = parseFloat(formData.Price);
       const quantity = parseInt(formData.Quantity);
       
-      if (isNaN(price) || price < 0) {
-        setAlert({ type: 'error', message: 'Please enter a valid price' });
+      if (isNaN(price) || price <= 0) {
+        setAlert({ type: 'error', message: 'Please enter a valid price greater than 0' });
         return;
       }
 
@@ -206,50 +195,104 @@ export default function AdminRestaurantMenuPage() {
         return;
       }
 
-      // Mock submission for now - replace with actual API call later
-      const newItem: MenuItem = {
-        ItemId: editingItem ? editingItem.ItemId : Math.max(...menuItems.map(i => i.ItemId), 0) + 1,
-        RestaurantId: parseInt(restaurantId as string),
+      const menuItemData = {
         ItemName: formData.ItemName.trim(),
         Description: formData.Description.trim(),
         IsAvailable: formData.IsAvailable,
         Image: formData.Image.trim(),
         Price: price,
-        Quantity: quantity,
-        CreatedAt: editingItem ? editingItem.CreatedAt : new Date().toISOString(),
-        UpdatedAt: new Date().toISOString()
+        Quantity: quantity
       };
 
+      let response;
+      
       if (editingItem) {
-        setMenuItems(prev => prev.map(item => 
-          item.ItemId === editingItem.ItemId ? newItem : item
-        ));
-        setAlert({ type: 'success', message: 'Menu item updated successfully' });
+        // Update existing menu item
+        response = await fetch(
+          `http://localhost:8000/api/restaurants/${restaurantId}/menu/${editingItem.ItemId}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(menuItemData),
+          }
+        );
       } else {
-        setMenuItems(prev => [...prev, newItem]);
-        setAlert({ type: 'success', message: 'Menu item created successfully' });
+        // Create new menu item
+        response = await fetch(
+          `http://localhost:8000/api/restaurants/${restaurantId}/menu`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(menuItemData),
+          }
+        );
       }
 
-      handleCloseDialog();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setAlert({ 
+          type: 'success', 
+          message: editingItem ? 'Menu item updated successfully' : 'Menu item created successfully'
+        });
+        
+        // Refresh the menu items list
+        await fetchMenuItems();
+        handleCloseDialog();
+      } else {
+        throw new Error(result.message || 'Failed to save menu item');
+      }
+      
     } catch (error) {
       console.error('Error saving menu item:', error);
-      setAlert({ type: 'error', message: 'Failed to save menu item' });
+      setAlert({ 
+        type: 'error', 
+        message: error instanceof Error ? error.message : 'Failed to save menu item' 
+      });
     }
   };
 
   const handleToggleAvailability = async (item: MenuItem) => {
     try {
-      const updatedItem = { ...item, IsAvailable: !item.IsAvailable };
-      setMenuItems(prev => prev.map(i => 
-        i.ItemId === item.ItemId ? updatedItem : i
-      ));
-      setAlert({ 
-        type: 'success', 
-        message: `${item.ItemName} marked as ${!item.IsAvailable ? 'available' : 'unavailable'}` 
-      });
+      const response = await fetch(
+        `http://localhost:8000/api/restaurants/${restaurantId}/menu/${item.ItemId}/availability`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setAlert({ type: 'success', message: result.message });
+        // Refresh the menu items to get updated data
+        await fetchMenuItems();
+      } else {
+        throw new Error(result.message || 'Failed to update availability');
+      }
     } catch (error) {
       console.error('Error updating availability:', error);
-      setAlert({ type: 'error', message: 'Failed to update availability' });
+      setAlert({ 
+        type: 'error', 
+        message: error instanceof Error ? error.message : 'Failed to update availability' 
+      });
     }
   };
 
@@ -259,11 +302,36 @@ export default function AdminRestaurantMenuPage() {
     }
 
     try {
-      setMenuItems(prev => prev.filter(i => i.ItemId !== item.ItemId));
-      setAlert({ type: 'success', message: 'Menu item deleted successfully' });
+      const response = await fetch(
+        `http://localhost:8000/api/restaurants/${restaurantId}/menu/${item.ItemId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setAlert({ type: 'success', message: 'Menu item deleted successfully' });
+        // Refresh the menu items list
+        await fetchMenuItems();
+      } else {
+        throw new Error(result.message || 'Failed to delete menu item');
+      }
     } catch (error) {
       console.error('Error deleting menu item:', error);
-      setAlert({ type: 'error', message: 'Failed to delete menu item' });
+      setAlert({ 
+        type: 'error', 
+        message: error instanceof Error ? error.message : 'Failed to delete menu item' 
+      });
     }
   };
 
