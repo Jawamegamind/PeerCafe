@@ -48,9 +48,9 @@ function ResponsiveAppBar() {
         logout();
         router.push('/login');
     }
-    // else if (page === 'Profile') {
-    //     router.push('/user/profile');
-    // }
+    else if (page === 'Profile') {
+        router.push('/user/profile');
+    }
     else if (page === 'Home') {
         router.push('/homepage');
     }
