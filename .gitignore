@@ -4,6 +4,10 @@ backend/__pycache__/
 **/__pycache__/
 # Ignore the .env file in the backend directory
 backend/.env
+# Ignore .coverage files
+backend/.coverage
+# Ignore DS_Store files (macOS)
+**/.DS_Store
 
 # Ignore the .vscode settings directory
 .vscode/*
