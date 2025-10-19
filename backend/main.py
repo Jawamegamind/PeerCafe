@@ -34,5 +34,12 @@ def read_root():
 # Testing endpoint to fetch dummy data from Supabase
 @app.get("/test-supabase")
 def test_supabase():
-    data = supabase.from_("testing").select("*").execute()
-    return data
+    try:
+        data = supabase.from_("testing").select("*").execute()
+        return data
+    except Exception as e:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
+        )
