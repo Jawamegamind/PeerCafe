@@ -87,8 +87,8 @@ export default function RestaurantDetailPage() {
           // If restaurant details endpoint doesn't exist, create a basic restaurant object
           setRestaurant({
             id: parseInt(restaurantId as string),
-            name: 'Restaurant Name',
-            description: 'A wonderful dining experience awaits you.',
+            Name: 'Restaurant Name',
+            Description: 'A wonderful dining experience awaits you.',
           });
         }
       } catch (err) {
