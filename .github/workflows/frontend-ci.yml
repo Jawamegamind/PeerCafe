@@ -70,6 +70,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           files: frontend/coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
           
   # Playwright E2E for Windows
   # This is currently disabled due to the nascent nature of the project
