@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional
 
 class Restaurant(BaseModel):
@@ -21,3 +21,10 @@ class RestaurantCreate(BaseModel):
     Email: EmailStr
     CuisineType: str
     DeliveryFee: Optional[float] = 0.0
+    
+    @field_validator('DeliveryFee')
+    @classmethod
+    def validate_delivery_fee(cls, v):
+        if v is not None and v < 0:
+            raise ValueError('Delivery fee cannot be negative')
+        return v
