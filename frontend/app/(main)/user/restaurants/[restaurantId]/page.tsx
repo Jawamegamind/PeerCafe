@@ -19,7 +19,12 @@ import {
   IconButton,
   Skeleton,
   Button,
-  CardActions
+  CardActions,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar
 } from '@mui/material';
 import {
   Restaurant as RestaurantIcon,
@@ -28,12 +33,14 @@ import {
   Cancel as UnavailableIcon,
   Star as StarIcon,
   ShoppingCart as CartIcon,
-  Add as AddIcon
+  Add as AddIcon,
+  Warning as WarningIcon
 } from '@mui/icons-material';
 import Navbar from "../../../../_components/navbar";
+import { useCart } from "../../../../_contexts/CartContext";
 
 interface MenuItem {
-  id: number;
+  ItemId: number;  // Changed from 'id' to match backend API
   ItemName: string;
   Description?: string;
   Price: number;
@@ -43,7 +50,7 @@ interface MenuItem {
 }
 
 interface Restaurant {
-  id: number;
+  RestaurantId: number;  // Changed from 'id' to match backend API
   Name: string;
   Description?: string;
   CuisineType?: string;
@@ -53,10 +60,22 @@ interface Restaurant {
 
 export default function RestaurantDetailPage() {
   const { restaurantId } = useParams();
+  const { addToCart, restaurant: cartRestaurant, clearCart } = useCart();
   const [menuItems, setMenuItems] = React.useState<MenuItem[]>([]);
   const [restaurant, setRestaurant] = React.useState<Restaurant | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [conflictDialogOpen, setConflictDialogOpen] = React.useState(false);
+  const [pendingItem, setPendingItem] = React.useState<MenuItem | null>(null);
+  const [snackbar, setSnackbar] = React.useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info';
+  }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   // console.log("Restaurant ID from params is", restaurantId);
 
@@ -86,7 +105,7 @@ export default function RestaurantDetailPage() {
         } catch (restaurantError) {
           // If restaurant details endpoint doesn't exist, create a basic restaurant object
           setRestaurant({
-            id: parseInt(restaurantId as string),
+            RestaurantId: parseInt(restaurantId as string),
             Name: 'Restaurant Name',
             Description: 'A wonderful dining experience awaits you.',
           });
@@ -105,8 +124,56 @@ export default function RestaurantDetailPage() {
 
   // Handle add to cart
   const handleAddToCart = (item: MenuItem) => {
-    // TODO: Implement cart functionality
-    console.log('Adding to cart:', item);
+    if (!restaurant) return;
+
+    const cartItem = {
+      id: item.ItemId,
+      ItemName: item.ItemName,
+      Price: item.Price,
+      Image: item.Image,
+      restaurantId: restaurant.RestaurantId,
+      restaurantName: restaurant.Name
+    };
+
+    const success = addToCart(cartItem);
+    
+    if (success) {
+      setSnackbar({
+        open: true,
+        message: `${item.ItemName} added to cart!`,
+        severity: 'success'
+      });
+    } else {
+      // Cart has items from different restaurant
+      setPendingItem(item);
+      setConflictDialogOpen(true);
+    }
+  };
+
+  const handleReplaceCart = () => {
+    if (pendingItem && restaurant) {
+      clearCart();
+      const cartItem = {
+        id: pendingItem.ItemId,
+        ItemName: pendingItem.ItemName,
+        Price: pendingItem.Price,
+        Image: pendingItem.Image,
+        restaurantId: restaurant.RestaurantId,
+        restaurantName: restaurant.Name
+      };
+      addToCart(cartItem);
+      setSnackbar({
+        open: true,
+        message: `Cart cleared and ${pendingItem.ItemName} added!`,
+        severity: 'success'
+      });
+    }
+    setConflictDialogOpen(false);
+    setPendingItem(null);
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   const MenuItemCard: React.FC<{ item: MenuItem }> = ({ item }) => (
@@ -339,7 +406,7 @@ export default function RestaurantDetailPage() {
             
             <Grid container spacing={3}>
               {menuItems.map((item) => (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.id}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.ItemId}>
                   <MenuItemCard item={item} />
                 </Grid>
               ))}
@@ -347,6 +414,54 @@ export default function RestaurantDetailPage() {
           </Box>
         )}
       </Container>
+
+      {/* Restaurant Conflict Dialog */}
+      <Dialog 
+        open={conflictDialogOpen} 
+        onClose={() => setConflictDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <WarningIcon color="warning" />
+          Different Restaurant
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" paragraph>
+            Your cart contains items from <strong>{cartRestaurant?.name}</strong>.
+          </Typography>
+          <Typography variant="body1" paragraph>
+            You can only order from one restaurant at a time. Would you like to clear your current cart and add this item from <strong>{restaurant?.Name}</strong>?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setConflictDialogOpen(false)}
+            color="inherit"
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleReplaceCart}
+            variant="contained"
+            color="primary"
+          >
+            Replace Cart
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Success/Error Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

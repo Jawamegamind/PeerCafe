@@ -11,20 +11,34 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Container from '@mui/material/Container';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
+import Badge from '@mui/material/Badge';
 import { useRouter } from 'next/navigation';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import {logout} from '@/app/(authentication)/login/actions';
+import { useCart } from '../_contexts/CartContext';
+import CartDropdown from './CartDropdown';
 
 const pages = ['Home', 'Logout', 'Profile'];
 
 
 function ResponsiveAppBar() {
   const router = useRouter();
+  const { totalItems } = useCart();
 
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
+  const [cartAnchorEl, setCartAnchorEl] = React.useState<null | HTMLElement>(null);
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
+  };
+
+  const handleCartClick = (event: React.MouseEvent<HTMLElement>) => {
+    setCartAnchorEl(event.currentTarget);
+  };
+
+  const handleCartClose = () => {
+    setCartAnchorEl(null);
   };
 
 //   async function handleSignOut() {
@@ -107,6 +121,16 @@ function ResponsiveAppBar() {
                 display: { xs: 'block', md: 'none' },
               }}
             >
+              {/* Cart MenuItem for mobile */}
+              <MenuItem onClick={handleCartClick}>
+                <IconButton color="inherit">
+                  <Badge badgeContent={totalItems} color="primary">
+                    <ShoppingCartIcon />
+                  </Badge>
+                </IconButton>
+                <Typography textAlign="center" sx={{ color: 'black', ml: 1 }}>Cart</Typography>
+              </MenuItem>
+              
               {pages.map((page) => (
                 <MenuItem key={page} onClick={() => handleCloseNavMenu(page)}>
                   {page === 'Profile' ? (
@@ -139,7 +163,18 @@ function ResponsiveAppBar() {
             AI LMS
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }} />
-          <Box sx={{ display: { xs: 'none', md: 'flex' }, ml: 'auto' }}>
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, ml: 'auto', alignItems: 'center', gap: 1 }}>
+            {/* Cart Icon */}
+            <IconButton
+              onClick={handleCartClick}
+              sx={{ color: 'black' }}
+              aria-label="Shopping Cart"
+            >
+              <Badge badgeContent={totalItems} color="primary">
+                <ShoppingCartIcon />
+              </Badge>
+            </IconButton>
+            
             {pages.map((page) => (
               page === 'Profile' ? (
                 <IconButton
@@ -163,6 +198,13 @@ function ResponsiveAppBar() {
           </Box>
         </Toolbar>
       </Container>
+      
+      {/* Cart Dropdown */}
+      <CartDropdown 
+        anchorEl={cartAnchorEl}
+        open={Boolean(cartAnchorEl)}
+        onClose={handleCartClose}
+      />
     </AppBar>
   );
 }
