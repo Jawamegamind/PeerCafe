@@ -1,6 +1,8 @@
 [![Frontend CI](https://github.com/Jawamegamind/PeerCafe/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/Jawamegamind/PeerCafe/actions/workflows/frontend-ci.yml)
 [![Backend CI](https://github.com/Jawamegamind/PeerCafe/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/Jawamegamind/PeerCafe/actions/workflows/backend-ci.yml)
 [![codecov](https://codecov.io/github/Jawamegamind/PeerCafe/graph/badge.svg?token=C532V373J8)](https://codecov.io/github/Jawamegamind/PeerCafe)
+[![Frontend Coverage](https://codecov.io/github/Jawamegamind/PeerCafe/branch/main/graph/badge.svg?flag=frontend&token=C532V373J8)](https://codecov.io/github/Jawamegamind/PeerCafe/flags)
+[![Backend Coverage](https://codecov.io/github/Jawamegamind/PeerCafe/branch/main/graph/badge.svg?flag=backend&token=C532V373J8)](https://codecov.io/github/Jawamegamind/PeerCafe/flags)
 [![Issues](https://img.shields.io/github/issues/Jawamegamind/PeerCafe)](https://github.com/Jawamegamind/PeerCafe/issues)
 
 # PeerCafe 🚀
