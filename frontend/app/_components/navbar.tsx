@@ -48,9 +48,9 @@ function ResponsiveAppBar() {
         logout();
         router.push('/login');
     }
-    else if (page === 'Profile') {
-        router.push('/profile');
-    }
+    // else if (page === 'Profile') {
+    //     router.push('/user/profile');
+    // }
     else if (page === 'Home') {
         router.push('/homepage');
     }
@@ -146,6 +146,7 @@ function ResponsiveAppBar() {
                   key={page}
                   onClick={() => handleCloseNavMenu(page)}
                   sx={{ color: 'black' }}
+                  aria-label="Profile"
                 >
                   <AccountCircleIcon />
                 </IconButton>
