@@ -27,6 +27,7 @@ interface CartContextType {
   removeFromCart: (itemId: number) => void;
   updateQuantity: (itemId: number, quantity: number) => void;
   clearCart: () => void;
+  clearCartAndAddItem: (item: Omit<CartItem, 'quantity'>) => void;
   isCartEmpty: boolean;
 }
 
@@ -150,6 +151,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setRestaurant(null);
   };
 
+  // Clear cart and add new item atomically
+  const clearCartAndAddItem = (newItem: Omit<CartItem, 'quantity'>) => {
+    // Clear current cart and add new item with its restaurant in one operation
+    setItems([{ ...newItem, quantity: 1 }]);
+    setRestaurant({
+      id: newItem.restaurantId,
+      name: newItem.restaurantName
+    });
+  };
+
   // Calculate totals
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce((sum, item) => sum + (item.Price * item.quantity), 0);
@@ -164,6 +175,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     removeFromCart,
     updateQuantity,
     clearCart,
+    clearCartAndAddItem,
     isCartEmpty
   };
 

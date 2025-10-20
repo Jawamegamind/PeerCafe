@@ -109,18 +109,18 @@ export default function CheckoutPage() {
                     <ListItem sx={{ px: 0, py: 2 }}>
                       <ListItemText
                         primary={
-                          <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
+                          <Typography component="span" variant="subtitle1" sx={{ fontWeight: 'medium' }}>
                             {item.ItemName}
                           </Typography>
                         }
                         secondary={
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography component="span" variant="body2" color="text.secondary">
                             ${item.Price.toFixed(2)} × {item.quantity}
                           </Typography>
                         }
                       />
                       <ListItemSecondaryAction>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                        <Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>
                           ${(item.Price * item.quantity).toFixed(2)}
                         </Typography>
                       </ListItemSecondaryAction>

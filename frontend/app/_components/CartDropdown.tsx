@@ -127,13 +127,13 @@ export const CartDropdown: React.FC<CartDropdownProps> = ({ anchorEl, open, onCl
                   <ListItem sx={{ px: 0, py: 1 }}>
                     <ListItemText
                       primary={
-                        <Typography variant="subtitle2" sx={{ fontWeight: 'medium' }}>
+                        <Typography component="span" variant="subtitle2" sx={{ fontWeight: 'medium' }}>
                           {item.ItemName}
                         </Typography>
                       }
                       secondary={
-                        <Box>
-                          <Typography variant="body2" color="primary.main" sx={{ fontWeight: 'medium' }}>
+                        <Box component="div">
+                          <Typography component="span" variant="body2" color="primary.main" sx={{ fontWeight: 'medium', display: 'block' }}>
                             ${item.Price.toFixed(2)} each
                           </Typography>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
@@ -143,7 +143,7 @@ export const CartDropdown: React.FC<CartDropdownProps> = ({ anchorEl, open, onCl
                             >
                               <RemoveIcon fontSize="small" />
                             </IconButton>
-                            <Typography variant="body2" sx={{ minWidth: 20, textAlign: 'center' }}>
+                            <Typography component="span" variant="body2" sx={{ minWidth: 20, textAlign: 'center' }}>
                               {item.quantity}
                             </Typography>
                             <IconButton
@@ -158,7 +158,7 @@ export const CartDropdown: React.FC<CartDropdownProps> = ({ anchorEl, open, onCl
                     />
                     <ListItemSecondaryAction>
                       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                        <Typography component="span" variant="body2" sx={{ fontWeight: 'bold' }}>
                           ${(item.Price * item.quantity).toFixed(2)}
                         </Typography>
                         <IconButton

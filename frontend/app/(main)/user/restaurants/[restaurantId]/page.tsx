@@ -60,7 +60,7 @@ interface Restaurant {
 
 export default function RestaurantDetailPage() {
   const { restaurantId } = useParams();
-  const { addToCart, restaurant: cartRestaurant, clearCart } = useCart();
+  const { addToCart, restaurant: cartRestaurant, clearCart, clearCartAndAddItem } = useCart();
   const [menuItems, setMenuItems] = React.useState<MenuItem[]>([]);
   const [restaurant, setRestaurant] = React.useState<Restaurant | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -152,7 +152,6 @@ export default function RestaurantDetailPage() {
 
   const handleReplaceCart = () => {
     if (pendingItem && restaurant) {
-      clearCart();
       const cartItem = {
         id: pendingItem.ItemId,
         ItemName: pendingItem.ItemName,
@@ -161,7 +160,7 @@ export default function RestaurantDetailPage() {
         restaurantId: restaurant.RestaurantId,
         restaurantName: restaurant.Name
       };
-      addToCart(cartItem);
+      clearCartAndAddItem(cartItem);
       setSnackbar({
         open: true,
         message: `Cart cleared and ${pendingItem.ItemName} added!`,
