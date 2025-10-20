@@ -18,9 +18,16 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import {logout} from '@/app/(authentication)/login/actions';
 import { useCart } from '../_contexts/CartContext';
 import CartDropdown from './CartDropdown';
+import { createClient } from '@/utils/supabase/client';
 
 const pages = ['Home', 'Logout', 'Profile'];
 
+interface UserData {
+  user_id: string;
+  IsAdmin: boolean;
+  // Add other user fields as needed
+  [key: string]: any;
+}
 
 function ResponsiveAppBar() {
   const router = useRouter();
@@ -28,6 +35,7 @@ function ResponsiveAppBar() {
 
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
   const [cartAnchorEl, setCartAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [user, setUser] = React.useState<UserData | null>(null);
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
@@ -56,14 +64,65 @@ function ResponsiveAppBar() {
 //     } 
 // }
 
-  const handleCloseNavMenu = (page?: string) => {
+  // Client-side function to fetch current user
+  const fetchCurrentUser = async () => {
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.log("No authenticated user found.");
+        return null;
+      }
+
+      const { data, error } = await supabase
+        .from('Users')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching user from Users table:", error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      return null;
+    }
+  };
+
+  const handleCloseNavMenu = async (page?: string) => {
     setAnchorElNav(null);
+    
     if (page === 'Logout') {
         logout();
         router.push('/login');
     }
     else if (page === 'Profile') {
-        router.push('/user/profile');
+        try {
+          const userData = await fetchCurrentUser();
+          if (userData) {
+            setUser(userData);
+
+            
+            // Redirect based on IsAdmin field
+            if (userData.IsAdmin === true) {
+              router.push('/admin/profile'); // Admin dashboard route
+            } else {
+              router.push('/user/profile'); // Regular user profile route
+            }
+          } else {
+            console.error('No user data found');
+            // Optionally redirect to login or show error
+            router.push('/login');
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          // Handle error - maybe redirect to login
+          router.push('/login');
+        }
     }
     else if (page === 'Home') {
         router.push('/homepage');

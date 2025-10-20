@@ -35,6 +35,23 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock
 });
 
+// Mock Supabase client
+const mockSingle = jest.fn();
+const mockEq = jest.fn(() => ({ single: mockSingle }));
+const mockSelect = jest.fn(() => ({ eq: mockEq }));
+const mockFrom = jest.fn(() => ({ select: mockSelect }));
+
+const mockSupabaseClient = {
+  auth: {
+    getUser: jest.fn(),
+  },
+  from: mockFrom,
+};
+
+jest.mock('@/utils/supabase/client', () => ({
+  createClient: () => mockSupabaseClient,
+}));
+
 // Test wrapper component with CartProvider
 const TestWrapper = ({ children }: { children: React.ReactNode }) => {
   return <CartProvider>{children}</CartProvider>;
@@ -47,6 +64,15 @@ describe('ResponsiveAppBar Component', () => {
     localStorageMock.getItem.mockReturnValue(null);
     localStorageMock.setItem.mockClear();
     localStorageMock.removeItem.mockClear();
+    // Reset Supabase mocks to default values
+    mockSupabaseClient.auth.getUser.mockResolvedValue({
+      data: { user: { id: 'test-user-id', email: 'test@example.com' } },
+      error: null,
+    });
+    mockSingle.mockResolvedValue({
+      data: { IsAdmin: false },
+      error: null,
+    });
   });
 
   it('renders the navbar with correct branding', () => {
@@ -95,6 +121,23 @@ describe('ResponsiveAppBar Component', () => {
   });
 
   it('navigates to profile page when Profile icon is clicked', async () => {
+    // Mock successful user data fetch for regular user
+    const mockUserData = {
+      user_id: 'test-user-id',
+      IsAdmin: false,
+      name: 'Test User'
+    };
+
+    mockSupabaseClient.auth.getUser.mockResolvedValue({
+      data: { user: { id: 'test-user-id' } },
+      error: null
+    });
+
+    mockSingle.mockResolvedValue({
+      data: mockUserData,
+      error: null
+    });
+
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
     
     const profileButton = screen.getByRole('button', { name: /profile/i });
@@ -102,6 +145,34 @@ describe('ResponsiveAppBar Component', () => {
     
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/user/profile');
+    });
+  });
+
+  it('navigates to admin dashboard when admin user clicks Profile', async () => {
+    // Mock successful user data fetch for admin user
+    const mockAdminUserData = {
+      user_id: 'admin-user-id',
+      IsAdmin: true,
+      name: 'Admin User'
+    };
+
+    mockSupabaseClient.auth.getUser.mockResolvedValue({
+      data: { user: { id: 'admin-user-id' } },
+      error: null
+    });
+
+    mockSingle.mockResolvedValue({
+      data: mockAdminUserData,
+      error: null
+    });
+
+    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+    
+    const profileButton = screen.getByRole('button', { name: /profile/i });
+    fireEvent.click(profileButton);
+    
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/admin/dashboard');
     });
   });
 

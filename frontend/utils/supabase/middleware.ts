@@ -4,8 +4,10 @@ import { NextResponse, type NextRequest } from 'next/server'
 // Declaring the routes that need to be protected
 const protectedRoutes = [
   '/user/dashboard',
+  '/user/profile',
   '/user/restaurants', 
-  '/admin/dashboard', 
+  '/admin/dashboard',
+  'admin/profile', 
   '/admin/restaurants',
   '/admin/restaurants/add',
 ]
