@@ -60,6 +60,18 @@ def sample_login_data():
         "Password": "secure_password_123"
     }
 
+@pytest.fixture
+def sample_menu_item_data():
+    """Sample menu item data for testing"""
+    return {
+        "ItemName": "Margherita Pizza",
+        "Description": "Classic pizza with tomato sauce, mozzarella, and basil",
+        "Price": 12.99,
+        "IsAvailable": True,
+        "Image": "https://example.com/pizza.jpg",
+        "Quantity": 10
+    }
+
 @pytest.fixture(autouse=True)
 def setup_test_env():
     """Setup test environment variables"""
