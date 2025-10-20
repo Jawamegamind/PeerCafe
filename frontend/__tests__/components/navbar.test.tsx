@@ -172,7 +172,7 @@ describe('ResponsiveAppBar Component', () => {
     fireEvent.click(profileButton);
     
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/admin/dashboard');
+      expect(mockPush).toHaveBeenCalledWith('/admin/profile');
     });
   });
 
