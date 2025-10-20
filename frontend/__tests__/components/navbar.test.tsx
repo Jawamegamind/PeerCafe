@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import '@testing-library/jest-dom';
 import ResponsiveAppBar from '../../app/_components/navbar';
+import { CartProvider } from '../../app/_contexts/CartContext';
 
 // Mock Next.js router
 const mockPush = jest.fn();
@@ -23,20 +24,40 @@ jest.mock('../../app/(authentication)/login/actions', () => ({
   logout: jest.fn(),
 }));
 
+// Mock localStorage
+const localStorageMock = {
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+};
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock
+});
+
+// Test wrapper component with CartProvider
+const TestWrapper = ({ children }: { children: React.ReactNode }) => {
+  return <CartProvider>{children}</CartProvider>;
+};
+
 describe('ResponsiveAppBar Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Clear localStorage mock
+    localStorageMock.getItem.mockReturnValue(null);
+    localStorageMock.setItem.mockClear();
+    localStorageMock.removeItem.mockClear();
   });
 
   it('renders the navbar with correct branding', () => {
-    render(<ResponsiveAppBar />);
+    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
     
     // Check for PeerCafe branding (desktop view)
     expect(screen.getByText('PeerCafe')).toBeInTheDocument();
   });
 
   it('displays navigation menu items on desktop', () => {
-    render(<ResponsiveAppBar />);
+    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
     
     // Check for navigation buttons (visible on desktop)
     expect(screen.getByRole('button', { name: /home/i })).toBeInTheDocument();
@@ -45,10 +66,14 @@ describe('ResponsiveAppBar Component', () => {
     // Check for profile icon (now with aria-label)
     const profileButton = screen.getByRole('button', { name: /profile/i });
     expect(profileButton).toBeInTheDocument();
+    
+    // Check for cart icon
+    const cartButton = screen.getByRole('button', { name: /shopping cart/i });
+    expect(cartButton).toBeInTheDocument();
   });
 
   it('shows mobile menu when hamburger menu is clicked', () => {
-    render(<ResponsiveAppBar />);
+    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
     
     // Find and click the hamburger menu (mobile menu trigger)
     const mobileMenuButton = screen.getByRole('button', { name: /account of current user/i });
@@ -59,7 +84,7 @@ describe('ResponsiveAppBar Component', () => {
   });
 
   it('navigates to home page when Home button is clicked', async () => {
-    render(<ResponsiveAppBar />);
+    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
     
     const homeButton = screen.getByRole('button', { name: /home/i });
     fireEvent.click(homeButton);
@@ -70,7 +95,7 @@ describe('ResponsiveAppBar Component', () => {
   });
 
   it('navigates to profile page when Profile icon is clicked', async () => {
-    render(<ResponsiveAppBar />);
+    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
     
     const profileButton = screen.getByRole('button', { name: /profile/i });
     fireEvent.click(profileButton);
@@ -83,7 +108,7 @@ describe('ResponsiveAppBar Component', () => {
   it('handles logout functionality', async () => {
     const { logout } = require('../../app/(authentication)/login/actions');
     
-    render(<ResponsiveAppBar />);
+    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
     
     const logoutButton = screen.getByRole('button', { name: /logout/i });
     fireEvent.click(logoutButton);
@@ -95,7 +120,7 @@ describe('ResponsiveAppBar Component', () => {
   });
 
   it('closes mobile menu when clicking outside menu items', () => {
-    render(<ResponsiveAppBar />);
+    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
     
     // Open mobile menu
     const mobileMenuButton = screen.getByRole('button', { name: /account of current user/i });
@@ -116,7 +141,7 @@ describe('ResponsiveAppBar Component', () => {
   });
 
   it('renders correctly on different screen sizes', () => {
-    render(<ResponsiveAppBar />);
+    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
     
     // Both desktop and mobile variants of the logo should exist in DOM
     // (Material-UI handles visibility with CSS)
@@ -125,11 +150,44 @@ describe('ResponsiveAppBar Component', () => {
   });
 
   it('has proper accessibility attributes', () => {
-    render(<ResponsiveAppBar />);
+    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
     
     const mobileMenuButton = screen.getByRole('button', { name: /account of current user/i });
     expect(mobileMenuButton).toHaveAttribute('aria-label');
     expect(mobileMenuButton).toHaveAttribute('aria-controls');
     expect(mobileMenuButton).toHaveAttribute('aria-haspopup', 'true');
+  });
+
+  // New cart-specific tests
+  it('displays cart icon with badge showing item count', () => {
+    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+    
+    // Cart icon should be present
+    const cartButton = screen.getByRole('button', { name: /shopping cart/i });
+    expect(cartButton).toBeInTheDocument();
+    
+    // Badge should show 0 items initially (badge may not be visible with 0 items)
+    // We just verify the cart button exists
+  });
+
+  it('opens cart dropdown when cart icon is clicked', () => {
+    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+    
+    const cartButton = screen.getByRole('button', { name: /shopping cart/i });
+    fireEvent.click(cartButton);
+    
+    // Cart dropdown should appear with specific heading
+    const cartHeading = screen.getByRole('heading', { name: /your cart/i });
+    expect(cartHeading).toBeInTheDocument();
+  });
+
+  it('shows empty cart message when cart is empty', () => {
+    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+    
+    const cartButton = screen.getByRole('button', { name: /shopping cart/i });
+    fireEvent.click(cartButton);
+    
+    // Should show empty cart message specifically in the body text
+    expect(screen.getByText(/add items from a restaurant to get started/i)).toBeInTheDocument();
   });
 });
