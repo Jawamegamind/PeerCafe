@@ -56,7 +56,7 @@ export async function login(formData: FormData) {
         console.log("The user object is",userObject)
 
         // Redirect based on the boolean flags
-        if (userObject.IsAdmin) {
+        if (userObject.is_admin) {
             redirect('/admin/dashboard')
         }
         else {
