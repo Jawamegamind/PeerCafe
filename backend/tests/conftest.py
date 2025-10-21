@@ -29,13 +29,13 @@ def sample_user_data():
     """Sample user data for testing"""
     return {
         "user_id": "test_user_123",
-        "FirstName": "John",
-        "LastName": "Doe",
-        "Email": "john.doe@example.com",
-        "Phone": "+1234567890",
-        "IsAdmin": False,
-        "IsActive": True,
-        "Password": "secure_password_123"
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "john.doe@example.com",
+        "phone": "+1234567890",
+        "is_admin": False,
+        "is_active": True,
+        "password": "secure_password_123"
     }
 
 @pytest.fixture
@@ -56,8 +56,8 @@ def sample_login_data():
     """Sample login data for testing"""
     return {
         "user_id": "test_user_123",
-        "Email": "john.doe@example.com",
-        "Password": "secure_password_123"
+        "email": "john.doe@example.com",
+        "password": "secure_password_123"
     }
 
 @pytest.fixture

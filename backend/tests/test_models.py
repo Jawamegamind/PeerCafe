@@ -16,48 +16,48 @@ class TestUserModel:
         user = User(**sample_user_data)
         
         assert user.user_id == "test_user_123"
-        assert user.FirstName == "John"
-        assert user.LastName == "Doe"
-        assert user.Email == "john.doe@example.com"
-        assert user.Phone == "+1234567890"
-        assert user.IsAdmin == False
-        assert user.IsActive == True
-        assert user.Password == "secure_password_123"
+        assert user.first_name == "John"
+        assert user.last_name == "Doe"
+        assert user.email == "john.doe@example.com"
+        assert user.phone == "+1234567890"
+        assert user.is_admin == False
+        assert user.is_active == True
+        assert user.password == "secure_password_123"
 
     def test_user_missing_required_fields(self):
         """Test user creation with missing required fields"""
         with pytest.raises(ValidationError):
             User(
-                FirstName="John",
-                LastName="Doe"
+                first_name="John",
+                last_name="Doe"
                 # Missing other required fields
             )
 
     def test_user_invalid_email_format(self, sample_user_data):
         """Test user creation with invalid email format"""
-        sample_user_data["Email"] = "invalid-email-format"
+        sample_user_data["email"] = "invalid-email-format"
         
         # Note: User model doesn't enforce email validation, but this tests the input
         user = User(**sample_user_data)
-        assert user.Email == "invalid-email-format"
+        assert user.email == "invalid-email-format"
 
     def test_user_empty_strings(self, sample_user_data):
         """Test user creation with empty strings"""
-        sample_user_data["FirstName"] = ""
-        sample_user_data["LastName"] = ""
+        sample_user_data["first_name"] = ""
+        sample_user_data["last_name"] = ""
         
         user = User(**sample_user_data)
-        assert user.FirstName == ""
-        assert user.LastName == ""
+        assert user.first_name == ""
+        assert user.last_name == ""
 
     def test_user_boolean_fields(self, sample_user_data):
         """Test user boolean field validation"""
-        sample_user_data["IsAdmin"] = True
-        sample_user_data["IsActive"] = False
+        sample_user_data["is_admin"] = True
+        sample_user_data["is_active"] = False
         
         user = User(**sample_user_data)
-        assert user.IsAdmin == True
-        assert user.IsActive == False
+        assert user.is_admin == True
+        assert user.is_active == False
 
     def test_user_model_dict_conversion(self, sample_user_data):
         """Test converting user model to dictionary"""
@@ -65,8 +65,8 @@ class TestUserModel:
         user_dict = user.model_dump()
         
         assert isinstance(user_dict, dict)
-        assert user_dict["FirstName"] == "John"
-        assert user_dict["Email"] == "john.doe@example.com"
+        assert user_dict["first_name"] == "John"
+        assert user_dict["email"] == "john.doe@example.com"
 
 
 class TestRestaurantModel:
@@ -181,14 +181,14 @@ class TestLoginRequestModel:
         login = LoginRequestModel(**sample_login_data)
         
         assert login.user_id == "test_user_123"
-        assert login.Email == "john.doe@example.com"
-        assert login.Password == "secure_password_123"
+        assert login.email == "john.doe@example.com"
+        assert login.password == "secure_password_123"
 
     def test_login_request_missing_fields(self):
         """Test login request with missing fields"""
         with pytest.raises(ValidationError):
             LoginRequestModel(
-                Email="test@example.com"
+                email="test@example.com"
                 # Missing other required fields
             )
 
@@ -196,14 +196,14 @@ class TestLoginRequestModel:
         """Test login request with empty strings"""
         login_data = {
             "user_id": "",
-            "Email": "",
-            "Password": ""
+            "email": "",
+            "password": ""
         }
         
         login = LoginRequestModel(**login_data)
         assert login.user_id == ""
-        assert login.Email == ""
-        assert login.Password == ""
+        assert login.email == ""
+        assert login.password == ""
 
     def test_login_request_model_serialization(self, sample_login_data):
         """Test login request model serialization"""
@@ -211,8 +211,8 @@ class TestLoginRequestModel:
         login_dict = login.model_dump()
         
         assert isinstance(login_dict, dict)
-        assert login_dict["Email"] == "john.doe@example.com"
-        assert "Password" in login_dict
+        assert login_dict["email"] == "john.doe@example.com"
+        assert "password" in login_dict
 
 
 class TestModelValidation:
@@ -230,16 +230,16 @@ class TestModelValidation:
         """Test automatic type coercion"""
         user_data = {
             "user_id": "test_user_123",
-            "FirstName": "John",
-            "LastName": "Doe",
-            "Email": "john.doe@example.com",
-            "Phone": "+1234567890",
-            "IsAdmin": "false",  # String instead of boolean
-            "IsActive": "true",   # String instead of boolean
-            "Password": "secure_password_123"
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "john.doe@example.com",
+            "phone": "+1234567890",
+            "is_admin": "false",  # String instead of boolean
+            "is_active": "true",   # String instead of boolean
+            "password": "secure_password_123"
         }
         
         user = User(**user_data)
         # Should coerce strings to booleans
-        assert user.IsAdmin == False
-        assert user.IsActive == True
+        assert user.is_admin == False
+        assert user.is_active == True
