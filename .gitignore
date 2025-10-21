@@ -11,3 +11,57 @@ backend/.coverage
 
 # Ignore the .vscode settings directory
 .vscode/*
+
+# ------------------------------
+# Node.js / JavaScript (root)
+# ------------------------------
+/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output
+/dist/
+/build/
+/coverage/
+
+# Next.js (in case of root usage)
+/.next/
+/out/
+
+# ------------------------------
+# Python
+# ------------------------------
+*.py[cod]
+*.pyo
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage*
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# ------------------------------
+# Env files (root)
+# ------------------------------
+.env
+.env.local
+.env.*.local
+
+# ------------------------------
+# IDE / Editor
+# ------------------------------
+.idea/
+*.code-workspace
+
+# ------------------------------
+# OS files (Windows)
+# ------------------------------
+Thumbs.db
+ehthumbs.db
