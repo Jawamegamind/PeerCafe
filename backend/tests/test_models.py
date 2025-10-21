@@ -76,60 +76,60 @@ class TestRestaurantModel:
         """Test creating a valid restaurant"""
         restaurant = Restaurant(**sample_restaurant_data)
         
-        assert restaurant.Name == "Mario's Pizza"
-        assert restaurant.Description == "Authentic Italian pizza"
-        assert restaurant.CuisineType == "Italian"
-        assert restaurant.IsActive == True  # Default value
-        assert restaurant.Rating == 0.0  # Default value
+        assert restaurant.name == "Mario's Pizza"
+        assert restaurant.description == "Authentic Italian pizza"
+        assert restaurant.cuisine_type == "Italian"
+        assert restaurant.is_active == True  # Default value
+        assert restaurant.rating == 0.0  # Default value
 
     def test_restaurant_with_optional_fields(self):
         """Test restaurant creation with minimal required fields"""
         minimal_data = {
-            "Name": "Test Restaurant",
-            "Address": "123 Test St",
-            "Phone": "+1234567890",
-            "Email": "test@restaurant.com",
-            "CuisineType": "American"
+            "name": "Test Restaurant",
+            "address": "123 Test St",
+            "phone": "+1234567890",
+            "email": "test@restaurant.com",
+            "cuisine_type": "American"
         }
         
         restaurant = Restaurant(**minimal_data)
-        assert restaurant.Name == "Test Restaurant"
-        assert restaurant.Description is None
-        assert restaurant.DeliveryFee == 0.0
+        assert restaurant.name == "Test Restaurant"
+        assert restaurant.description is None
+        assert restaurant.delivery_fee == 0.0
 
     def test_restaurant_missing_required_fields(self):
         """Test restaurant creation with missing required fields"""
         with pytest.raises(ValidationError):
             Restaurant(
-                Name="Test Restaurant"
+                name="Test Restaurant"
                 # Missing other required fields
             )
 
     def test_restaurant_invalid_email(self, sample_restaurant_data):
         """Test restaurant creation with invalid email"""
-        sample_restaurant_data["Email"] = "invalid-email"
+        sample_restaurant_data["email"] = "invalid-email"
         
         with pytest.raises(ValidationError):
             Restaurant(**sample_restaurant_data)
 
     def test_restaurant_negative_values(self, sample_restaurant_data):
         """Test restaurant with negative rating/delivery fee"""
-        sample_restaurant_data["Rating"] = -1.0
-        sample_restaurant_data["DeliveryFee"] = -5.0
+        sample_restaurant_data["rating"] = -1.0
+        sample_restaurant_data["delivery_fee"] = -5.0
         
         restaurant = Restaurant(**sample_restaurant_data)
-        assert restaurant.Rating == -1.0
-        assert restaurant.DeliveryFee == -5.0
+        assert restaurant.rating == -1.0
+        assert restaurant.delivery_fee == -5.0
 
     def test_restaurant_id_auto_generated(self, sample_restaurant_data):
-        """Test that RestaurantId can be None (auto-generated)"""
+        """Test that restaurant_id can be None (auto-generated)"""
         restaurant = Restaurant(**sample_restaurant_data)
-        assert restaurant.RestaurantId is None
+        assert restaurant.restaurant_id is None
         
         # Test with explicit ID
-        sample_restaurant_data["RestaurantId"] = 123
+        sample_restaurant_data["restaurant_id"] = 123
         restaurant_with_id = Restaurant(**sample_restaurant_data)
-        assert restaurant_with_id.RestaurantId == 123
+        assert restaurant_with_id.restaurant_id == 123
 
 
 class TestRestaurantCreateModel:
@@ -137,36 +137,36 @@ class TestRestaurantCreateModel:
 
     def test_valid_restaurant_create(self, sample_restaurant_data):
         """Test creating a valid RestaurantCreate instance"""
-        # Remove RestaurantId as it shouldn't be in create model
-        create_data = {k: v for k, v in sample_restaurant_data.items() if k != "RestaurantId"}
+        # Remove restaurant_id as it shouldn't be in create model
+        create_data = {k: v for k, v in sample_restaurant_data.items() if k != "restaurant_id"}
         
         restaurant = RestaurantCreate(**create_data)
         
-        assert restaurant.Name == "Mario's Pizza"
-        assert restaurant.CuisineType == "Italian"
-        assert restaurant.DeliveryFee == 2.99
+        assert restaurant.name == "Mario's Pizza"
+        assert restaurant.cuisine_type == "Italian"
+        assert restaurant.delivery_fee == 2.99
 
     def test_restaurant_create_minimal(self):
         """Test RestaurantCreate with minimal fields"""
         minimal_data = {
-            "Name": "Test Restaurant",
-            "Address": "123 Test St",
-            "Phone": "+1234567890",
-            "Email": "test@restaurant.com",
-            "CuisineType": "American"
+            "name": "Test Restaurant",
+            "address": "123 Test St",
+            "phone": "+1234567890",
+            "email": "test@restaurant.com",
+            "cuisine_type": "American"
         }
         
         restaurant = RestaurantCreate(**minimal_data)
-        assert restaurant.DeliveryFee == 0.0  # Default value
+        assert restaurant.delivery_fee == 0.0  # Default value
 
     def test_restaurant_create_invalid_email(self):
         """Test RestaurantCreate with invalid email"""
         invalid_data = {
-            "Name": "Test Restaurant",
-            "Address": "123 Test St",
-            "Phone": "+1234567890",
-            "Email": "invalid-email",
-            "CuisineType": "American"
+            "name": "Test Restaurant",
+            "address": "123 Test St",
+            "phone": "+1234567890",
+            "email": "invalid-email",
+            "cuisine_type": "American"
         }
         
         with pytest.raises(ValidationError):

@@ -42,13 +42,13 @@ def sample_user_data():
 def sample_restaurant_data():
     """Sample restaurant data for testing"""
     return {
-        "Name": "Mario's Pizza",
-        "Description": "Authentic Italian pizza",
-        "Address": "123 Main St, City, State 12345",
-        "Phone": "+1234567890",
-        "Email": "info@mariospizza.com",
-        "CuisineType": "Italian",
-        "DeliveryFee": 2.99
+        "name": "Mario's Pizza",
+        "description": "Authentic Italian pizza",
+        "address": "123 Main St, City, State 12345",
+        "phone": "+1234567890",
+        "email": "info@mariospizza.com",
+        "cuisine_type": "Italian",
+        "delivery_fee": 2.99
     }
 
 @pytest.fixture
