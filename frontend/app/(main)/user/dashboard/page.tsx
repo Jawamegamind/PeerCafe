@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Navbar from "../../../_components/navbar";
+import { Black_Han_Sans } from 'next/font/google';
 
 export default function UserDashboard() {
   return (
@@ -89,12 +90,23 @@ export default function UserDashboard() {
             border: '2px solid #e2e8f0',
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
             textAlign: 'center',
-            opacity: 0.6
+            // opacity: 0.6
+            cursor: 'pointer',
+            transition: 'transform 0.2s, box-shadow 0.2s'
+          }}
+          onClick={() => window.location.href = '/user/delivery'}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
           }}>
             <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🚚</div>
-            <h3 style={{ margin: '0 0 8px 0', color: '#757575' }}>Delivery Tracking</h3>
+            <h3 style={{ margin: '0 0 8px 0', color: '#1976d2'}}>Delivery Tracking</h3>
             <p style={{ margin: '0', color: '#64748b', fontSize: '0.9rem' }}>
-              Coming Soon...
+              Discover nearby orders and deliver them to earn awesome rewards!
             </p>
           </div>
         </div>
@@ -104,7 +116,8 @@ export default function UserDashboard() {
           padding: '15px',
           backgroundColor: '#f1f5f9',
           borderRadius: '8px',
-          border: '2px solid #e2e8f0'
+          border: '2px solid #e2e8f0',
+          color: '#757575'
         }}>
           <strong>Current Route:</strong> /user/dashboard
         </div>

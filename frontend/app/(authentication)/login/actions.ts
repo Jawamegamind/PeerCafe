@@ -40,7 +40,7 @@ export async function login(formData: FormData) {
         // })
         const access_token = data.session.access_token
 
-        const response = await axios.post('http://localhost:8000/api/login', {
+        const response = await axios.post('http://127.0.0.1:8000/api/login', {
             user_id: data.user?.id ?? '',
             email: formdata.email,
             password: formdata.password
