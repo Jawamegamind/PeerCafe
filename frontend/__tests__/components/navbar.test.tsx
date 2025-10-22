@@ -152,7 +152,7 @@ describe('ResponsiveAppBar Component', () => {
     // Mock successful user data fetch for admin user
     const mockAdminUserData = {
       user_id: 'admin-user-id',
-      IsAdmin: true,
+      is_admin: true,
       name: 'Admin User'
     };
 
