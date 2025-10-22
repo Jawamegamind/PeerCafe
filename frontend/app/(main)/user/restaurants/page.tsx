@@ -158,14 +158,14 @@ export default function RestaurantsPage() {
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
               <Rating 
-                value={restaurant.Rating} 
+                value={restaurant.Rating || 0} 
                 readOnly 
                 size="small" 
                 precision={0.1}
                 sx={{ mr: 1 }}
               />
               <Typography variant="body2" color="text.secondary">
-                ({restaurant.Rating.toFixed(1)})
+                ({(restaurant.Rating || 0).toFixed(1)})
               </Typography>
             </Box>
           </Box>
@@ -222,7 +222,7 @@ export default function RestaurantsPage() {
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <DeliveryIcon sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
             <Typography variant="body2" color="text.secondary">
-              Delivery Fee: <strong>${restaurant.DeliveryFee.toFixed(2)}</strong>
+              Delivery Fee: <strong>${(restaurant.DeliveryFee || 0).toFixed(2)}</strong>
             </Typography>
           </Box>
         </Box>

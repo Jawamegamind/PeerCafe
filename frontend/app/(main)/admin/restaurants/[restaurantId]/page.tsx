@@ -511,7 +511,7 @@ export default function AdminRestaurantMenuPage() {
                         </TableCell>
                         <TableCell>
                           <Typography variant="body1" fontWeight="medium" color="primary.main">
-                            ${item.Price.toFixed(2)}
+                            ${(item.Price || 0).toFixed(2)}
                           </Typography>
                         </TableCell>
                         <TableCell>

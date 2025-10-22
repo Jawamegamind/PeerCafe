@@ -1,16 +1,27 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
 from database.supabase_db import create_supabase_client
 from models.menu_item_model import MenuItem, MenuItemCreate
 from typing import List
 
 menu_router = APIRouter()
+# Initialize once; may be None if env vars missing. Tests may patch this symbol.
 supabase = create_supabase_client()
+
+def get_supabase_client():
+    global supabase
+    if supabase is not None:
+        return supabase
+    supabase = create_supabase_client()
+    return supabase
 
 @menu_router.get("/restaurants/{restaurant_id}/menu", response_model=List[dict])
 async def get_menu_items(restaurant_id: int):
     """Get all menu items for a specific restaurant"""
     try:
-        result = supabase.from_("MenuItems").select("*").eq("RestaurantId", restaurant_id).execute()
+        client = get_supabase_client()
+        if client is None:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+        result = client.from_("menu_items").select("*").eq("RestaurantId", restaurant_id).execute()
         return result.data or []
     except Exception as e:
         print(f"Error fetching menu items for restaurant {restaurant_id}: {e}")
@@ -20,8 +31,11 @@ async def get_menu_items(restaurant_id: int):
 async def create_menu_item(restaurant_id: int, menu_item: MenuItemCreate):
     """Create a new menu item for a restaurant"""
     try:
+        client = get_supabase_client()
+        if client is None:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
         # Verify restaurant exists
-        restaurant_check = supabase.from_("Restaurants").select("RestaurantId").eq("RestaurantId", restaurant_id).execute()
+        restaurant_check = client.from_("restaurants").select("RestaurantId").eq("RestaurantId", restaurant_id).execute()
         if not restaurant_check.data:
             raise HTTPException(status_code=404, detail="Restaurant not found")
         
@@ -36,7 +50,7 @@ async def create_menu_item(restaurant_id: int, menu_item: MenuItemCreate):
             "Quantity": menu_item.Quantity or 0
         }
         
-        result = supabase.from_("MenuItems").insert(menu_item_data).execute()
+        result = client.from_("menu_items").insert(menu_item_data).execute()
         
         if result.data:
             return {
@@ -57,7 +71,10 @@ async def create_menu_item(restaurant_id: int, menu_item: MenuItemCreate):
 async def get_menu_item(restaurant_id: int, item_id: int):
     """Get a specific menu item"""
     try:
-        result = supabase.from_("MenuItems").select("*").eq("RestaurantId", restaurant_id).eq("ItemId", item_id).execute()
+        client = get_supabase_client()
+        if client is None:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+        result = client.from_("menu_items").select("*").eq("RestaurantId", restaurant_id).eq("ItemId", item_id).execute()
         
         if result.data:
             return result.data[0]
@@ -73,6 +90,9 @@ async def get_menu_item(restaurant_id: int, item_id: int):
 async def update_menu_item(restaurant_id: int, item_id: int, menu_item: MenuItemCreate):
     """Update a menu item"""
     try:
+        client = get_supabase_client()
+        if client is None:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
         update_data = {
             "ItemName": menu_item.ItemName,
             "Description": menu_item.Description,
@@ -82,7 +102,7 @@ async def update_menu_item(restaurant_id: int, item_id: int, menu_item: MenuItem
             "Quantity": menu_item.Quantity or 0
         }
         
-        result = supabase.from_("MenuItems").update(update_data).eq("RestaurantId", restaurant_id).eq("ItemId", item_id).execute()
+        result = client.from_("menu_items").update(update_data).eq("RestaurantId", restaurant_id).eq("ItemId", item_id).execute()
         
         if result.data:
             return {
@@ -102,7 +122,10 @@ async def update_menu_item(restaurant_id: int, item_id: int, menu_item: MenuItem
 async def delete_menu_item(restaurant_id: int, item_id: int):
     """Delete a menu item"""
     try:
-        result = supabase.from_("MenuItems").delete().eq("RestaurantId", restaurant_id).eq("ItemId", item_id).execute()
+        client = get_supabase_client()
+        if client is None:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+        result = client.from_("menu_items").delete().eq("RestaurantId", restaurant_id).eq("ItemId", item_id).execute()
         
         if result.data:
             return {"success": True, "message": "Menu item deleted successfully"}
@@ -118,15 +141,18 @@ async def delete_menu_item(restaurant_id: int, item_id: int):
 async def toggle_menu_item_availability(restaurant_id: int, item_id: int):
     """Toggle menu item availability"""
     try:
+        client = get_supabase_client()
+        if client is None:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
         # First get current availability status
-        current_item = supabase.from_("MenuItems").select("IsAvailable").eq("RestaurantId", restaurant_id).eq("ItemId", item_id).execute()
+        current_item = client.from_("menu_items").select("IsAvailable").eq("RestaurantId", restaurant_id).eq("ItemId", item_id).execute()
         
         if not current_item.data:
             raise HTTPException(status_code=404, detail="Menu item not found")
         
         new_availability = not current_item.data[0]["IsAvailable"]
         
-        result = supabase.from_("MenuItems").update({"IsAvailable": new_availability}).eq("RestaurantId", restaurant_id).eq("ItemId", item_id).execute()
+        result = client.from_("menu_items").update({"IsAvailable": new_availability}).eq("RestaurantId", restaurant_id).eq("ItemId", item_id).execute()
         
         if result.data:
             return {

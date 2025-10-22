@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 from fastapi import Header, Request
 from database.supabase_db import create_supabase_client
 from models.user_model import User
@@ -6,16 +6,39 @@ from models.login_model import LoginRequestModel
 import bcrypt
 
 auth_router = APIRouter()
+# Initialize once; may be None if env vars missing. Tests patch this symbol directly.
 supabase = create_supabase_client()
 
-def user_exists(key: str = "Email", value: str = None):
-    user = supabase.from_("Users").select("*").eq(key, value).execute()
+def get_supabase_client():
+    """Return a Supabase client if available, else None.
+    Tries module-level first (to support unit-test patching), else creates on-demand.
+    """
+    global supabase
+    if supabase is not None:
+        return supabase
+    supabase = create_supabase_client()
+    return supabase
+
+def user_exists(key: str = "Email", value: str | None = None):
+    client = get_supabase_client()
+    if client is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Supabase is not configured. Set backend/.env and restart.",
+        )
+    user = client.from_("users").select("*").eq(key, value).execute()
     return len(user.data) > 0
 
 @auth_router.post("/register")
 def create_user(user: User, authorization: str = Header(None)):
     print("Creating user:", user)
     try:
+        client = get_supabase_client()
+        if client is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured. Set backend/.env and restart.",
+            )
         # Extract the Supabase token if sent
         token = None
         if authorization and authorization.startswith("Bearer "):
@@ -24,7 +47,7 @@ def create_user(user: User, authorization: str = Header(None)):
         if token:
             # print("Received token:", token)
             # Here you can add logic to validate the token if needed
-            supabase.postgrest.auth(token)
+            client.postgrest.auth(token)
 
         user_email = user.Email.lower()
         hased_password = bcrypt.hashpw(user.Password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -39,7 +62,7 @@ def create_user(user: User, authorization: str = Header(None)):
         #     "password": hased_password,
         #     "role": user.role
         # }).execute()
-        user = supabase.from_("Users").insert({
+        user = client.from_("users").insert({
             "user_id": user.user_id,
             "FirstName": user.FirstName,
             "LastName": user.LastName,
@@ -62,6 +85,12 @@ def create_user(user: User, authorization: str = Header(None)):
 def login_user(login_request: LoginRequestModel, authorization: str = Header(None)):
     print("Login attempt for:", login_request.Email)
     try:
+        client = get_supabase_client()
+        if client is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured. Set backend/.env and restart.",
+            )
         # Extract the token from Authorization header
         token = None
         if authorization and authorization.startswith("Bearer "):
@@ -70,10 +99,10 @@ def login_user(login_request: LoginRequestModel, authorization: str = Header(Non
         if token:
             # print("Received token:", token)
             # Here you can add logic to validate the token if needed
-            supabase.postgrest.auth(token)
+            client.postgrest.auth(token)
 
         user_email = login_request.Email.lower()
-        response = supabase.from_("Users").select("*").eq("Email", user_email).execute()
+        response = client.from_("users").select("*").eq("Email", user_email).execute()
 
         if not response.data:
             return {"message": "User not found"}

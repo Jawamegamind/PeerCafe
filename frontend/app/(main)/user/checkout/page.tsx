@@ -115,13 +115,13 @@ export default function CheckoutPage() {
                         }
                         secondary={
                           <Typography component="span" variant="body2" color="text.secondary">
-                            ${item.Price.toFixed(2)} × {item.quantity}
+                            ${(item.Price || 0).toFixed(2)} × {item.quantity}
                           </Typography>
                         }
                       />
                       <ListItemSecondaryAction>
                         <Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                          ${(item.Price * item.quantity).toFixed(2)}
+                          ${((item.Price || 0) * item.quantity).toFixed(2)}
                         </Typography>
                       </ListItemSecondaryAction>
                     </ListItem>
@@ -138,7 +138,7 @@ export default function CheckoutPage() {
                   Total ({totalItems} {totalItems === 1 ? 'item' : 'items'})
                 </Typography>
                 <Typography variant="h5" color="primary.main" sx={{ fontWeight: 'bold' }}>
-                  ${totalPrice.toFixed(2)}
+                  ${(totalPrice || 0).toFixed(2)}
                 </Typography>
               </Box>
             </Paper>

@@ -225,7 +225,7 @@ export default function RestaurantDetailPage() {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto' }}>
           <Chip
             icon={<PriceIcon />}
-            label={`$${item.Price.toFixed(2)}`}
+            label={`$${(item.Price || 0).toFixed(2)}`}
             color="primary"
             variant="filled"
           />
