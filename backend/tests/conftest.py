@@ -64,12 +64,12 @@ def sample_login_data():
 def sample_menu_item_data():
     """Sample menu item data for testing"""
     return {
-        "ItemName": "Margherita Pizza",
-        "Description": "Classic pizza with tomato sauce, mozzarella, and basil",
-        "Price": 12.99,
-        "IsAvailable": True,
-        "Image": "https://example.com/pizza.jpg",
-        "Quantity": 10
+        "item_name": "Margherita Pizza",
+        "description": "Classic pizza with tomato sauce, mozzarella, and basil",
+        "price": 12.99,
+        "is_available": True,
+        "image": "https://example.com/pizza.jpg",
+        "quantity": 10
     }
 
 @pytest.fixture(autouse=True)
