@@ -9,6 +9,13 @@ auth_router = APIRouter()
 # Initialize once; may be None if env vars missing. Tests patch this symbol directly.
 supabase = create_supabase_client()
 
+def get_supabase_client():
+    global supabase
+    if supabase is not None:
+        return supabase
+    supabase = create_supabase_client()
+    return supabase
+
 def user_exists(key: str = "email", value: str = None):
     user = supabase.from_("users").select("*").eq(key, value).execute()
     return len(user.data) > 0
