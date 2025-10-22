@@ -75,15 +75,29 @@ export default function RestaurantsPage() {
 
   const fetchRestaurants = async () => {
     try {
+      console.log('Fetching restaurants from API...');
       const response = await fetch('http://localhost:8000/api/restaurants');
+      console.log('Response status:', response.status);
       if (response.ok) {
         const data = await response.json();
+        console.log('Fetched restaurants:', data);
         setRestaurants(data);
       } else {
-        console.error('Failed to fetch restaurants');
+        const errorText = await response.text();
+        console.error('Failed to fetch restaurants:', response.status, errorText);
+        setSnackbar({
+          open: true,
+          message: `Failed to fetch restaurants: ${response.status}`,
+          severity: 'error'
+        });
       }
     } catch (error) {
       console.error('Error fetching restaurants:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error connecting to server',
+        severity: 'error'
+      });
     } finally {
       setLoading(false);
     }

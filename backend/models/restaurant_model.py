@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, validator, field_validator
 from typing import Optional
 
 class Restaurant(BaseModel):
@@ -12,6 +12,11 @@ class Restaurant(BaseModel):
     is_active: bool = True
     rating: Optional[float] = 0.0
     delivery_fee: Optional[float] = 0.0
+
+    class Config:
+        populate_by_name = True  # Allow both snake_case and PascalCase
+        # For Pydantic v1, use alias_generator to preserve field names
+        # But we'll set it via fields instead
 
 class RestaurantCreate(BaseModel):
     name: str
@@ -28,3 +33,6 @@ class RestaurantCreate(BaseModel):
         if v is not None and v < 0:
             raise ValueError('Delivery fee cannot be negative')
         return v
+    
+    class Config:
+        populate_by_name = True

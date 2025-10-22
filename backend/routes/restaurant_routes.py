@@ -1,15 +1,27 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
 from database.supabase_db import create_supabase_client
 from models.restaurant_model import Restaurant, RestaurantCreate
 from typing import List
 
 restaurant_router = APIRouter()
+# Initialize once; may be None if env vars missing. Tests may patch this symbol.
 supabase = create_supabase_client()
+
+def get_supabase_client():
+    global supabase
+    if supabase is not None:
+        return supabase
+    supabase = create_supabase_client()
+    return supabase
+
 
 @restaurant_router.post("/restaurants", response_model=dict)
 async def create_restaurant(restaurant: RestaurantCreate):
     """Create a new restaurant (Admin only)"""
     try:
+        client = get_supabase_client()
+        if client is None:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
         # Insert restaurant data
         restaurant_data = {
             "name": restaurant.name,
@@ -72,6 +84,9 @@ async def get_restaurant(restaurant_id: int):
 async def update_restaurant(restaurant_id: int, restaurant: RestaurantCreate):
     """Update a restaurant (Admin only)"""
     try:
+        client = get_supabase_client()
+        if client is None:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
         update_data = {
             "name": restaurant.name,
             "description": restaurant.description,

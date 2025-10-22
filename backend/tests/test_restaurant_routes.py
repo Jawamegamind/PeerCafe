@@ -56,7 +56,7 @@ class TestRestaurantRoutes:
     @patch('routes.restaurant_routes.supabase')
     def test_get_all_restaurants_success(self, mock_supabase, client, sample_restaurant_data):
         """Test successful retrieval of all restaurants"""
-        # Mock restaurants data
+        # Mock restaurants data in snake_case (as returned by Supabase)
         restaurants_data = [
             {**sample_restaurant_data, "restaurant_id": 1, "is_active": True, "rating": 4.5},
             {**sample_restaurant_data, "restaurant_id": 2, "name": "Joe's Burgers", "is_active": True, "rating": 4.2}

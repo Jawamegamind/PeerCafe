@@ -100,7 +100,18 @@ export default function RestaurantDetailPage() {
           if (restaurantResponse.ok) {
             const restaurantData = await restaurantResponse.json();
             console.log("Restaurant data fetched:", restaurantData);
-            setRestaurant(restaurantData);
+            // Normalize to snake_case fields; accept PascalCase from older mocks/tests
+            const rd: any = restaurantData;
+            const normalized: Restaurant = {
+              restaurant_id:
+                rd?.restaurant_id ?? rd?.RestaurantId ?? parseInt(restaurantId as string),
+              name: rd?.name ?? rd?.Name ?? 'Restaurant Name',
+              description: rd?.description ?? rd?.Description,
+              cuisine_type: rd?.cuisine_type ?? rd?.CuisineType,
+              rating: rd?.rating ?? rd?.Rating,
+              address: rd?.address ?? rd?.Address,
+            };
+            setRestaurant(normalized);
           }
         } catch (restaurantError) {
           // If restaurant details endpoint doesn't exist, create a basic restaurant object

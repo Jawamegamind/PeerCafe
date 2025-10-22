@@ -134,7 +134,10 @@ export const CartDropdown: React.FC<CartDropdownProps> = ({ anchorEl, open, onCl
                       secondary={
                         <Box component="div">
                           <Typography component="span" variant="body2" color="primary.main" sx={{ fontWeight: 'medium', display: 'block' }}>
-                            ${item.Price.toFixed(2)} each
+                                                    <Typography variant="body2" color="text.secondary">
+                            ${(item.Price || 0).toFixed(2)} each
+                        </Typography>
+
                           </Typography>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
                             <IconButton
@@ -159,7 +162,7 @@ export const CartDropdown: React.FC<CartDropdownProps> = ({ anchorEl, open, onCl
                     <ListItemSecondaryAction>
                       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
                         <Typography component="span" variant="body2" sx={{ fontWeight: 'bold' }}>
-                          ${(item.Price * item.quantity).toFixed(2)}
+                          ${((item.Price || 0) * item.quantity).toFixed(2)}
                         </Typography>
                         <IconButton
                           size="small"
@@ -184,7 +187,7 @@ export const CartDropdown: React.FC<CartDropdownProps> = ({ anchorEl, open, onCl
                 Total ({totalItems} {totalItems === 1 ? 'item' : 'items'})
               </Typography>
               <Typography variant="h6" color="primary.main" sx={{ fontWeight: 'bold' }}>
-                ${totalPrice.toFixed(2)}
+                ${(totalPrice || 0).toFixed(2)}
               </Typography>
             </Box>
 

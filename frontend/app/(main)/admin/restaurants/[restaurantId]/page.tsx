@@ -110,11 +110,11 @@ export default function AdminRestaurantMenuPage() {
     //   setRestaurantName("Mario's Italian Restaurant");
         // Send API request to get restaurant info by ID
         const response = await fetch(`http://localhost:8000/api/restaurants/${restaurantId}`);
-        const data = await response.json();
-        console.log("Restaurant data:", data);
+  const data = await response.json();
+  console.log("Restaurant data:", data);
 
-        // Set restaurant name from fetched data
-        setRestaurantName(data.Name);
+  // Set restaurant name from fetched data (snake_case)
+  setRestaurantName(data.name);
     } catch (error) {
       console.error('Error fetching restaurant info:', error);
     }
