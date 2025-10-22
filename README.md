@@ -4,20 +4,18 @@
 [![Frontend Coverage](https://codecov.io/github/Jawamegamind/PeerCafe/branch/main/graph/badge.svg?flag=frontend&token=C532V373J8)](https://codecov.io/github/Jawamegamind/PeerCafe/tree/main?flags%5B0%5D=frontend)
 [![Backend Coverage](https://codecov.io/github/Jawamegamind/PeerCafe/branch/main/graph/badge.svg?flag=backend&token=C532V373J8)](https://codecov.io/github/Jawamegamind/PeerCafe/tree/main?flags%5B0%5D=backend)
 [![Issues](https://img.shields.io/github/issues/Jawamegamind/PeerCafe)](https://github.com/Jawamegamind/PeerCafe/issues)
-[![Quick Start](https://img.shields.io/badge/Install-Quick%20Start-2ea44f?logo=readme&logoColor=white)](./INSTALL.md)
 
 # PeerCafe 🚀
 
-[➡️ Quick Start: Installation & Setup](./INSTALL.md)
-
 A peer-to-peer delivery system developed as part of CSC 510: Software Engineering offered at NC State University.
+
+## [➡️ Quick Start: Installation & Setup](./INSTALL.md)
 
 ## 📋 Table of Contents
 
 - [About the Project](#about-the-project)
 - [Tech Stack](#tech-stack)
 - [Features](#features)
- - [Installation & Setup](./INSTALL.md)
 - [API Documentation](#api-documentation)
 - [Project Structure](#project-structure)
 - [Contributing](#contributing)
@@ -61,14 +59,6 @@ PeerCafe is a modern peer-to-peer delivery platform that connects users who need
 - [ ] Delivery Acceptance System
 - [ ] Real-time Order Tracking
 - [ ] User Profiles and Ratings
-
-##  Installation & Setup
-
-Looking for how to set up the project locally? We've moved all prerequisites, installation steps, environment variables, and run instructions to a dedicated guide:
-
-- Full installation guide: [INSTALL.md](./INSTALL.md)
-
-This keeps the README focused while giving you a clean, step-by-step setup experience.
 
 ## 📚 API Documentation
 
