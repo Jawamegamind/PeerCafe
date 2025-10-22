@@ -56,10 +56,40 @@ class TestRestaurantRoutes:
     @patch('routes.restaurant_routes.supabase')
     def test_get_all_restaurants_success(self, mock_supabase, client, sample_restaurant_data):
         """Test successful retrieval of all restaurants"""
-        # Mock restaurants data
+        # Mock restaurants data in snake_case (as returned by Supabase)
         restaurants_data = [
-            {**sample_restaurant_data, "RestaurantId": 1, "IsActive": True, "Rating": 4.5},
-            {**sample_restaurant_data, "RestaurantId": 2, "Name": "Joe's Burgers", "IsActive": True, "Rating": 4.2}
+            {
+                "restaurant_id": 1,
+                "name": "Mario's Pizza",
+                "description": "Authentic Italian pizza",
+                "address": "123 Main St, City, State 12345",
+                "phone": "+1234567890",
+                "email": "info@mariospizza.com",
+                "cuisine_type": "Italian",
+                "is_active": True,
+                "rating": 4.5,
+                "delivery_fee": 2.99,
+                "primary_admin_id": None,
+                "logo": None,
+                "created_at": "2023-01-01T00:00:00",
+                "updated_at": "2023-01-01T00:00:00"
+            },
+            {
+                "restaurant_id": 2,
+                "name": "Joe's Burgers",
+                "description": "Best burgers in town",
+                "address": "456 Oak Ave, City, State 12345",
+                "phone": "+1234567891",
+                "email": "info@joesburgers.com",
+                "cuisine_type": "American",
+                "is_active": True,
+                "rating": 4.2,
+                "delivery_fee": 3.99,
+                "primary_admin_id": None,
+                "logo": None,
+                "created_at": "2023-01-01T00:00:00",
+                "updated_at": "2023-01-01T00:00:00"
+            }
         ]
         mock_supabase.from_.return_value.select.return_value.execute.return_value.data = restaurants_data
         
@@ -67,8 +97,9 @@ class TestRestaurantRoutes:
         
         assert response.status_code == status.HTTP_200_OK
         assert len(response.json()) == 2
-        assert response.json()[0]["RestaurantId"] == 1
-        assert response.json()[1]["RestaurantId"] == 2
+        # Response should be in snake_case from backend
+        assert response.json()[0]["restaurant_id"] == 1
+        assert response.json()[1]["restaurant_id"] == 2
 
     @patch('routes.restaurant_routes.supabase')
     def test_get_all_restaurants_empty(self, mock_supabase, client):
@@ -94,14 +125,30 @@ class TestRestaurantRoutes:
     @patch('routes.restaurant_routes.supabase')
     def test_get_restaurant_by_id_success(self, mock_supabase, client, sample_restaurant_data):
         """Test successful retrieval of restaurant by ID"""
-        # Mock restaurant data
-        restaurant_data = {**sample_restaurant_data, "RestaurantId": 1, "IsActive": True, "Rating": 4.5}
+        # Mock restaurant data in snake_case (as returned by Supabase)
+        restaurant_data = {
+            "restaurant_id": 1,
+            "name": "Mario's Pizza",
+            "description": "Authentic Italian pizza",
+            "address": "123 Main St, City, State 12345",
+            "phone": "+1234567890",
+            "email": "info@mariospizza.com",
+            "cuisine_type": "Italian",
+            "is_active": True,
+            "rating": 4.5,
+            "delivery_fee": 2.99,
+            "primary_admin_id": None,
+            "logo": None,
+            "created_at": "2023-01-01T00:00:00",
+            "updated_at": "2023-01-01T00:00:00"
+        }
         mock_supabase.from_.return_value.select.return_value.eq.return_value.execute.return_value.data = [restaurant_data]
         
         response = client.get("/api/restaurants/1")
         
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["RestaurantId"] == 1
+        # Response should be in snake_case from backend
+        assert response.json()["restaurant_id"] == 1
 
     @patch('routes.restaurant_routes.supabase')
     def test_get_restaurant_by_id_not_found(self, mock_supabase, client):

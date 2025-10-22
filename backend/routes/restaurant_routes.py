@@ -14,25 +14,6 @@ def get_supabase_client():
     supabase = create_supabase_client()
     return supabase
 
-def transform_restaurant_data(restaurant_data: dict) -> dict:
-    """Transform snake_case database fields to PascalCase for frontend compatibility"""
-    return {
-        "RestaurantId": restaurant_data.get("restaurant_id"),
-        "Name": restaurant_data.get("name"),
-        "PrimaryAdminId": restaurant_data.get("primary_admin_id"),
-        "Logo": restaurant_data.get("logo"),
-        "IsActive": restaurant_data.get("is_active"),
-        "CreatedAt": restaurant_data.get("created_at"),
-        "UpdatedAt": restaurant_data.get("updated_at"),
-        "Description": restaurant_data.get("description"),
-        "Address": restaurant_data.get("address"),
-        "Phone": restaurant_data.get("phone"),
-        "Email": restaurant_data.get("email"),
-        "CuisineType": restaurant_data.get("cuisine_type"),
-        "Rating": restaurant_data.get("rating"),
-        "DeliveryFee": restaurant_data.get("delivery_fee"),
-    }
-
 
 @restaurant_router.post("/restaurants", response_model=dict)
 async def create_restaurant(restaurant: RestaurantCreate):
@@ -60,7 +41,7 @@ async def create_restaurant(restaurant: RestaurantCreate):
             return {
                 "success": True,
                 "message": "Restaurant created successfully",
-                "restaurant": transform_restaurant_data(result.data[0])
+                "restaurant": result.data[0]
             }
         else:
             raise HTTPException(status_code=400, detail="Failed to create restaurant")
@@ -80,9 +61,7 @@ async def get_all_restaurants():
         if client is None:
             raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
         result = client.from_("restaurants").select("*").execute()
-        # Transform each restaurant to PascalCase
-        restaurants = [transform_restaurant_data(r) for r in (result.data or [])]
-        return restaurants
+        return result.data or []
     except Exception as e:
         print(f"Error fetching restaurants: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch restaurants")
@@ -97,7 +76,7 @@ async def get_restaurant(restaurant_id: int):
         result = client.from_("restaurants").select("*").eq("RestaurantId", restaurant_id).execute()
         
         if result.data:
-            return transform_restaurant_data(result.data[0])
+            return result.data[0]
         else:
             raise HTTPException(status_code=404, detail="Restaurant not found")
     except HTTPException:
@@ -130,7 +109,7 @@ async def update_restaurant(restaurant_id: int, restaurant: RestaurantCreate):
             return {
                 "success": True,
                 "message": "Restaurant updated successfully",
-                "restaurant": transform_restaurant_data(result.data[0])
+                "restaurant": result.data[0]
             }
         else:
             raise HTTPException(status_code=404, detail="Restaurant not found")

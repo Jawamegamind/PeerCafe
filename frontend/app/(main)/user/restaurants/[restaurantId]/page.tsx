@@ -50,12 +50,12 @@ interface MenuItem {
 }
 
 interface Restaurant {
-  RestaurantId: number;  // Changed from 'id' to match backend API
-  Name: string;
-  Description?: string;
-  CuisineType?: string;
-  Rating?: number;
-  Address?: string;
+  restaurant_id: number;  // snake_case from backend API
+  name: string;
+  description?: string;
+  cuisine_type?: string;
+  rating?: number;
+  address?: string;
 }
 
 export default function RestaurantDetailPage() {
@@ -100,14 +100,25 @@ export default function RestaurantDetailPage() {
           if (restaurantResponse.ok) {
             const restaurantData = await restaurantResponse.json();
             console.log("Restaurant data fetched:", restaurantData);
-            setRestaurant(restaurantData);
+            // Normalize to snake_case fields; accept PascalCase from older mocks/tests
+            const rd: any = restaurantData;
+            const normalized: Restaurant = {
+              restaurant_id:
+                rd?.restaurant_id ?? rd?.RestaurantId ?? parseInt(restaurantId as string),
+              name: rd?.name ?? rd?.Name ?? 'Restaurant Name',
+              description: rd?.description ?? rd?.Description,
+              cuisine_type: rd?.cuisine_type ?? rd?.CuisineType,
+              rating: rd?.rating ?? rd?.Rating,
+              address: rd?.address ?? rd?.Address,
+            };
+            setRestaurant(normalized);
           }
         } catch (restaurantError) {
           // If restaurant details endpoint doesn't exist, create a basic restaurant object
           setRestaurant({
-            RestaurantId: parseInt(restaurantId as string),
-            Name: 'Restaurant Name',
-            Description: 'A wonderful dining experience awaits you.',
+            restaurant_id: parseInt(restaurantId as string),
+            name: 'Restaurant Name',
+            description: 'A wonderful dining experience awaits you.',
           });
         }
       } catch (err) {
@@ -126,13 +137,13 @@ export default function RestaurantDetailPage() {
   const handleAddToCart = (item: MenuItem) => {
     if (!restaurant) return;
 
-    const cartItem = {
+      const cartItem = {
       id: item.ItemId,
       ItemName: item.ItemName,
       Price: item.Price,
       Image: item.Image,
-      restaurantId: restaurant.RestaurantId,
-      restaurantName: restaurant.Name
+        restaurantId: restaurant.restaurant_id,
+        restaurantName: restaurant.name
     };
 
     const success = addToCart(cartItem);
@@ -157,8 +168,8 @@ export default function RestaurantDetailPage() {
         ItemName: pendingItem.ItemName,
         Price: pendingItem.Price,
         Image: pendingItem.Image,
-        restaurantId: restaurant.RestaurantId,
-        restaurantName: restaurant.Name
+        restaurantId: restaurant.restaurant_id,
+        restaurantName: restaurant.name
       };
       clearCartAndAddItem(cartItem);
       setSnackbar({
@@ -318,20 +329,20 @@ export default function RestaurantDetailPage() {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <RestaurantIcon sx={{ fontSize: 40 }} />
                 <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold' }}>
-                  {restaurant.Name}
+                  {restaurant.name}
                 </Typography>
               </Box>
               
-              {restaurant.Description && (
+              {restaurant.description && (
                 <Typography variant="h6" sx={{ opacity: 0.9, maxWidth: '80%' }}>
-                  {restaurant.Description}
+                  {restaurant.description}
                 </Typography>
               )}
               
               <Stack direction="row" spacing={2} flexWrap="wrap">
-                {restaurant.CuisineType && (
+                {restaurant.cuisine_type && (
                   <Chip 
-                    label={restaurant.CuisineType} 
+                    label={restaurant.cuisine_type} 
                     variant="outlined" 
                     sx={{ 
                       borderColor: 'white', 
@@ -340,10 +351,10 @@ export default function RestaurantDetailPage() {
                     }} 
                   />
                 )}
-                {restaurant.Rating && (
+                {restaurant.rating && (
                   <Chip 
                     icon={<StarIcon />}
-                    label={`${restaurant.Rating}/5`} 
+                    label={`${restaurant.rating}/5`} 
                     variant="outlined" 
                     sx={{ 
                       borderColor: 'white', 
@@ -352,9 +363,9 @@ export default function RestaurantDetailPage() {
                     }} 
                   />
                 )}
-                {restaurant.Address && (
+                {restaurant.address && (
                   <Chip 
-                    label={restaurant.Address} 
+                    label={restaurant.address} 
                     variant="outlined" 
                     sx={{ 
                       borderColor: 'white', 
@@ -404,8 +415,8 @@ export default function RestaurantDetailPage() {
             </Typography>
             
             <Grid container spacing={3}>
-              {menuItems.map((item) => (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.ItemId}>
+              {menuItems.map((item, index) => (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={`${item.ItemId}-${index}`}>
                   <MenuItemCard item={item} />
                 </Grid>
               ))}
@@ -430,7 +441,7 @@ export default function RestaurantDetailPage() {
             Your cart contains items from <strong>{cartRestaurant?.name}</strong>.
           </Typography>
           <Typography variant="body1" paragraph>
-            You can only order from one restaurant at a time. Would you like to clear your current cart and add this item from <strong>{restaurant?.Name}</strong>?
+            You can only order from one restaurant at a time. Would you like to clear your current cart and add this item from <strong>{restaurant?.name}</strong>?
           </Typography>
         </DialogContent>
         <DialogActions>

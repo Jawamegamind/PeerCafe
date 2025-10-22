@@ -44,9 +44,10 @@ class TestSupabaseDB:
         
         client = create_supabase_client()
         
-        # Should still call create_client, but with None values
-        mock_create_client.assert_called_once_with(None, None)
-        assert client == mock_client
+        # Should return None when env vars are missing
+        assert client is None
+        # create_client should not be called with None values
+        mock_create_client.assert_not_called()
 
     @patch.dict(os.environ, {
         'PROJECT_URL': '',
@@ -61,9 +62,10 @@ class TestSupabaseDB:
         
         client = create_supabase_client()
         
-        # Should call create_client with empty strings
-        mock_create_client.assert_called_once_with('', '')
-        assert client == mock_client
+        # Should return None when env vars are empty
+        assert client is None
+        # create_client should not be called with empty strings
+        mock_create_client.assert_not_called()
 
     @patch('database.supabase_db.load_dotenv')
     @patch('database.supabase_db.create_client')
@@ -85,10 +87,9 @@ class TestSupabaseDB:
         # Mock create_client to raise an exception
         mock_create_client.side_effect = Exception("Connection failed")
         
-        with pytest.raises(Exception) as excinfo:
-            create_supabase_client()
-        
-        assert "Connection failed" in str(excinfo.value)
+        # Should return None instead of raising exception
+        client = create_supabase_client()
+        assert client is None
 
     def test_environment_variable_types(self):
         """Test that environment variables are treated as strings"""

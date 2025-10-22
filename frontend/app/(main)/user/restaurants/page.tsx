@@ -36,16 +36,16 @@ import Navbar from "../../../_components/navbar";
 import { getRestaurants } from './actions';
 
 interface Restaurant {
-  RestaurantId: number;
-  Name: string;
-  Description: string;
-  Address: string;
-  Phone: string;
-  Email: string;
-  CuisineType: string;
-  IsActive: boolean;
-  Rating: number;
-  DeliveryFee: number;
+  restaurant_id: number;
+  name: string;
+  description: string;
+  address: string;
+  phone: string;
+  email: string;
+  cuisine_type: string;
+  is_active: boolean;
+  rating: number;
+  delivery_fee: number;
 }
 
 const cuisineColors: Record<string, string> = {
@@ -85,7 +85,7 @@ export default function RestaurantsPage() {
       const response = await getRestaurants();
       if (response) {
         const activeRestaurants = response.filter(
-          (restaurant: Restaurant) => restaurant.IsActive
+          (restaurant: Restaurant) => restaurant.is_active
         );
         setRestaurants(activeRestaurants);
       } else {
@@ -104,22 +104,22 @@ export default function RestaurantsPage() {
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(restaurant =>
-        restaurant.Name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        restaurant.CuisineType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        restaurant.Description?.toLowerCase().includes(searchTerm.toLowerCase())
+  restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  restaurant.cuisine_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  restaurant.description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Filter by cuisine type
     if (cuisineFilter && cuisineFilter !== 'All') {
-      filtered = filtered.filter(restaurant => restaurant.CuisineType === cuisineFilter);
+  filtered = filtered.filter(restaurant => restaurant.cuisine_type === cuisineFilter);
     }
 
     setFilteredRestaurants(filtered);
   };
 
   const getCuisineTypes = () => {
-    const types = [...new Set(restaurants.map(r => r.CuisineType))];
+  const types = [...new Set(restaurants.map(r => r.cuisine_type))];
     return ['All', ...types.sort()];
   };
 
@@ -145,27 +145,27 @@ export default function RestaurantsPage() {
               width: 56, 
               height: 56, 
               mr: 2,
-              backgroundColor: cuisineColors[restaurant.CuisineType] || cuisineColors.Other,
+              backgroundColor: cuisineColors[restaurant.cuisine_type] || cuisineColors.Other,
               color: 'primary.main',
               fontSize: '1.5rem'
             }}
           >
-            {restaurant.Name.charAt(0).toUpperCase()}
+            {restaurant.name.charAt(0).toUpperCase()}
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="h6" component="h2" fontWeight="bold" noWrap>
-              {restaurant.Name}
+              {restaurant.name}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
               <Rating 
-                value={restaurant.Rating || 0} 
+                value={restaurant.rating || 0} 
                 readOnly 
                 size="small" 
                 precision={0.1}
                 sx={{ mr: 1 }}
               />
               <Typography variant="body2" color="text.secondary">
-                ({(restaurant.Rating || 0).toFixed(1)})
+                ({(restaurant.rating || 0).toFixed(1)})
               </Typography>
             </Box>
           </Box>
@@ -173,10 +173,10 @@ export default function RestaurantsPage() {
 
         {/* Cuisine Type Chip */}
         <Chip 
-          label={restaurant.CuisineType}
+          label={restaurant.cuisine_type}
           size="small"
           sx={{
-            backgroundColor: cuisineColors[restaurant.CuisineType] || cuisineColors.Other,
+              backgroundColor: cuisineColors[restaurant.cuisine_type] || cuisineColors.Other,
             color: 'primary.main',
             fontWeight: 'medium',
             mb: 2
@@ -184,7 +184,7 @@ export default function RestaurantsPage() {
         />
 
         {/* Description */}
-        {restaurant.Description && (
+  {restaurant.description && (
           <Typography 
             variant="body2" 
             color="text.secondary" 
@@ -197,7 +197,7 @@ export default function RestaurantsPage() {
               lineHeight: 1.4
             }}
           >
-            {restaurant.Description}
+            {restaurant.description}
           </Typography>
         )}
 
@@ -208,21 +208,21 @@ export default function RestaurantsPage() {
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <LocationIcon sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
             <Typography variant="body2" color="text.secondary" noWrap>
-              {restaurant.Address}
+              {restaurant.address}
             </Typography>
           </Box>
           
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <PhoneIcon sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
             <Typography variant="body2" color="text.secondary">
-              {restaurant.Phone}
+              {restaurant.phone}
             </Typography>
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <DeliveryIcon sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
             <Typography variant="body2" color="text.secondary">
-              Delivery Fee: <strong>${(restaurant.DeliveryFee || 0).toFixed(2)}</strong>
+              Delivery Fee: <strong>${(restaurant.delivery_fee || 0).toFixed(2)}</strong>
             </Typography>
           </Box>
         </Box>
@@ -235,7 +235,7 @@ export default function RestaurantsPage() {
           fullWidth
           startIcon={<RestaurantIcon />}
           onClick={() => {
-            router.push(`/user/restaurants/${restaurant.RestaurantId}`);
+            router.push(`/user/restaurants/${restaurant.restaurant_id}`);
           }}
         >
           View Menu
@@ -369,8 +369,8 @@ export default function RestaurantsPage() {
             </Box>
             ) : (
             // Restaurant cards
-            filteredRestaurants.map((restaurant) => (
-                <RestaurantCard key={restaurant.RestaurantId} restaurant={restaurant} />
+      filteredRestaurants.map((restaurant) => (
+        <RestaurantCard key={restaurant.restaurant_id} restaurant={restaurant} />
             ))
             )}
         </Box>
