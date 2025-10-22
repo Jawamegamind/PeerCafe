@@ -12,18 +12,18 @@ async def create_restaurant(restaurant: RestaurantCreate):
     try:
         # Insert restaurant data
         restaurant_data = {
-            "Name": restaurant.Name,
-            "Description": restaurant.Description,
-            "Address": restaurant.Address,
-            "Phone": restaurant.Phone,
-            "Email": restaurant.Email,
-            "CuisineType": restaurant.CuisineType,
-            "IsActive": True,
-            "Rating": 0.0,
-            "DeliveryFee": restaurant.DeliveryFee or 0.0
+            "name": restaurant.name,
+            "description": restaurant.description,
+            "address": restaurant.address,
+            "phone": restaurant.phone,
+            "email": restaurant.email,
+            "cuisine_type": restaurant.cuisine_type,
+            "is_active": True,
+            "rating": 0.0,
+            "delivery_fee": restaurant.delivery_fee or 0.0
         }
         
-        result = supabase.from_("Restaurants").insert(restaurant_data).execute()
+        result = supabase.from_("restaurants").insert(restaurant_data).execute()
         
         if result.data:
             return {
@@ -45,7 +45,7 @@ async def create_restaurant(restaurant: RestaurantCreate):
 async def get_all_restaurants():
     """Get all restaurants"""
     try:
-        result = supabase.from_("Restaurants").select("*").execute()
+        result = supabase.from_("restaurants").select("*").execute()
         return result.data or []
     except Exception as e:
         print(f"Error fetching restaurants: {e}")
@@ -55,7 +55,7 @@ async def get_all_restaurants():
 async def get_restaurant(restaurant_id: int):
     """Get a specific restaurant by ID"""
     try:
-        result = supabase.from_("Restaurants").select("*").eq("RestaurantId", restaurant_id).execute()
+        result = supabase.from_("restaurants").select("*").eq("restaurant_id", restaurant_id).execute()
         
         if result.data:
             return result.data[0]
@@ -73,17 +73,17 @@ async def update_restaurant(restaurant_id: int, restaurant: RestaurantCreate):
     """Update a restaurant (Admin only)"""
     try:
         update_data = {
-            "Name": restaurant.Name,
-            "Description": restaurant.Description,
-            "Address": restaurant.Address,
-            "Phone": restaurant.Phone,
-            "Email": restaurant.Email,
-            "CuisineType": restaurant.CuisineType,
-            "DeliveryFee": restaurant.DeliveryFee or 0.0
+            "name": restaurant.name,
+            "description": restaurant.description,
+            "address": restaurant.address,
+            "phone": restaurant.phone,
+            "email": restaurant.email,
+            "cuisine_type": restaurant.cuisine_type,
+            "delivery_fee": restaurant.delivery_fee or 0.0
         }
-        
-        result = supabase.from_("Restaurants").update(update_data).eq("RestaurantId", restaurant_id).execute()
-        
+
+        result = supabase.from_("restaurants").update(update_data).eq("restaurant_id", restaurant_id).execute()
+
         if result.data:
             return {
                 "success": True,
@@ -103,9 +103,9 @@ async def update_restaurant(restaurant_id: int, restaurant: RestaurantCreate):
 async def delete_restaurant(restaurant_id: int):
     """Delete a restaurant (Admin only)"""
     try:
-        # Soft delete by setting IsActive to False
-        result = supabase.from_("Restaurants").update({"IsActive": False}).eq("RestaurantId", restaurant_id).execute()
-        
+        # Soft delete by setting is_active to False
+        result = supabase.from_("restaurants").update({"is_active": False}).eq("restaurant_id", restaurant_id).execute()
+
         if result.data:
             return {"success": True, "message": "Restaurant deleted successfully"}
         else:
@@ -121,9 +121,9 @@ async def delete_restaurant(restaurant_id: int):
 async def restore_restaurant(restaurant_id: int):
     """Restore a deleted restaurant (Admin only)"""
     try:
-        # Restore by setting IsActive to True
-        result = supabase.from_("Restaurants").update({"IsActive": True}).eq("RestaurantId", restaurant_id).execute()
-        
+        # Restore by setting is_active to True
+        result = supabase.from_("restaurants").update({"is_active": True}).eq("restaurant_id", restaurant_id).execute()
+
         if result.data:
             return {"success": True, "message": "Restaurant restored successfully"}
         else:

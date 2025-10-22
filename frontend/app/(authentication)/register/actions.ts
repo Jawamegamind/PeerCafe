@@ -55,13 +55,13 @@ export async function register(formData: FormData) {
 
         const response = await axios.post('http://localhost:8000/api/register', {
             user_id: data.user?.id ?? '',
-            FirstName: formdata.name.split(' ')[0] || '',
-            LastName: formdata.name.split(' ')[1] || '',
-            Email: formdata.email,
-            Phone: '',
-            IsAdmin: false,
-            IsActive: true,
-            Password: formdata.password
+            first_name: formdata.name.split(' ')[0] || '',
+            last_name: formdata.name.split(' ')[1] || '',
+            email: formdata.email,
+            phone: '',
+            is_admin: false,
+            is_active: true,
+            password: formdata.password
         }, {
             headers: access_token ? { Authorization: `Bearer ${access_token}` } : {}
         })

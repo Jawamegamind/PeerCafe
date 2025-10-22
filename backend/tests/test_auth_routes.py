@@ -31,9 +31,9 @@ class TestAuthRoutes:
         # Mock user already exists
         existing_user = {
             "user_id": "existing-123",
-            "Email": sample_user_data["Email"].lower(),
-            "FirstName": "Existing",
-            "LastName": "User"
+            "email": sample_user_data["email"].lower(),
+            "first_name": "Existing",
+            "last_name": "User"
         }
         mock_supabase.from_.return_value.select.return_value.eq.return_value.execute.return_value.data = [existing_user]
         
@@ -45,7 +45,7 @@ class TestAuthRoutes:
 
     def test_register_invalid_data(self, client):
         """Test registration with invalid data"""
-        invalid_data = {"Email": "invalid-email"}  # Missing required fields
+        invalid_data = {"email": "invalid-email"}  # Missing required fields
         
         response = client.post("/api/register", json=invalid_data)
         
@@ -76,12 +76,12 @@ class TestAuthRoutes:
         # Mock user exists with any hashed password
         mock_user = {
             "user_id": "test-123",
-            "Email": sample_login_data["Email"].lower(),
-            "FirstName": "Test",
-            "LastName": "User",
-            "Password": "hashed_password_mock",
-            "IsAdmin": False,
-            "IsActive": True
+            "email": sample_login_data["email"].lower(),
+            "first_name": "Test",
+            "last_name": "User",
+            "password": "hashed_password_mock",
+            "is_admin": False,
+            "is_active": True
         }
         mock_supabase.from_.return_value.select.return_value.eq.return_value.execute.return_value.data = [mock_user]
         
@@ -114,10 +114,10 @@ class TestAuthRoutes:
         # Mock user exists with any hashed password
         mock_user = {
             "user_id": "test-123",
-            "Email": sample_login_data["Email"].lower(),
-            "Password": "hashed_password_mock",
-            "IsAdmin": False,
-            "IsActive": True
+            "email": sample_login_data["email"].lower(),
+            "password": "hashed_password_mock",
+            "is_admin": False,
+            "is_active": True
         }
         mock_supabase.from_.return_value.select.return_value.eq.return_value.execute.return_value.data = [mock_user]
         
@@ -129,7 +129,7 @@ class TestAuthRoutes:
 
     def test_login_invalid_data(self, client):
         """Test login with invalid data"""
-        invalid_data = {"Email": "invalid-email"}  # Missing password
+        invalid_data = {"email": "invalid-email"}  # Missing password
         
         response = client.post("/api/login", json=invalid_data)
         
@@ -173,10 +173,10 @@ class TestAuthRoutes:
         # Mock user exists
         mock_user = {
             "user_id": "test-123",
-            "Email": sample_login_data["Email"].lower(),
-            "Password": "hashed_password_mock",
-            "IsAdmin": False,
-            "IsActive": True
+            "email": sample_login_data["email"].lower(),
+            "password": "hashed_password_mock",
+            "is_admin": False,
+            "is_active": True
         }
         mock_supabase.from_.return_value.select.return_value.eq.return_value.execute.return_value.data = [mock_user]
         
@@ -212,12 +212,12 @@ class TestAuthRouteValidation:
         """Test registration with missing email"""
         data = {
             "user_id": "test-123",
-            "FirstName": "Test",
-            "LastName": "User",
-            "Password": "testpass123",
-            "Phone": "+1234567890",
-            "IsAdmin": False,
-            "IsActive": True
+            "first_name": "Test",
+            "last_name": "User",
+            "password": "testpass123",
+            "phone": "+1234567890",
+            "is_admin": False,
+            "is_active": True
         }
         
         response = client.post("/api/register", json=data)
@@ -245,12 +245,12 @@ class TestAuthRouteValidation:
         """Test registration with missing password"""
         data = {
             "user_id": "test-123",
-            "FirstName": "Test",
-            "LastName": "User",
-            "Email": "test@example.com",
-            "Phone": "+1234567890",
-            "IsAdmin": False,
-            "IsActive": True
+            "first_name": "Test",
+            "last_name": "User",
+            "email": "test@example.com",
+            "phone": "+1234567890",
+            "is_admin": False,
+            "is_active": True
         }
         
         response = client.post("/api/register", json=data)
@@ -259,7 +259,7 @@ class TestAuthRouteValidation:
 
     def test_login_missing_email(self, client):
         """Test login with missing email"""
-        data = {"Password": "testpass123"}
+        data = {"password": "testpass123"}
         
         response = client.post("/api/login", json=data)
         
@@ -267,7 +267,7 @@ class TestAuthRouteValidation:
 
     def test_login_missing_password(self, client):
         """Test login with missing password"""
-        data = {"Email": "test@example.com"}
+        data = {"email": "test@example.com"}
         
         response = client.post("/api/login", json=data)
         
@@ -276,8 +276,8 @@ class TestAuthRouteValidation:
     def test_login_invalid_email_format(self, client):
         """Test login with invalid email format"""
         data = {
-            "Email": "invalid-email-format",
-            "Password": "testpass123"
+            "email": "invalid-email-format",
+            "password": "testpass123"
         }
         
         response = client.post("/api/login", json=data)

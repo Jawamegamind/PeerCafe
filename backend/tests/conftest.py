@@ -29,26 +29,26 @@ def sample_user_data():
     """Sample user data for testing"""
     return {
         "user_id": "test_user_123",
-        "FirstName": "John",
-        "LastName": "Doe",
-        "Email": "john.doe@example.com",
-        "Phone": "+1234567890",
-        "IsAdmin": False,
-        "IsActive": True,
-        "Password": "secure_password_123"
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "john.doe@example.com",
+        "phone": "+1234567890",
+        "is_admin": False,
+        "is_active": True,
+        "password": "secure_password_123"
     }
 
 @pytest.fixture
 def sample_restaurant_data():
     """Sample restaurant data for testing"""
     return {
-        "Name": "Mario's Pizza",
-        "Description": "Authentic Italian pizza",
-        "Address": "123 Main St, City, State 12345",
-        "Phone": "+1234567890",
-        "Email": "info@mariospizza.com",
-        "CuisineType": "Italian",
-        "DeliveryFee": 2.99
+        "name": "Mario's Pizza",
+        "description": "Authentic Italian pizza",
+        "address": "123 Main St, City, State 12345",
+        "phone": "+1234567890",
+        "email": "info@mariospizza.com",
+        "cuisine_type": "Italian",
+        "delivery_fee": 2.99
     }
 
 @pytest.fixture
@@ -56,8 +56,20 @@ def sample_login_data():
     """Sample login data for testing"""
     return {
         "user_id": "test_user_123",
-        "Email": "john.doe@example.com",
-        "Password": "secure_password_123"
+        "email": "john.doe@example.com",
+        "password": "secure_password_123"
+    }
+
+@pytest.fixture
+def sample_menu_item_data():
+    """Sample menu item data for testing"""
+    return {
+        "item_name": "Margherita Pizza",
+        "description": "Classic pizza with tomato sauce, mozzarella, and basil",
+        "price": 12.99,
+        "is_available": True,
+        "image": "https://example.com/pizza.jpg",
+        "quantity": 10
     }
 
 @pytest.fixture(autouse=True)

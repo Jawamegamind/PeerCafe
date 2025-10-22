@@ -24,7 +24,7 @@ const pages = ['Home', 'Logout', 'Profile'];
 
 interface UserData {
   user_id: string;
-  IsAdmin: boolean;
+  is_admin: boolean;
   // Add other user fields as needed
   [key: string]: any;
 }
@@ -76,7 +76,7 @@ function ResponsiveAppBar() {
       }
 
       const { data, error } = await supabase
-        .from('Users')
+        .from('users')
         .select('*')
         .eq('user_id', user.id)
         .single();
@@ -105,10 +105,8 @@ function ResponsiveAppBar() {
           const userData = await fetchCurrentUser();
           if (userData) {
             setUser(userData);
-
-            
-            // Redirect based on IsAdmin field
-            if (userData.IsAdmin === true) {
+            // Redirect based on is_admin field
+            if (userData.is_admin === true) {
               router.push('/admin/profile'); // Admin dashboard route
             } else {
               router.push('/user/profile'); // Regular user profile route
