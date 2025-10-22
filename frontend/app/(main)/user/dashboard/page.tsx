@@ -152,7 +152,7 @@ export default function UserDashboard() {
               Delivery Tracking
             </h3>
             <p style={{ margin: '0', color: '#64748b', fontSize: '0.9rem' }}>
-              Coming Soon...
+              Discover nearby orders and deliver them to earn awesome rewards!
             </p>
           </div>
         </div>
