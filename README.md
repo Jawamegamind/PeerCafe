@@ -4,6 +4,7 @@
 [![Frontend Coverage](https://codecov.io/github/Jawamegamind/PeerCafe/branch/main/graph/badge.svg?flag=frontend&token=C532V373J8)](https://codecov.io/github/Jawamegamind/PeerCafe/tree/main?flags%5B0%5D=frontend)
 [![Backend Coverage](https://codecov.io/github/Jawamegamind/PeerCafe/branch/main/graph/badge.svg?flag=backend&token=C532V373J8)](https://codecov.io/github/Jawamegamind/PeerCafe/tree/main?flags%5B0%5D=backend)
 [![Issues](https://img.shields.io/github/issues/Jawamegamind/PeerCafe)](https://github.com/Jawamegamind/PeerCafe/issues)
+[![DOI](https://zenodo.org/badge/1069984936.svg)](https://doi.org/10.5281/zenodo.17420477)
 
 # PeerCafe 🚀
 
