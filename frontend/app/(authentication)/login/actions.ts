@@ -54,16 +54,17 @@ export async function login(formData: FormData) {
         // Now here we need to check the user's role and based on that redirect to the appropriate dashboard
         const userObject = response.data.user
         console.log("The user object is",userObject)
-
+        redirect('/user/dashboard')
+        // TODO: Add back role based redirection
         // Redirect based on the boolean flags
-        if (userObject.is_admin) {
-            redirect('/admin/dashboard')
-        }
-        else {
-            // Sign in successful so we redirect to the dashboard
-            revalidatePath('/', 'layout')
-            redirect('/user/dashboard')
-        }
+        // if (userObject.IsAdmin) {
+        //     redirect('/admin/dashboard')
+        // }
+        // else {
+        //     // Sign in successful so we redirect to the dashboard
+        //     revalidatePath('/', 'layout')
+        //     redirect('/user/dashboard')
+        // }
 
         // if (userObject.role == "admin") {
         //     console.log("The user is admin")
