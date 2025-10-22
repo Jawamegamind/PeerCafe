@@ -8,8 +8,8 @@ import bcrypt
 auth_router = APIRouter()
 supabase = create_supabase_client()
 
-def user_exists(key: str = "Email", value: str = None):
-    user = supabase.from_("Users").select("*").eq(key, value).execute()
+def user_exists(key: str = "email", value: str = None):
+    user = supabase.from_("users").select("*").eq(key, value).execute()
     return len(user.data) > 0
 
 @auth_router.post("/register")
@@ -26,8 +26,8 @@ def create_user(user: User, authorization: str = Header(None)):
             # Here you can add logic to validate the token if needed
             supabase.postgrest.auth(token)
 
-        user_email = user.Email.lower()
-        hased_password = bcrypt.hashpw(user.Password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        user_email = user.email.lower()
+        hashed_password = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
         if user_exists(value=user_email):
             return {"message": "User already exists"}
@@ -39,15 +39,15 @@ def create_user(user: User, authorization: str = Header(None)):
         #     "password": hased_password,
         #     "role": user.role
         # }).execute()
-        user = supabase.from_("Users").insert({
+        user = supabase.from_("users").insert({
             "user_id": user.user_id,
-            "FirstName": user.FirstName,
-            "LastName": user.LastName,
-            "Email": user_email,
-            "Phone": user.Phone,
-            "IsAdmin": user.IsAdmin,
-            "IsActive": user.IsActive,
-            "Password": hased_password
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user_email,
+            "phone": user.phone,
+            "is_admin": user.is_admin,
+            "is_active": user.is_active,
+            "password": hashed_password
         }).execute()
 
         if user:
@@ -60,7 +60,7 @@ def create_user(user: User, authorization: str = Header(None)):
 
 @auth_router.post("/login")
 def login_user(login_request: LoginRequestModel, authorization: str = Header(None)):
-    print("Login attempt for:", login_request.Email)
+    print("Login attempt for:", login_request.email)
     try:
         # Extract the token from Authorization header
         token = None
@@ -72,15 +72,15 @@ def login_user(login_request: LoginRequestModel, authorization: str = Header(Non
             # Here you can add logic to validate the token if needed
             supabase.postgrest.auth(token)
 
-        user_email = login_request.Email.lower()
-        response = supabase.from_("Users").select("*").eq("Email", user_email).execute()
+        user_email = login_request.email.lower()
+        response = supabase.from_("users").select("*").eq("email", user_email).execute()
 
         if not response.data:
             return {"message": "User not found"}
 
         db_user = response.data[0]
 
-        if bcrypt.checkpw(login_request.Password.encode('utf-8'), db_user['Password'].encode('utf-8')):
+        if bcrypt.checkpw(login_request.password.encode('utf-8'), db_user['password'].encode('utf-8')):
             return {"message": "Login successful", "user": db_user}
         else:
             return {"message": "Invalid password"}

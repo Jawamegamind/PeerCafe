@@ -25,13 +25,13 @@ import Navbar from "../../../../_components/navbar";
 import { useRouter } from 'next/navigation';
 
 interface RestaurantForm {
-  Name: string;
-  Description: string;
-  Address: string;
-  Phone: string;
-  Email: string;
-  CuisineType: string;
-  DeliveryFee: string;
+  name: string;
+  description: string;
+  address: string;
+  phone: string;
+  email: string;
+  cuisine_type: string;
+  delivery_fee: string;
 }
 
 const cuisineTypes = [
@@ -60,13 +60,13 @@ export default function AddRestaurantPage() {
   });
 
   const [formData, setFormData] = React.useState<RestaurantForm>({
-    Name: '',
-    Description: '',
-    Address: '',
-    Phone: '',
-    Email: '',
-    CuisineType: '',
-    DeliveryFee: '0.00'
+    name: '',
+    description: '',
+    address: '',
+    phone: '',
+    email: '',
+    cuisine_type: '',
+    delivery_fee: '0.00'
   });
 
   const [errors, setErrors] = React.useState<Partial<RestaurantForm>>({});
@@ -91,31 +91,31 @@ export default function AddRestaurantPage() {
   const validateForm = (): boolean => {
     const newErrors: Partial<RestaurantForm> = {};
 
-    if (!formData.Name.trim()) {
-      newErrors.Name = 'Restaurant name is required';
+    if (!formData.name.trim()) {
+      newErrors.name = 'Restaurant name is required';
     }
 
-    if (!formData.Address.trim()) {
-      newErrors.Address = 'Address is required';
+    if (!formData.address.trim()) {
+      newErrors.address = 'Address is required';
     }
 
-    if (!formData.Phone.trim()) {
-      newErrors.Phone = 'Phone number is required';
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
     }
 
-    if (!formData.Email.trim()) {
-      newErrors.Email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.Email)) {
-      newErrors.Email = 'Please enter a valid email address';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
     }
 
-    if (!formData.CuisineType) {
-      newErrors.CuisineType = 'Cuisine type is required';
+    if (!formData.cuisine_type) {
+      newErrors.cuisine_type = 'Cuisine type is required';
     }
 
-    const deliveryFee = parseFloat(formData.DeliveryFee);
+    const deliveryFee = parseFloat(formData.delivery_fee);
     if (isNaN(deliveryFee) || deliveryFee < 0) {
-      newErrors.DeliveryFee = 'Please enter a valid delivery fee';
+      newErrors.delivery_fee = 'Please enter a valid delivery fee';
     }
 
     setErrors(newErrors);
@@ -144,7 +144,7 @@ export default function AddRestaurantPage() {
         },
         body: JSON.stringify({
           ...formData,
-          DeliveryFee: parseFloat(formData.DeliveryFee)
+          delivery_fee: parseFloat(formData.delivery_fee)
         }),
       });
 
@@ -158,13 +158,13 @@ export default function AddRestaurantPage() {
         
         // Reset form
         setFormData({
-          Name: '',
-          Description: '',
-          Address: '',
-          Phone: '',
-          Email: '',
-          CuisineType: '',
-          DeliveryFee: '0.00'
+          name: '',
+          description: '',
+          address: '',
+          phone: '',
+          email: '',
+          cuisine_type: '',
+          delivery_fee: '0.00'
         });
 
         // Optionally redirect to restaurant list
@@ -246,24 +246,24 @@ export default function AddRestaurantPage() {
                     <TextField
                     fullWidth
                     label="Restaurant Name"
-                    value={formData.Name}
-                    onChange={handleInputChange('Name')}
-                    error={!!errors.Name}
-                    helperText={errors.Name}
+                    value={formData.name}
+                    onChange={handleInputChange('name')}
+                    error={!!errors.name}
+                    helperText={errors.name}
                     required
                     variant="outlined"
                     />
                 </Box>
                 <Box sx={{ flex: 1, minWidth: 280 }}>
-                    <FormControl fullWidth error={!!errors.CuisineType} required>
+                    <FormControl fullWidth error={!!errors.cuisine_type} required>
                     <InputLabel>Cuisine Type</InputLabel>
                     <Select
-                        value={formData.CuisineType}
+                        value={formData.cuisine_type}
                         label="Cuisine Type"
                         onChange={(e) => {
-                        setFormData(prev => ({ ...prev, CuisineType: e.target.value }));
-                        if (errors.CuisineType) {
-                            setErrors(prev => ({ ...prev, CuisineType: '' }));
+                        setFormData(prev => ({ ...prev, cuisine_type: e.target.value }));
+                        if (errors.cuisine_type) {
+                            setErrors(prev => ({ ...prev, cuisine_type: '' }));
                         }
                         }}
                     >
@@ -273,9 +273,9 @@ export default function AddRestaurantPage() {
                         </MenuItem>
                         ))}
                     </Select>
-                    {errors.CuisineType && (
+                    {errors.cuisine_type && (
                         <Typography variant="caption" color="error" sx={{ mt: 1, ml: 2 }}>
-                        {errors.CuisineType}
+                        {errors.cuisine_type}
                         </Typography>
                     )}
                     </FormControl>
@@ -286,8 +286,8 @@ export default function AddRestaurantPage() {
                 <TextField
                 fullWidth
                 label="Description"
-                value={formData.Description}
-                onChange={handleInputChange('Description')}
+                value={formData.description}
+                onChange={handleInputChange('description')}
                 multiline
                 rows={3}
                 variant="outlined"
@@ -298,10 +298,10 @@ export default function AddRestaurantPage() {
                 <TextField
                 fullWidth
                 label="Address"
-                value={formData.Address}
-                onChange={handleInputChange('Address')}
-                error={!!errors.Address}
-                helperText={errors.Address}
+                value={formData.address}
+                onChange={handleInputChange('address')}
+                error={!!errors.address}
+                helperText={errors.address}
                 required
                 variant="outlined"
                 />
@@ -312,10 +312,10 @@ export default function AddRestaurantPage() {
                     <TextField
                     fullWidth
                     label="Phone Number"
-                    value={formData.Phone}
-                    onChange={handleInputChange('Phone')}
-                    error={!!errors.Phone}
-                    helperText={errors.Phone}
+                    value={formData.phone}
+                    onChange={handleInputChange('phone')}
+                    error={!!errors.phone}
+                    helperText={errors.phone}
                     required
                     variant="outlined"
                     placeholder="(555) 123-4567"
@@ -326,10 +326,10 @@ export default function AddRestaurantPage() {
                     fullWidth
                     label="Email Address"
                     type="email"
-                    value={formData.Email}
-                    onChange={handleInputChange('Email')}
-                    error={!!errors.Email}
-                    helperText={errors.Email}
+                    value={formData.email}
+                    onChange={handleInputChange('email')}
+                    error={!!errors.email}
+                    helperText={errors.email}
                     required
                     variant="outlined"
                     />
@@ -342,10 +342,10 @@ export default function AddRestaurantPage() {
                     fullWidth
                     label="Delivery Fee"
                     type="number"
-                    value={formData.DeliveryFee}
-                    onChange={handleInputChange('DeliveryFee')}
-                    error={!!errors.DeliveryFee}
-                    helperText={errors.DeliveryFee}
+                    value={formData.delivery_fee}
+                    onChange={handleInputChange('delivery_fee')}
+                    error={!!errors.delivery_fee}
+                    helperText={errors.delivery_fee}
                     required
                     variant="outlined"
                     inputProps={{

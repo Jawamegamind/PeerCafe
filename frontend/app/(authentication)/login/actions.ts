@@ -42,8 +42,8 @@ export async function login(formData: FormData) {
 
         const response = await axios.post('http://localhost:8000/api/login', {
             user_id: data.user?.id ?? '',
-            Email: formdata.email,
-            Password: formdata.password
+            email: formdata.email,
+            password: formdata.password
         }, {
             headers: {
                 Authorization: `Bearer ${access_token}`
@@ -56,7 +56,7 @@ export async function login(formData: FormData) {
         console.log("The user object is",userObject)
 
         // Redirect based on the boolean flags
-        if (userObject.IsAdmin) {
+        if (userObject.is_admin) {
             redirect('/admin/dashboard')
         }
         else {

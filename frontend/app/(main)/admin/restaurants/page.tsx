@@ -41,16 +41,16 @@ import Navbar from "../../../_components/navbar";
 import { useRouter } from 'next/navigation';
 
 interface Restaurant {
-  RestaurantId: number;
-  Name: string;
-  Description?: string;
-  CuisineType: string;
-  Address: string;
-  Phone: string;
-  Email: string;
-  Rating: number;
-  DeliveryFee: number;
-  IsActive: boolean;
+  restaurant_id: number;
+  name: string;
+  description?: string;
+  cuisine_type: string;
+  address: string;
+  phone: string;
+  email: string;
+  rating: number;
+  delivery_fee: number;
+  is_active: boolean;
 }
 
 export default function RestaurantsPage() {
@@ -101,23 +101,23 @@ export default function RestaurantsPage() {
 
     setDeleteLoading(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/restaurants/${deleteDialog.restaurant.RestaurantId}`, {
+      const response = await fetch(`http://localhost:8000/api/restaurants/${deleteDialog.restaurant.restaurant_id}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
-        // Update the restaurant's IsActive status to false instead of removing it
+        // Update the restaurant's is_active status to false instead of removing it
         setRestaurants(prev => 
           prev.map(r => 
-            r.RestaurantId === deleteDialog.restaurant!.RestaurantId 
-              ? { ...r, IsActive: false }
+            r.restaurant_id === deleteDialog.restaurant!.restaurant_id 
+              ? { ...r, is_active: false }
               : r
           )
         );
         
         setSnackbar({
           open: true,
-          message: `${deleteDialog.restaurant.Name} has been deleted successfully`,
+          message: `${deleteDialog.restaurant.name} has been deleted successfully`,
           severity: 'success'
         });
       } else {
@@ -151,7 +151,7 @@ export default function RestaurantsPage() {
 
   const handleRestoreRestaurant = async (restaurant: Restaurant) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/restaurants/${restaurant.RestaurantId}/restore`, {
+      const response = await fetch(`http://localhost:8000/api/restaurants/${restaurant.restaurant_id}/restore`, {
         method: 'PATCH',
       });
 
@@ -159,15 +159,15 @@ export default function RestaurantsPage() {
         // Update the restaurant in the state
         setRestaurants(prev => 
           prev.map(r => 
-            r.RestaurantId === restaurant.RestaurantId 
-              ? { ...r, IsActive: true }
+            r.restaurant_id === restaurant.restaurant_id 
+              ? { ...r, is_active: true }
               : r
           )
         );
         
         setSnackbar({
           open: true,
-          message: `${restaurant.Name} has been restored successfully`,
+          message: `${restaurant.name} has been restored successfully`,
           severity: 'success'
         });
       } else {
@@ -237,8 +237,8 @@ export default function RestaurantsPage() {
             />
             <Typography variant="body2" color="text.secondary">
                 Total: {restaurants.length} restaurants
-                {restaurants.filter(r => !r.IsActive).length > 0 && 
-                ` (${restaurants.filter(r => !r.IsActive).length} deleted)`
+                {restaurants.filter(r => !r.is_active).length > 0 && 
+                ` (${restaurants.filter(r => !r.is_active).length} deleted)`
                 }
             </Typography>
             </Box>
@@ -266,7 +266,7 @@ export default function RestaurantsPage() {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {restaurants.filter(r => showDeleted || r.IsActive).length === 0 ? (
+                    {restaurants.filter(r => showDeleted || r.is_active).length === 0 ? (
                     <TableRow>
                         <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
                         <Typography variant="body1" color="text.secondary">
@@ -279,14 +279,14 @@ export default function RestaurantsPage() {
                     </TableRow>
                     ) : (
                     restaurants
-                        .filter(restaurant => showDeleted || restaurant.IsActive)
+                        .filter(restaurant => showDeleted || restaurant.is_active)
                         .map((restaurant) => (
                         <TableRow 
-                            key={restaurant.RestaurantId} 
+                            key={restaurant.restaurant_id} 
                             hover
                             sx={{ 
-                                opacity: restaurant.IsActive ? 1 : 0.6,
-                                backgroundColor: restaurant.IsActive ? 'inherit' : '#fafafa'
+                                opacity: restaurant.is_active ? 1 : 0.6,
+                                backgroundColor: restaurant.is_active ? 'inherit' : '#fafafa'
                             }}
                         >
                         <TableCell>
@@ -294,12 +294,12 @@ export default function RestaurantsPage() {
                                 variant="subtitle1" 
                                 fontWeight="medium"
                                 sx={{ 
-                                    textDecoration: restaurant.IsActive ? 'none' : 'line-through',
-                                    color: restaurant.IsActive ? 'inherit' : 'text.secondary'
+                                    textDecoration: restaurant.is_active ? 'none' : 'line-through',
+                                    color: restaurant.is_active ? 'inherit' : 'text.secondary'
                                 }}
                             >
-                            {restaurant.Name}
-                            {!restaurant.IsActive && (
+                            {restaurant.name}
+                            {!restaurant.is_active && (
                                 <Chip 
                                 label="Deleted" 
                                 size="small" 
@@ -311,7 +311,7 @@ export default function RestaurantsPage() {
                         </TableCell>
                         <TableCell>
                             <Chip 
-                            label={restaurant.CuisineType} 
+                            label={restaurant.cuisine_type} 
                             variant="outlined" 
                             size="small"
                             color="primary"
@@ -319,38 +319,38 @@ export default function RestaurantsPage() {
                         </TableCell>
                         <TableCell>
                             <Typography variant="body2" color="text.secondary">
-                            {restaurant.Address}
+                            {restaurant.address}
                             </Typography>
                         </TableCell>
-                        <TableCell>{restaurant.Phone}</TableCell>
+                        <TableCell>{restaurant.phone}</TableCell>
                         <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <Typography variant="body2">
-                                ⭐ {restaurant.Rating.toFixed(1)}
+                                ⭐ {restaurant.rating.toFixed(1)}
                             </Typography>
                             </Box>
                         </TableCell>
                         <TableCell>
                             <Typography variant="body2" fontWeight="medium">
-                            ${restaurant.DeliveryFee.toFixed(2)}
+                            ${restaurant.delivery_fee.toFixed(2)}
                             </Typography>
                         </TableCell>
                         <TableCell>
                             <Chip 
-                            label={restaurant.IsActive ? 'Active' : 'Inactive'}
-                            color={restaurant.IsActive ? 'success' : 'default'}
+                            label={restaurant.is_active ? 'Active' : 'Inactive'}
+                            color={restaurant.is_active ? 'success' : 'default'}
                             size="small"
                             />
                         </TableCell>
                         <TableCell align="center">
                             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                            {restaurant.IsActive ? (
+                            {restaurant.is_active ? (
                                 <>
                                 <IconButton 
                                     size="small" 
                                     color="info"
                                     title="Manage Menu"
-                                    onClick={() => router.push(`/admin/restaurants/${restaurant.RestaurantId}`)}
+                                    onClick={() => router.push(`/admin/restaurants/${restaurant.restaurant_id}`)}
                                 >
                                     <MenuBookIcon />
                                 </IconButton>
@@ -360,7 +360,7 @@ export default function RestaurantsPage() {
                                     title="Edit Restaurant"
                                     onClick={() => {
                                     // TODO: Navigate to edit page
-                                    console.log('Edit restaurant:', restaurant.RestaurantId);
+                                    console.log('Edit restaurant:', restaurant.restaurant_id);
                                     }}
                                 >
                                     <EditIcon />
@@ -408,7 +408,7 @@ export default function RestaurantsPage() {
             </DialogTitle>
             <DialogContent>
             <DialogContentText id="delete-dialog-description" sx={{ mb: 2 }}>
-                Are you sure you want to delete <strong>{deleteDialog.restaurant?.Name}</strong>?
+                Are you sure you want to delete <strong>{deleteDialog.restaurant?.name}</strong>?
             </DialogContentText>
             
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>

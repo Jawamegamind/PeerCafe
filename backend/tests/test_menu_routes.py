@@ -14,8 +14,8 @@ class TestMenuRoutes:
         """Test successful retrieval of menu items"""
         # Mock successful query
         menu_items = [
-            {**sample_menu_item_data, "ItemId": 1},
-            {**sample_menu_item_data, "ItemId": 2, "ItemName": "Pasta"}
+            {**sample_menu_item_data, "item_id": 1},
+            {**sample_menu_item_data, "item_id": 2, "item_name": "Pasta"}
         ]
         mock_supabase.from_.return_value.select.return_value.eq.return_value.execute.return_value.data = menu_items
         
@@ -23,8 +23,8 @@ class TestMenuRoutes:
         
         assert response.status_code == status.HTTP_200_OK
         assert len(response.json()) == 2
-        assert response.json()[0]["ItemId"] == 1
-        assert response.json()[1]["ItemName"] == "Pasta"
+        assert response.json()[0]["item_id"] == 1
+        assert response.json()[1]["item_name"] == "Pasta"
 
     @patch('routes.menu_routes.supabase')
     def test_get_menu_items_empty(self, mock_supabase, client):
@@ -62,10 +62,10 @@ class TestMenuRoutes:
     def test_create_menu_item_success(self, mock_supabase, client, sample_menu_item_data):
         """Test successful menu item creation"""
         # Mock restaurant exists
-        mock_supabase.from_.return_value.select.return_value.eq.return_value.execute.return_value.data = [{"RestaurantId": 1}]
+        mock_supabase.from_.return_value.select.return_value.eq.return_value.execute.return_value.data = [{"restaurant_id": 1}]
         
         # Mock successful insert
-        created_item = {**sample_menu_item_data, "ItemId": 1, "RestaurantId": 1}
+        created_item = {**sample_menu_item_data, "item_id": 1, "restaurant_id": 1}
         mock_supabase.from_.return_value.insert.return_value.execute.return_value.data = [created_item]
         
         response = client.post("/api/restaurants/1/menu", json=sample_menu_item_data)
@@ -90,7 +90,7 @@ class TestMenuRoutes:
     def test_create_menu_item_failed_insert(self, mock_supabase, client, sample_menu_item_data):
         """Test creation with failed insert"""
         # Mock restaurant exists
-        mock_supabase.from_.return_value.select.return_value.eq.return_value.execute.return_value.data = [{"RestaurantId": 1}]
+        mock_supabase.from_.return_value.select.return_value.eq.return_value.execute.return_value.data = [{"restaurant_id": 1}]
         
         # Mock failed insert
         mock_supabase.from_.return_value.insert.return_value.execute.return_value.data = None
@@ -101,7 +101,7 @@ class TestMenuRoutes:
 
     def test_create_menu_item_invalid_data(self, client):
         """Test creation with invalid data"""
-        invalid_data = {"ItemName": ""}  # Missing required fields
+        invalid_data = {"item_name": ""}  # Missing required fields
         
         response = client.post("/api/restaurants/1/menu", json=invalid_data)
         
@@ -121,13 +121,13 @@ class TestMenuRoutes:
     def test_get_menu_item_success(self, mock_supabase, client, sample_menu_item_data):
         """Test successful retrieval of specific menu item"""
         # Mock successful query
-        menu_item = {**sample_menu_item_data, "ItemId": 1, "RestaurantId": 1}
+        menu_item = {**sample_menu_item_data, "item_id": 1, "restaurant_id": 1}
         mock_supabase.from_.return_value.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = [menu_item]
         
         response = client.get("/api/restaurants/1/menu/1")
         
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["ItemId"] == 1
+        assert response.json()["item_id"] == 1
 
     @patch('routes.menu_routes.supabase')
     def test_get_menu_item_not_found(self, mock_supabase, client):
@@ -153,7 +153,7 @@ class TestMenuRoutes:
     def test_update_menu_item_success(self, mock_supabase, client, sample_menu_item_data):
         """Test successful menu item update"""
         # Mock successful update
-        updated_item = {**sample_menu_item_data, "ItemId": 1, "RestaurantId": 1}
+        updated_item = {**sample_menu_item_data, "item_id": 1, "restaurant_id": 1}
         mock_supabase.from_.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value.data = [updated_item]
         
         response = client.put("/api/restaurants/1/menu/1", json=sample_menu_item_data)
@@ -175,7 +175,7 @@ class TestMenuRoutes:
 
     def test_update_menu_item_invalid_data(self, client):
         """Test update with invalid data"""
-        invalid_data = {"ItemName": ""}  # Missing required fields
+        invalid_data = {"item_name": ""}  # Missing required fields
         
         response = client.put("/api/restaurants/1/menu/1", json=invalid_data)
         
@@ -195,7 +195,7 @@ class TestMenuRoutes:
     def test_delete_menu_item_success(self, mock_supabase, client):
         """Test successful menu item deletion"""
         # Mock successful deletion
-        deleted_item = {"ItemId": 1, "RestaurantId": 1}
+        deleted_item = {"item_id": 1, "restaurant_id": 1}
         mock_supabase.from_.return_value.delete.return_value.eq.return_value.eq.return_value.execute.return_value.data = [deleted_item]
         
         response = client.delete("/api/restaurants/1/menu/1")
@@ -229,10 +229,10 @@ class TestMenuRoutes:
     def test_toggle_availability_success_to_unavailable(self, mock_supabase, client):
         """Test toggling availability from available to unavailable"""
         # Mock current item is available
-        mock_supabase.from_.return_value.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = [{"IsAvailable": True}]
+        mock_supabase.from_.return_value.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = [{"is_available": True}]
         
         # Mock successful update
-        updated_item = {"ItemId": 1, "IsAvailable": False}
+        updated_item = {"item_id": 1, "is_available": False}
         mock_supabase.from_.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value.data = [updated_item]
         
         response = client.patch("/api/restaurants/1/menu/1/availability")
@@ -246,10 +246,10 @@ class TestMenuRoutes:
     def test_toggle_availability_success_to_available(self, mock_supabase, client):
         """Test toggling availability from unavailable to available"""
         # Mock current item is unavailable
-        mock_supabase.from_.return_value.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = [{"IsAvailable": False}]
+        mock_supabase.from_.return_value.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = [{"is_available": False}]
         
         # Mock successful update
-        updated_item = {"ItemId": 1, "IsAvailable": True}
+        updated_item = {"item_id": 1, "is_available": True}
         mock_supabase.from_.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value.data = [updated_item]
         
         response = client.patch("/api/restaurants/1/menu/1/availability")
@@ -273,7 +273,7 @@ class TestMenuRoutes:
     def test_toggle_availability_item_not_found_on_update(self, mock_supabase, client):
         """Test toggling availability when item not found during update"""
         # Mock current item exists
-        mock_supabase.from_.return_value.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = [{"IsAvailable": True}]
+        mock_supabase.from_.return_value.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = [{"is_available": True}]
         
         # Mock update returns no data
         mock_supabase.from_.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value.data = []
@@ -321,8 +321,8 @@ class TestMenuRouteValidation:
     def test_create_menu_item_missing_required_fields(self, client):
         """Test creation with missing required fields"""
         incomplete_data = {
-            "Description": "Test description"
-            # Missing ItemName, Price, IsAvailable
+            "description": "Test description"
+            # Missing item_name, price, is_available
         }
         
         response = client.post("/api/restaurants/1/menu", json=incomplete_data)
@@ -331,9 +331,9 @@ class TestMenuRouteValidation:
     def test_create_menu_item_invalid_price(self, client):
         """Test creation with invalid price"""
         invalid_data = {
-            "ItemName": "Test Item",
-            "Price": -5.0,  # Negative price
-            "IsAvailable": True
+            "item_name": "Test Item",
+            "price": -5.0,  # Negative price
+            "is_available": True
         }
         
         response = client.post("/api/restaurants/1/menu", json=invalid_data)
@@ -342,20 +342,20 @@ class TestMenuRouteValidation:
     def test_create_menu_item_with_quantity_none(self, client):
         """Test creation with quantity as None (should default to 0)"""
         data = {
-            "ItemName": "Test Item",
-            "Price": 10.0,
-            "IsAvailable": True,
-            "Quantity": None
+            "item_name": "Test Item",
+            "price": 10.0,
+            "is_available": True,
+            "quantity": None
         }
         
-        # This should be handled by the route (Quantity or 0)
+        # This should be handled by the route (quantity or 0)
         # We need to mock the database calls for this test
         with patch('routes.menu_routes.supabase') as mock_supabase:
             # Mock restaurant exists
-            mock_supabase.from_.return_value.select.return_value.eq.return_value.execute.return_value.data = [{"RestaurantId": 1}]
+            mock_supabase.from_.return_value.select.return_value.eq.return_value.execute.return_value.data = [{"restaurant_id": 1}]
             
             # Mock successful insert
-            created_item = {**data, "ItemId": 1, "RestaurantId": 1, "Quantity": 0}
+            created_item = {**data, "item_id": 1, "restaurant_id": 1, "quantity": 0}
             mock_supabase.from_.return_value.insert.return_value.execute.return_value.data = [created_item]
             
             response = client.post("/api/restaurants/1/menu", json=data)

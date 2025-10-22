@@ -37,22 +37,22 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 const mockMenuItem = {
-  ItemId: 1,  // Updated to match backend API
-  ItemName: 'Test Pizza',
-  Description: 'Delicious test pizza with cheese',
-  Price: 15.99,
-  Image: 'https://example.com/pizza.jpg',
-  IsAvailable: true,
-  Quantity: 10,
+  item_id: 1,  // Updated to match backend API snake_case
+  item_name: 'Test Pizza',
+  description: 'Delicious test pizza with cheese',
+  price: 15.99,
+  image: 'https://example.com/pizza.jpg',
+  is_available: true,
+  quantity: 10,
 };
 
 const mockRestaurant = {
-  RestaurantId: 1,  // Updated to match backend API
-  Name: 'Test Restaurant',
-  Description: 'A great place to dine',
-  CuisineType: 'Italian',
-  Rating: 4.5,
-  Address: '123 Test Street',
+  restaurant_id: 1,  // Updated to match backend API snake_case
+  name: 'Test Restaurant',
+  description: 'A great place to dine',
+  cuisine_type: 'Italian',
+  rating: 4.5,
+  address: '123 Test Street',
 };
 
 describe('RestaurantDetailPage', () => {
@@ -135,7 +135,7 @@ describe('RestaurantDetailPage', () => {
   });
 
   it('handles unavailable menu items correctly', async () => {
-    const unavailableItem = { ...mockMenuItem, IsAvailable: false };
+    const unavailableItem = { ...mockMenuItem, is_available: false };
     (fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => [unavailableItem],
@@ -188,7 +188,7 @@ describe('RestaurantDetailPage', () => {
   });
 
   it('displays menu count in the header', async () => {
-    const multipleItems = [mockMenuItem, { ...mockMenuItem, id: 2, ItemName: 'Test Pasta' }];
+    const multipleItems = [mockMenuItem, { ...mockMenuItem, item_id: 2, item_name: 'Test Pasta' }];
     (fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => multipleItems,

@@ -50,25 +50,25 @@ import { useParams, useRouter } from 'next/navigation';
 import Navbar from "../../../../_components/navbar";
 
 interface MenuItem {
-  ItemId: number;
-  RestaurantId: number;
-  ItemName: string;
-  Description: string;
-  IsAvailable: boolean;
-  Image: string;
-  Price: number;
-  CreatedAt: string;
-  UpdatedAt: string;
-  Quantity: number;
+  item_id: number;
+  restaurant_id: number;
+  item_name: string;
+  description: string;
+  is_available: boolean;
+  image: string;
+  price: number;
+  created_at: string;
+  updated_at: string;
+  quantity: number;
 }
 
 interface MenuItemFormData {
-  ItemName: string;
-  Description: string;
-  IsAvailable: boolean;
-  Image: string;
-  Price: string;
-  Quantity: string;
+  item_name: string;
+  description: string;
+  is_available: boolean;
+  image: string;
+  price: string;
+  quantity: string;
 }
 
 export default function AdminRestaurantMenuPage() {
@@ -85,12 +85,12 @@ export default function AdminRestaurantMenuPage() {
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   
   const [formData, setFormData] = React.useState<MenuItemFormData>({
-    ItemName: '',
-    Description: '',
-    IsAvailable: true,
-    Image: '',
-    Price: '',
-    Quantity: '0'
+    item_name: '',
+    description: '',
+    is_available: true,
+    image: '',
+    price: '',
+    quantity: '0'
   });
   
   const [alert, setAlert] = React.useState<{type: 'success' | 'error', message: string} | null>(null);
@@ -145,22 +145,22 @@ export default function AdminRestaurantMenuPage() {
     if (item) {
       setEditingItem(item);
       setFormData({
-        ItemName: item.ItemName,
-        Description: item.Description || '',
-        IsAvailable: item.IsAvailable,
-        Image: item.Image || '',
-        Price: item.Price.toString(),
-        Quantity: item.Quantity.toString()
+        item_name: item.item_name,
+        description: item.description || '',
+        is_available: item.is_available,
+        image: item.image || '',
+        price: item.price.toString(),
+        quantity: item.quantity.toString()
       });
     } else {
       setEditingItem(null);
       setFormData({
-        ItemName: '',
-        Description: '',
-        IsAvailable: true,
-        Image: '',
-        Price: '',
-        Quantity: '0'
+        item_name: '',
+        description: '',
+        is_available: true,
+        image: '',
+        price: '',
+        quantity: '0'
       });
     }
     setDialogOpen(true);
@@ -177,14 +177,14 @@ export default function AdminRestaurantMenuPage() {
 
   const handleSubmit = async () => {
     try {
-      if (!formData.ItemName.trim() || !formData.Price.trim()) {
+      if (!formData.item_name.trim() || !formData.price.trim()) {
         setAlert({ type: 'error', message: 'Please fill in required fields' });
         return;
       }
 
-      const price = parseFloat(formData.Price);
-      const quantity = parseInt(formData.Quantity);
-      
+      const price = parseFloat(formData.price);
+      const quantity = parseInt(formData.quantity);
+
       if (isNaN(price) || price <= 0) {
         setAlert({ type: 'error', message: 'Please enter a valid price greater than 0' });
         return;
@@ -196,12 +196,12 @@ export default function AdminRestaurantMenuPage() {
       }
 
       const menuItemData = {
-        ItemName: formData.ItemName.trim(),
-        Description: formData.Description.trim(),
-        IsAvailable: formData.IsAvailable,
-        Image: formData.Image.trim(),
-        Price: price,
-        Quantity: quantity
+        item_name: formData.item_name.trim(),
+        description: formData.description.trim(),
+        is_available: formData.is_available,
+        image: formData.image.trim(),
+        price: price,
+        quantity: quantity
       };
 
       let response;
@@ -209,7 +209,7 @@ export default function AdminRestaurantMenuPage() {
       if (editingItem) {
         // Update existing menu item
         response = await fetch(
-          `http://localhost:8000/api/restaurants/${restaurantId}/menu/${editingItem.ItemId}`,
+          `http://localhost:8000/api/restaurants/${restaurantId}/menu/${editingItem.item_id}`,
           {
             method: 'PUT',
             headers: {
@@ -264,7 +264,7 @@ export default function AdminRestaurantMenuPage() {
   const handleToggleAvailability = async (item: MenuItem) => {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/restaurants/${restaurantId}/menu/${item.ItemId}/availability`,
+        `http://localhost:8000/api/restaurants/${restaurantId}/menu/${item.item_id}/availability`,
         {
           method: 'PATCH',
           headers: {
@@ -297,13 +297,13 @@ export default function AdminRestaurantMenuPage() {
   };
 
   const handleDeleteItem = async (item: MenuItem) => {
-    if (!confirm(`Are you sure you want to delete "${item.ItemName}"?`)) {
+    if (!confirm(`Are you sure you want to delete "${item.item_name}"?`)) {
       return;
     }
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/restaurants/${restaurantId}/menu/${item.ItemId}`,
+        `http://localhost:8000/api/restaurants/${restaurantId}/menu/${item.item_id}`,
         {
           method: 'DELETE',
           headers: {
@@ -337,8 +337,8 @@ export default function AdminRestaurantMenuPage() {
 
   // Filter and paginate items
   const filteredItems = menuItems.filter(item =>
-    item.ItemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.Description.toLowerCase().includes(searchTerm.toLowerCase())
+    item.item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const paginatedItems = filteredItems.slice(
@@ -489,10 +489,10 @@ export default function AdminRestaurantMenuPage() {
                   </TableHead>
                   <TableBody>
                     {paginatedItems.map((item) => (
-                      <TableRow key={item.ItemId} hover>
+                      <TableRow key={item.item_id} hover>
                         <TableCell>
                           <Typography variant="subtitle1" fontWeight="medium">
-                            {item.ItemName}
+                            {item.item_name}
                           </Typography>
                         </TableCell>
                         <TableCell>
@@ -506,32 +506,32 @@ export default function AdminRestaurantMenuPage() {
                               whiteSpace: 'nowrap'
                             }}
                           >
-                            {item.Description || 'No description'}
+                            {item.description || 'No description'}
                           </Typography>
                         </TableCell>
                         <TableCell>
                           <Typography variant="body1" fontWeight="medium" color="primary.main">
-                            ${item.Price.toFixed(2)}
+                            ${item.price.toFixed(2)}
                           </Typography>
                         </TableCell>
                         <TableCell>
                           <Chip 
-                            label={item.Quantity}
+                            label={item.quantity}
                             size="small"
-                            color={item.Quantity > 0 ? 'success' : 'error'}
+                            color={item.quantity > 0 ? 'success' : 'error'}
                             variant="outlined"
                           />
                         </TableCell>
                         <TableCell>
                           <Chip 
-                            label={item.IsAvailable ? 'Available' : 'Unavailable'}
-                            color={item.IsAvailable ? 'success' : 'default'}
+                            label={item.is_available ? 'Available' : 'Unavailable'}
+                            color={item.is_available ? 'success' : 'default'}
                             size="small"
                           />
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" color="text.secondary">
-                            {new Date(item.UpdatedAt).toLocaleDateString()}
+                            {new Date(item.updated_at).toLocaleDateString()}
                           </Typography>
                         </TableCell>
                         <TableCell align="center">
@@ -539,10 +539,10 @@ export default function AdminRestaurantMenuPage() {
                             <IconButton
                               size="small"
                               onClick={() => handleToggleAvailability(item)}
-                              color={item.IsAvailable ? 'success' : 'default'}
-                              title={item.IsAvailable ? 'Mark as unavailable' : 'Mark as available'}
+                              color={item.is_available ? 'success' : 'default'}
+                              title={item.is_available ? 'Mark as unavailable' : 'Mark as available'}
                             >
-                              {item.IsAvailable ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                              {item.is_available ? <VisibilityIcon /> : <VisibilityOffIcon />}
                             </IconButton>
                             <IconButton
                               size="small"
@@ -600,8 +600,8 @@ export default function AdminRestaurantMenuPage() {
               <TextField
                 label="Item Name *"
                 fullWidth
-                value={formData.ItemName}
-                onChange={(e) => handleFormChange('ItemName', e.target.value)}
+                value={formData.item_name}
+                onChange={(e) => handleFormChange('item_name', e.target.value)}
               />
 
               <TextField
@@ -609,8 +609,8 @@ export default function AdminRestaurantMenuPage() {
                 fullWidth
                 multiline
                 rows={3}
-                value={formData.Description}
-                onChange={(e) => handleFormChange('Description', e.target.value)}
+                value={formData.description}
+                onChange={(e) => handleFormChange('description', e.target.value)}
               />
 
               <Box sx={{ display: 'flex', gap: 2 }}>
@@ -621,8 +621,8 @@ export default function AdminRestaurantMenuPage() {
                   InputProps={{
                     startAdornment: <InputAdornment position="start">$</InputAdornment>,
                   }}
-                  value={formData.Price}
-                  onChange={(e) => handleFormChange('Price', e.target.value)}
+                  value={formData.price}
+                  onChange={(e) => handleFormChange('price', e.target.value)}
                   sx={{ flex: 1 }}
                 />
 
@@ -630,8 +630,8 @@ export default function AdminRestaurantMenuPage() {
                   label="Quantity *"
                   type="number"
                   inputProps={{ min: "0" }}
-                  value={formData.Quantity}
-                  onChange={(e) => handleFormChange('Quantity', e.target.value)}
+                  value={formData.quantity}
+                  onChange={(e) => handleFormChange('quantity', e.target.value)}
                   sx={{ flex: 1 }}
                 />
               </Box>
@@ -639,16 +639,16 @@ export default function AdminRestaurantMenuPage() {
               <TextField
                 label="Image URL"
                 fullWidth
-                value={formData.Image}
-                onChange={(e) => handleFormChange('Image', e.target.value)}
+                value={formData.image}
+                onChange={(e) => handleFormChange('image', e.target.value)}
                 placeholder="https://example.com/image.jpg"
               />
 
               <FormControlLabel
                 control={
                   <Switch
-                    checked={formData.IsAvailable}
-                    onChange={(e) => handleFormChange('IsAvailable', e.target.checked)}
+                    checked={formData.is_available}
+                    onChange={(e) => handleFormChange('is_available', e.target.checked)}
                   />
                 }
                 label="Available for ordering"
