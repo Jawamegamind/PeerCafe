@@ -51,12 +51,17 @@ jobs:
       - name: Build (for tests that rely on build)
         run: npm run build --if-present
         working-directory: ./frontend
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
       - name: Run unit tests with coverage (Jest)
         run: npm run test:coverage --if-present -- --coverageDirectory=coverage --coverageReporters=lcov
         working-directory: ./frontend
         env:
           CI: true
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
       - name: Upload unit test artifact
         if: always()

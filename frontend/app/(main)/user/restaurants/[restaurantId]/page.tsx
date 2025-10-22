@@ -40,17 +40,17 @@ import Navbar from "../../../../_components/navbar";
 import { useCart } from "../../../../_contexts/CartContext";
 
 interface MenuItem {
-  ItemId: number;  // Changed from 'id' to match backend API
-  ItemName: string;
-  Description?: string;
-  Price: number;
-  Image?: string;
-  IsAvailable: boolean;
-  Quantity?: number;
+  item_id: number;  // Changed from 'id' to match backend API
+  item_name: string;
+  description?: string;
+  price: number;
+  image?: string;
+  is_available: boolean;
+  quantity?: number;
 }
 
 interface Restaurant {
-  restaurant_id: number;  // snake_case from backend API
+  restaurant_id: number;  // Changed from 'id' to match backend API
   name: string;
   description?: string;
   cuisine_type?: string;
@@ -137,13 +137,13 @@ export default function RestaurantDetailPage() {
   const handleAddToCart = (item: MenuItem) => {
     if (!restaurant) return;
 
-      const cartItem = {
-      id: item.ItemId,
-      ItemName: item.ItemName,
-      Price: item.Price,
-      Image: item.Image,
-        restaurantId: restaurant.restaurant_id,
-        restaurantName: restaurant.name
+    const cartItem = {
+      id: item.item_id,
+      ItemName: item.item_name,
+      Price: item.price,
+      Image: item.image,
+      restaurantId: restaurant.restaurant_id,
+      restaurantName: restaurant.name
     };
 
     const success = addToCart(cartItem);
@@ -151,7 +151,7 @@ export default function RestaurantDetailPage() {
     if (success) {
       setSnackbar({
         open: true,
-        message: `${item.ItemName} added to cart!`,
+        message: `${item.item_name} added to cart!`,
         severity: 'success'
       });
     } else {
@@ -164,17 +164,17 @@ export default function RestaurantDetailPage() {
   const handleReplaceCart = () => {
     if (pendingItem && restaurant) {
       const cartItem = {
-        id: pendingItem.ItemId,
-        ItemName: pendingItem.ItemName,
-        Price: pendingItem.Price,
-        Image: pendingItem.Image,
+        id: pendingItem.item_id,
+        ItemName: pendingItem.item_name,
+        Price: pendingItem.price,
+        Image: pendingItem.image,
         restaurantId: restaurant.restaurant_id,
         restaurantName: restaurant.name
       };
       clearCartAndAddItem(cartItem);
       setSnackbar({
         open: true,
-        message: `Cart cleared and ${pendingItem.ItemName} added!`,
+        message: `Cart cleared and ${pendingItem.item_name} added!`,
         severity: 'success'
       });
     }
@@ -197,52 +197,52 @@ export default function RestaurantDetailPage() {
           transform: 'translateY(-2px)',
           boxShadow: 4,
         },
-        opacity: item.IsAvailable ? 1 : 0.7,
+        opacity: item.is_available ? 1 : 0.7,
       }}
     >
-      {item.Image && (
+      {item.image && (
         <CardMedia
           component="img"
           height="160"
-          image={item.Image}
-          alt={item.ItemName}
+          image={item.image}
+          alt={item.item_name}
           sx={{ objectFit: 'cover' }}
         />
       )}
       <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
           <Typography variant="h6" component="h3" sx={{ flexGrow: 1, pr: 1 }}>
-            {item.ItemName}
+            {item.item_name}
           </Typography>
           <Chip
-            icon={item.IsAvailable ? <AvailableIcon /> : <UnavailableIcon />}
-            label={item.IsAvailable ? 'Available' : 'Unavailable'}
-            color={item.IsAvailable ? 'success' : 'error'}
+            icon={item.is_available ? <AvailableIcon /> : <UnavailableIcon />}
+            label={item.is_available ? 'Available' : 'Unavailable'}
+            color={item.is_available ? 'success' : 'error'}
             size="small"
             variant="outlined"
           />
         </Box>
         
-        {item.Description && (
+        {item.description && (
           <Typography 
             variant="body2" 
             color="text.secondary" 
             sx={{ mb: 2, flexGrow: 1 }}
           >
-            {item.Description}
+            {item.description}
           </Typography>
         )}
         
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto' }}>
           <Chip
             icon={<PriceIcon />}
-            label={`$${(item.Price || 0).toFixed(2)}`}
+            label={`$${item.price.toFixed(2)}`}
             color="primary"
             variant="filled"
           />
-          {item.Quantity !== undefined && (
+          {item.quantity !== undefined && (
             <Typography variant="caption" color="text.secondary">
-              Qty: {item.Quantity}
+              Qty: {item.quantity}
             </Typography>
           )}
         </Box>
@@ -254,7 +254,7 @@ export default function RestaurantDetailPage() {
           color="primary"
           startIcon={<CartIcon />}
           onClick={() => handleAddToCart(item)}
-          disabled={!item.IsAvailable}
+          disabled={!item.is_available}
           sx={{ m: 1 }}
         >
           Add to Cart
@@ -415,8 +415,8 @@ export default function RestaurantDetailPage() {
             </Typography>
             
             <Grid container spacing={3}>
-              {menuItems.map((item, index) => (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={`${item.ItemId}-${index}`}>
+              {menuItems.map((item) => (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.item_id}>
                   <MenuItemCard item={item} />
                 </Grid>
               ))}

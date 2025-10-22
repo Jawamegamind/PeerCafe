@@ -5,6 +5,7 @@ from database.supabase_db import create_supabase_client
 from routes.auth_routes import auth_router
 from routes.restaurant_routes import restaurant_router
 from routes.menu_routes import menu_router
+from routes.order_routes import router as order_router
 
 # Initializing the FastAPI app
 app = FastAPI()
@@ -25,6 +26,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/api")
 app.include_router(restaurant_router, prefix="/api")
 app.include_router(menu_router, prefix="/api")
+app.include_router(order_router, prefix="/api")
 
 # Basic root endpoint
 @app.get("/")

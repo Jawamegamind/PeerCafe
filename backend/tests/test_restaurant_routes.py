@@ -14,7 +14,7 @@ class TestRestaurantRoutes:
         """Test successful restaurant creation"""
         # Mock successful insert
         mock_supabase.from_.return_value.insert.return_value.execute.return_value.data = [
-            {**sample_restaurant_data, "RestaurantId": 1, "IsActive": True, "Rating": 0.0}
+            {**sample_restaurant_data, "restaurant_id": 1, "is_active": True, "rating": 0.0}
         ]
         
         response = client.post("/api/restaurants", json=sample_restaurant_data)
@@ -27,7 +27,7 @@ class TestRestaurantRoutes:
 
     def test_create_restaurant_invalid_data(self, client):
         """Test restaurant creation with invalid data"""
-        invalid_data = {"Name": ""}  # Missing required fields
+        invalid_data = {"name": ""}  # Missing required fields
         
         response = client.post("/api/restaurants", json=invalid_data)
         
@@ -58,38 +58,8 @@ class TestRestaurantRoutes:
         """Test successful retrieval of all restaurants"""
         # Mock restaurants data in snake_case (as returned by Supabase)
         restaurants_data = [
-            {
-                "restaurant_id": 1,
-                "name": "Mario's Pizza",
-                "description": "Authentic Italian pizza",
-                "address": "123 Main St, City, State 12345",
-                "phone": "+1234567890",
-                "email": "info@mariospizza.com",
-                "cuisine_type": "Italian",
-                "is_active": True,
-                "rating": 4.5,
-                "delivery_fee": 2.99,
-                "primary_admin_id": None,
-                "logo": None,
-                "created_at": "2023-01-01T00:00:00",
-                "updated_at": "2023-01-01T00:00:00"
-            },
-            {
-                "restaurant_id": 2,
-                "name": "Joe's Burgers",
-                "description": "Best burgers in town",
-                "address": "456 Oak Ave, City, State 12345",
-                "phone": "+1234567891",
-                "email": "info@joesburgers.com",
-                "cuisine_type": "American",
-                "is_active": True,
-                "rating": 4.2,
-                "delivery_fee": 3.99,
-                "primary_admin_id": None,
-                "logo": None,
-                "created_at": "2023-01-01T00:00:00",
-                "updated_at": "2023-01-01T00:00:00"
-            }
+            {**sample_restaurant_data, "restaurant_id": 1, "is_active": True, "rating": 4.5},
+            {**sample_restaurant_data, "restaurant_id": 2, "name": "Joe's Burgers", "is_active": True, "rating": 4.2}
         ]
         mock_supabase.from_.return_value.select.return_value.execute.return_value.data = restaurants_data
         
@@ -97,7 +67,6 @@ class TestRestaurantRoutes:
         
         assert response.status_code == status.HTTP_200_OK
         assert len(response.json()) == 2
-        # Response should be in snake_case from backend
         assert response.json()[0]["restaurant_id"] == 1
         assert response.json()[1]["restaurant_id"] == 2
 
@@ -125,29 +94,13 @@ class TestRestaurantRoutes:
     @patch('routes.restaurant_routes.supabase')
     def test_get_restaurant_by_id_success(self, mock_supabase, client, sample_restaurant_data):
         """Test successful retrieval of restaurant by ID"""
-        # Mock restaurant data in snake_case (as returned by Supabase)
-        restaurant_data = {
-            "restaurant_id": 1,
-            "name": "Mario's Pizza",
-            "description": "Authentic Italian pizza",
-            "address": "123 Main St, City, State 12345",
-            "phone": "+1234567890",
-            "email": "info@mariospizza.com",
-            "cuisine_type": "Italian",
-            "is_active": True,
-            "rating": 4.5,
-            "delivery_fee": 2.99,
-            "primary_admin_id": None,
-            "logo": None,
-            "created_at": "2023-01-01T00:00:00",
-            "updated_at": "2023-01-01T00:00:00"
-        }
+        # Mock restaurant data
+        restaurant_data = {**sample_restaurant_data, "restaurant_id": 1, "is_active": True, "rating": 4.5}
         mock_supabase.from_.return_value.select.return_value.eq.return_value.execute.return_value.data = [restaurant_data]
         
         response = client.get("/api/restaurants/1")
         
         assert response.status_code == status.HTTP_200_OK
-        # Response should be in snake_case from backend
         assert response.json()["restaurant_id"] == 1
 
     @patch('routes.restaurant_routes.supabase')
@@ -174,7 +127,7 @@ class TestRestaurantRoutes:
     def test_update_restaurant_success(self, mock_supabase, client, sample_restaurant_data):
         """Test successful restaurant update"""
         # Mock successful update
-        updated_restaurant = {**sample_restaurant_data, "RestaurantId": 1, "IsActive": True}
+        updated_restaurant = {**sample_restaurant_data, "restaurant_id": 1, "is_active": True}
         mock_supabase.from_.return_value.update.return_value.eq.return_value.execute.return_value.data = [updated_restaurant]
         
         response = client.put("/api/restaurants/1", json=sample_restaurant_data)
@@ -186,7 +139,7 @@ class TestRestaurantRoutes:
 
     def test_update_restaurant_invalid_data(self, client):
         """Test restaurant update with invalid data"""
-        invalid_data = {"Name": ""}  # Missing required fields
+        invalid_data = {"name": ""}  # Missing required fields
         
         response = client.put("/api/restaurants/1", json=invalid_data)
         
@@ -216,7 +169,7 @@ class TestRestaurantRoutes:
     def test_delete_restaurant_success(self, mock_supabase, client):
         """Test successful restaurant deletion (soft delete)"""
         # Mock successful soft delete
-        deleted_restaurant = {"RestaurantId": 1, "IsActive": False}
+        deleted_restaurant = {"restaurant_id": 1, "is_active": False}
         mock_supabase.from_.return_value.update.return_value.eq.return_value.execute.return_value.data = [deleted_restaurant]
         
         response = client.delete("/api/restaurants/1")
@@ -250,7 +203,7 @@ class TestRestaurantRoutes:
     def test_restore_restaurant_success(self, mock_supabase, client):
         """Test successful restaurant restoration"""
         # Mock successful restore
-        restored_restaurant = {"RestaurantId": 1, "IsActive": True}
+        restored_restaurant = {"restaurant_id": 1, "is_active": True}
         mock_supabase.from_.return_value.update.return_value.eq.return_value.execute.return_value.data = [restored_restaurant]
         
         response = client.patch("/api/restaurants/1/restore")
@@ -287,11 +240,11 @@ class TestRestaurantRouteValidation:
     def test_create_restaurant_missing_name(self, client):
         """Test creation with missing name field"""
         data = {
-            "Description": "Test description",
-            "Address": "123 Test St",
-            "Phone": "+1234567890",
-            "Email": "test@example.com",
-            "CuisineType": "Italian"
+            "description": "Test description",
+            "address": "123 Test St",
+            "phone": "+1234567890",
+            "email": "test@example.com",
+            "cuisine_type": "Italian"
         }
         
         response = client.post("/api/restaurants", json=data)
@@ -301,12 +254,12 @@ class TestRestaurantRouteValidation:
     def test_create_restaurant_invalid_email(self, client):
         """Test creation with invalid email format"""
         data = {
-            "Name": "Test Restaurant",
-            "Description": "Test description", 
-            "Address": "123 Test St",
-            "Phone": "+1234567890",
-            "Email": "invalid-email",
-            "CuisineType": "Italian"
+            "name": "Test Restaurant",
+            "description": "Test description", 
+            "address": "123 Test St",
+            "phone": "+1234567890",
+            "email": "invalid-email",
+            "cuisine_type": "Italian"
         }
         
         response = client.post("/api/restaurants", json=data)
@@ -316,13 +269,13 @@ class TestRestaurantRouteValidation:
     def test_create_restaurant_negative_delivery_fee(self, client):
         """Test creation with negative delivery fee"""
         data = {
-            "Name": "Test Restaurant",
-            "Description": "Test description",
-            "Address": "123 Test St", 
-            "Phone": "+1234567890",
-            "Email": "test@example.com",
-            "CuisineType": "Italian",
-            "DeliveryFee": -5.0
+            "name": "Test Restaurant",
+            "description": "Test description",
+            "address": "123 Test St", 
+            "phone": "+1234567890",
+            "email": "test@example.com",
+            "cuisine_type": "Italian",
+            "delivery_fee": -5.0
         }
         
         response = client.post("/api/restaurants", json=data)

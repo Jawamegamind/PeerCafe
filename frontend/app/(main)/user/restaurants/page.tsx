@@ -104,22 +104,22 @@ export default function RestaurantsPage() {
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(restaurant =>
-  restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  restaurant.cuisine_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  restaurant.description?.toLowerCase().includes(searchTerm.toLowerCase())
+        restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        restaurant.cuisine_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        restaurant.description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Filter by cuisine type
     if (cuisineFilter && cuisineFilter !== 'All') {
-  filtered = filtered.filter(restaurant => restaurant.cuisine_type === cuisineFilter);
+      filtered = filtered.filter(restaurant => restaurant.cuisine_type === cuisineFilter);
     }
 
     setFilteredRestaurants(filtered);
   };
 
   const getCuisineTypes = () => {
-  const types = [...new Set(restaurants.map(r => r.cuisine_type))];
+    const types = [...new Set(restaurants.map(r => r.cuisine_type))];
     return ['All', ...types.sort()];
   };
 
@@ -158,14 +158,14 @@ export default function RestaurantsPage() {
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
               <Rating 
-                value={restaurant.rating || 0} 
+                value={restaurant.rating} 
                 readOnly 
                 size="small" 
                 precision={0.1}
                 sx={{ mr: 1 }}
               />
               <Typography variant="body2" color="text.secondary">
-                ({(restaurant.rating || 0).toFixed(1)})
+                ({restaurant.rating.toFixed(1)})
               </Typography>
             </Box>
           </Box>
@@ -176,7 +176,7 @@ export default function RestaurantsPage() {
           label={restaurant.cuisine_type}
           size="small"
           sx={{
-              backgroundColor: cuisineColors[restaurant.cuisine_type] || cuisineColors.Other,
+            backgroundColor: cuisineColors[restaurant.cuisine_type] || cuisineColors.Other,
             color: 'primary.main',
             fontWeight: 'medium',
             mb: 2
@@ -184,7 +184,7 @@ export default function RestaurantsPage() {
         />
 
         {/* Description */}
-  {restaurant.description && (
+        {restaurant.description && (
           <Typography 
             variant="body2" 
             color="text.secondary" 
@@ -222,7 +222,7 @@ export default function RestaurantsPage() {
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <DeliveryIcon sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
             <Typography variant="body2" color="text.secondary">
-              Delivery Fee: <strong>${(restaurant.delivery_fee || 0).toFixed(2)}</strong>
+              Delivery Fee: <strong>${restaurant.delivery_fee.toFixed(2)}</strong>
             </Typography>
           </Box>
         </Box>
@@ -369,8 +369,8 @@ export default function RestaurantsPage() {
             </Box>
             ) : (
             // Restaurant cards
-      filteredRestaurants.map((restaurant) => (
-        <RestaurantCard key={restaurant.restaurant_id} restaurant={restaurant} />
+            filteredRestaurants.map((restaurant) => (
+                <RestaurantCard key={restaurant.restaurant_id} restaurant={restaurant} />
             ))
             )}
         </Box>
