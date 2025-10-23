@@ -12,6 +12,8 @@ A peer-to-peer delivery system developed as part of CSC 510: Software Engineerin
 
 ## [➡️ Quick Start: Installation & Setup](./INSTALL.md)
 
+## [➡️ High Level Flow View](./docs/Flow.md)
+
 ## 📋 Table of Contents
 
 - [About the Project](#about-the-project)
