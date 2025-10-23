@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
 import { CartProvider } from "./_contexts/CartContext";
+import LocationProvider from './_contexts/LocationContext'
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,7 +30,9 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AppRouterCacheProvider>
           <CartProvider>
-            {children}
+            <LocationProvider>
+              {children}
+            </LocationProvider>
           </CartProvider>
         </AppRouterCacheProvider>
       </body>
