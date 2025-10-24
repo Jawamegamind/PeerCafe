@@ -78,14 +78,14 @@ export async function register(formData: FormData) {
     // If the response message is "User registered successfully", we should register the user
     // If the response message is "User registration failed", we should not register the user
     if (response.data.message == 'User already exists') {
-    //   console.log('User already exists');
+      //   console.log('User already exists');
       return 'User already exists';
     } else if (response.data.message == 'User created successfully') {
-    //   console.log('User registered successfully');
+      //   console.log('User registered successfully');
       revalidatePath('/', 'layout');
       redirect('/login');
     } else if (response.data.message == 'User registration failed') {
-    //   console.log('User registration failed');
+      //   console.log('User registration failed');
       return 'User registration failed';
     }
   }

@@ -5,9 +5,6 @@ import {
   Box,
   Container,
   Typography,
-  Card,
-  CardContent,
-  CardActions,
   Button,
   Dialog,
   DialogTitle,
@@ -42,8 +39,8 @@ import {
   VisibilityOff as VisibilityOffIcon,
   Save as SaveIcon,
   Cancel as CancelIcon,
-  Restaurant as RestaurantIcon,
-  AttachMoney as MoneyIcon,
+  // Restaurant as RestaurantIcon,
+  // AttachMoney as MoneyIcon,
   Search as SearchIcon,
 } from '@mui/icons-material';
 import { useParams, useRouter } from 'next/navigation';
@@ -116,12 +113,14 @@ export default function AdminRestaurantMenuPage() {
         `http://localhost:8000/api/restaurants/${restaurantId}`
       );
       const data = await response.json();
-      console.log('Restaurant data:', data);
+      // console.log('Restaurant data:', data);
 
       // Set restaurant name from fetched data
       setRestaurantName(data.Name);
-    } catch (error) {
-      console.error('Error fetching restaurant info:', error);
+    } catch {
+      // Show alert on error
+      setAlert({ type: 'error', message: 'Failed to load restaurant info' });
+      // console.error('Error fetching restaurant info:', error);
     }
   };
 
@@ -138,10 +137,10 @@ export default function AdminRestaurantMenuPage() {
       }
 
       const data = await response.json();
-      console.log('Menu items data:', data);
+      // console.log('Menu items data:', data);
       setMenuItems(data);
-    } catch (error) {
-      console.error('Error fetching menu items:', error);
+    } catch {
+      // console.error('Error fetching menu items:', error);
       setAlert({ type: 'error', message: 'Failed to load menu items' });
     } finally {
       setLoading(false);
@@ -269,7 +268,7 @@ export default function AdminRestaurantMenuPage() {
         throw new Error(result.message || 'Failed to save menu item');
       }
     } catch (error) {
-      console.error('Error saving menu item:', error);
+      // console.error('Error saving menu item:', error);
       setAlert({
         type: 'error',
         message:
@@ -307,7 +306,7 @@ export default function AdminRestaurantMenuPage() {
         throw new Error(result.message || 'Failed to update availability');
       }
     } catch (error) {
-      console.error('Error updating availability:', error);
+      // console.error('Error updating availability:', error);
       setAlert({
         type: 'error',
         message:
@@ -354,7 +353,7 @@ export default function AdminRestaurantMenuPage() {
         throw new Error(result.message || 'Failed to delete menu item');
       }
     } catch (error) {
-      console.error('Error deleting menu item:', error);
+      // console.error('Error deleting menu item:', error);
       setAlert({
         type: 'error',
         message:
