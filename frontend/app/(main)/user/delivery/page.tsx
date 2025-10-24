@@ -312,6 +312,7 @@ export default function DeliveryPage() {
             <Navbar />
             <h3 style={{justifySelf: "center", margin: "10px"}}>Browse nearby Orders</h3>
             <div
+                className="map"
                 ref={mapContainer}
                 style={{
                     margin: "20px",
