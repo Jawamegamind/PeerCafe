@@ -37,7 +37,9 @@ class TestErrorBoundary extends React.Component<
 }
 
 // Component that throws an error for testing
-const ErrorThrowingComponent: React.FC<{ shouldThrow?: boolean }> = ({ shouldThrow = false }) => {
+const ErrorThrowingComponent: React.FC<{ shouldThrow?: boolean }> = ({
+  shouldThrow = false,
+}) => {
   if (shouldThrow) {
     throw new Error('Test error');
   }
@@ -45,7 +47,9 @@ const ErrorThrowingComponent: React.FC<{ shouldThrow?: boolean }> = ({ shouldThr
 };
 
 // Mock component that simulates network errors
-const NetworkErrorComponent: React.FC<{ simulateError?: boolean }> = ({ simulateError = false }) => {
+const NetworkErrorComponent: React.FC<{ simulateError?: boolean }> = ({
+  simulateError = false,
+}) => {
   const [data, setData] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -120,7 +124,7 @@ describe('Error Handling and Edge Cases', () => {
 
     it('displays error message on network failure', async () => {
       render(<NetworkErrorComponent simulateError={true} />);
-      
+
       // Should show error after loading
       expect(await screen.findByRole('alert')).toBeInTheDocument();
       expect(screen.getByText('Error: Network error')).toBeInTheDocument();
@@ -128,7 +132,7 @@ describe('Error Handling and Edge Cases', () => {
 
     it('displays success data on successful fetch', async () => {
       render(<NetworkErrorComponent simulateError={false} />);
-      
+
       // Should show success data after loading
       expect(await screen.findByText('Data: Success data')).toBeInTheDocument();
     });
@@ -141,7 +145,7 @@ describe('Error Handling and Edge Cases', () => {
 
       const validateForm = () => {
         const newErrors: string[] = [];
-        
+
         if (!email) {
           newErrors.push('Email is required');
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -162,7 +166,7 @@ describe('Error Handling and Edge Cases', () => {
           <input
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={e => setEmail(e.target.value)}
             placeholder="Email"
             aria-label="Email"
           />
@@ -178,20 +182,22 @@ describe('Error Handling and Edge Cases', () => {
 
     it('validates empty email field', async () => {
       render(<TestForm />);
-      
+
       const submitButton = screen.getByRole('button', { name: /submit/i });
       submitButton.click();
 
-      expect(await screen.findByTestId('form-error')).toHaveTextContent('Email is required');
+      expect(await screen.findByTestId('form-error')).toHaveTextContent(
+        'Email is required'
+      );
     });
 
     it('validates invalid email format', async () => {
       const user = userEvent.setup();
       render(<TestForm />);
-      
+
       const emailInput = screen.getByLabelText(/email/i);
       const submitButton = screen.getByRole('button', { name: /submit/i });
-      
+
       // Type invalid email using userEvent
       await user.type(emailInput, 'invalid-email');
       await user.click(submitButton);
@@ -211,11 +217,7 @@ describe('Error Handling and Edge Cases', () => {
         <div>
           <button onClick={() => setShowModal(true)}>Open Modal</button>
           {showModal && (
-            <div
-              role="dialog"
-              aria-label="Test Modal"
-              aria-modal="true"
-            >
+            <div role="dialog" aria-label="Test Modal" aria-modal="true">
               <h2>Modal Content</h2>
               <button onClick={() => setShowModal(false)}>Close</button>
             </div>
@@ -227,7 +229,7 @@ describe('Error Handling and Edge Cases', () => {
     it('handles modal accessibility correctly', async () => {
       const user = userEvent.setup();
       render(<AccessibilityTestComponent />);
-      
+
       const openButton = screen.getByRole('button', { name: /open modal/i });
       await user.click(openButton);
 
@@ -246,8 +248,10 @@ describe('Error Handling and Edge Cases', () => {
         if (data === null) return 'No data';
         if (data === undefined) return 'Undefined data';
         if (Array.isArray(data) && data.length === 0) return 'Empty array';
-        if (typeof data === 'object' && Object.keys(data).length === 0) return 'Empty object';
-        if (typeof data === 'string' && data.trim() === '') return 'Empty string';
+        if (typeof data === 'object' && Object.keys(data).length === 0)
+          return 'Empty object';
+        if (typeof data === 'string' && data.trim() === '')
+          return 'Empty string';
         return JSON.stringify(data);
       };
 
@@ -261,22 +265,30 @@ describe('Error Handling and Edge Cases', () => {
 
     it('handles undefined data', () => {
       render(<DataDisplayComponent data={undefined} />);
-      expect(screen.getByTestId('data-display')).toHaveTextContent('Undefined data');
+      expect(screen.getByTestId('data-display')).toHaveTextContent(
+        'Undefined data'
+      );
     });
 
     it('handles empty array', () => {
       render(<DataDisplayComponent data={[]} />);
-      expect(screen.getByTestId('data-display')).toHaveTextContent('Empty array');
+      expect(screen.getByTestId('data-display')).toHaveTextContent(
+        'Empty array'
+      );
     });
 
     it('handles empty object', () => {
       render(<DataDisplayComponent data={{}} />);
-      expect(screen.getByTestId('data-display')).toHaveTextContent('Empty object');
+      expect(screen.getByTestId('data-display')).toHaveTextContent(
+        'Empty object'
+      );
     });
 
     it('handles empty string', () => {
       render(<DataDisplayComponent data="   " />);
-      expect(screen.getByTestId('data-display')).toHaveTextContent('Empty string');
+      expect(screen.getByTestId('data-display')).toHaveTextContent(
+        'Empty string'
+      );
     });
   });
 });

@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import * as React from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -19,7 +19,7 @@ import {
   Chip,
   Grid,
   CircularProgress,
-  LinearProgress
+  LinearProgress,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -29,9 +29,9 @@ import {
   Schedule as ScheduleIcon,
   CheckCircle as CheckCircleIcon,
   LocalShipping as LocalShippingIcon,
-  Payment as PaymentIcon
+  Payment as PaymentIcon,
 } from '@mui/icons-material';
-import Navbar from "../../../../_components/navbar";
+import Navbar from '../../../../_components/navbar';
 import { createClient } from '@/utils/supabase/client';
 
 // Interfaces
@@ -80,17 +80,37 @@ interface Order {
 const getStatusConfig = (status: string) => {
   switch (status) {
     case 'pending':
-      return { label: 'Order Pending', color: 'warning' as const, progress: 10 };
+      return {
+        label: 'Order Pending',
+        color: 'warning' as const,
+        progress: 10,
+      };
     case 'confirmed':
       return { label: 'Order Confirmed', color: 'info' as const, progress: 25 };
     case 'preparing':
-      return { label: 'Preparing Your Food', color: 'primary' as const, progress: 50 };
+      return {
+        label: 'Preparing Your Food',
+        color: 'primary' as const,
+        progress: 50,
+      };
     case 'ready':
-      return { label: 'Ready for Pickup', color: 'primary' as const, progress: 70 };
+      return {
+        label: 'Ready for Pickup',
+        color: 'primary' as const,
+        progress: 70,
+      };
     case 'assigned':
-      return { label: 'Delivery Driver Assigned', color: 'primary' as const, progress: 75 };
+      return {
+        label: 'Delivery Driver Assigned',
+        color: 'primary' as const,
+        progress: 75,
+      };
     case 'picked_up':
-      return { label: 'Order Picked Up', color: 'primary' as const, progress: 85 };
+      return {
+        label: 'Order Picked Up',
+        color: 'primary' as const,
+        progress: 85,
+      };
     case 'en_route':
       return { label: 'On the Way', color: 'primary' as const, progress: 90 };
     case 'delivered':
@@ -98,7 +118,11 @@ const getStatusConfig = (status: string) => {
     case 'cancelled':
       return { label: 'Cancelled', color: 'error' as const, progress: 0 };
     default:
-      return { label: 'Unknown Status', color: 'default' as const, progress: 0 };
+      return {
+        label: 'Unknown Status',
+        color: 'default' as const,
+        progress: 0,
+      };
   }
 };
 
@@ -107,7 +131,7 @@ export default function OrderDetailsPage() {
   const params = useParams();
   const orderId = params.orderId as string;
   const supabase = createClient();
-  
+
   const [order, setOrder] = React.useState<Order | null>(null);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -119,10 +143,13 @@ export default function OrderDetailsPage() {
     const getCurrentUser = async () => {
       try {
         setAuthLoading(true);
-        
+
         // Get current authenticated user
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+
         if (authError || !user) {
           console.error('No authenticated user found:', authError);
           setError('You must be logged in to view this order');
@@ -162,20 +189,22 @@ export default function OrderDetailsPage() {
       if (!currentUser) return; // Wait for authentication
 
       try {
-        const response = await fetch(`http://localhost:8000/api/orders/${orderId}`);
-        
+        const response = await fetch(
+          `http://localhost:8000/api/orders/${orderId}`
+        );
+
         if (!response.ok) {
           throw new Error('Order not found');
         }
 
         const orderData = await response.json();
-        
+
         // Verify the order belongs to the current user
         if (orderData.user_id !== currentUser.user_id) {
           setError('You do not have permission to view this order');
           return;
         }
-        
+
         setOrder(orderData);
       } catch (err) {
         console.error('Error fetching order:', err);
@@ -192,13 +221,20 @@ export default function OrderDetailsPage() {
 
   // Auto refresh order status every 30 seconds for pending orders
   React.useEffect(() => {
-    if (!order || !currentUser || order.status === 'delivered' || order.status === 'cancelled') {
+    if (
+      !order ||
+      !currentUser ||
+      order.status === 'delivered' ||
+      order.status === 'cancelled'
+    ) {
       return;
     }
 
     const interval = setInterval(async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/orders/${orderId}`);
+        const response = await fetch(
+          `http://localhost:8000/api/orders/${orderId}`
+        );
         if (response.ok) {
           const updatedOrder = await response.json();
           // Verify the order still belongs to the current user
@@ -222,7 +258,9 @@ export default function OrderDetailsPage() {
           <Paper sx={{ p: 4, textAlign: 'center' }}>
             <CircularProgress size={64} />
             <Typography variant="h6" sx={{ mt: 2 }}>
-              {authLoading ? 'Verifying your account...' : 'Loading order details...'}
+              {authLoading
+                ? 'Verifying your account...'
+                : 'Loading order details...'}
             </Typography>
           </Paper>
         </Container>
@@ -260,7 +298,7 @@ export default function OrderDetailsPage() {
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   });
 
   return (
@@ -278,7 +316,11 @@ export default function OrderDetailsPage() {
             Back
           </Button>
           <Box>
-            <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+            <Typography
+              variant="h4"
+              component="h1"
+              sx={{ fontWeight: 'bold', color: 'primary.main' }}
+            >
               Order #{order.order_id.slice(-8)}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -289,30 +331,50 @@ export default function OrderDetailsPage() {
 
         {/* Order Status */}
         <Paper sx={{ p: 3, mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              mb: 2,
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+            >
               <CheckCircleIcon />
               Order Status
             </Typography>
-            <Chip 
-              label={statusConfig.label} 
+            <Chip
+              label={statusConfig.label}
               color={statusConfig.color}
-              icon={order.status === 'delivered' ? <CheckCircleIcon /> : <ScheduleIcon />}
+              icon={
+                order.status === 'delivered' ? (
+                  <CheckCircleIcon />
+                ) : (
+                  <ScheduleIcon />
+                )
+              }
             />
           </Box>
-          
-          <LinearProgress 
-            variant="determinate" 
-            value={statusConfig.progress} 
+
+          <LinearProgress
+            variant="determinate"
+            value={statusConfig.progress}
             sx={{ mb: 2, height: 8, borderRadius: 4 }}
           />
-          
+
           {order.estimated_delivery_time && (
             <Typography variant="body2" color="text.secondary">
-              Estimated delivery: {new Date(order.estimated_delivery_time).toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
+              Estimated delivery:{' '}
+              {new Date(order.estimated_delivery_time).toLocaleTimeString(
+                'en-US',
+                {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                }
+              )}
             </Typography>
           )}
         </Paper>
@@ -322,28 +384,44 @@ export default function OrderDetailsPage() {
           <Grid size={{ xs: 12, md: 8 }}>
             {/* Items */}
             <Paper sx={{ p: 3, mb: 3 }}>
-              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+              >
                 <ReceiptIcon />
                 Order Items
               </Typography>
-              
+
               <List>
                 {order.order_items.map((item, index) => (
                   <React.Fragment key={item.item_id}>
                     <ListItem sx={{ px: 0, py: 2 }}>
                       <ListItemText
                         primary={
-                          <Typography component="span" variant="subtitle1" sx={{ fontWeight: 'medium' }}>
+                          <Typography
+                            component="span"
+                            variant="subtitle1"
+                            sx={{ fontWeight: 'medium' }}
+                          >
                             {item.item_name}
                           </Typography>
                         }
                         secondary={
                           <Box>
-                            <Typography component="span" variant="body2" color="text.secondary">
+                            <Typography
+                              component="span"
+                              variant="body2"
+                              color="text.secondary"
+                            >
                               ${item.price.toFixed(2)} × {item.quantity}
                             </Typography>
                             {item.special_instructions && (
-                              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', mt: 0.5 }}>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{ fontStyle: 'italic', mt: 0.5 }}
+                              >
                                 Note: {item.special_instructions}
                               </Typography>
                             )}
@@ -351,7 +429,11 @@ export default function OrderDetailsPage() {
                         }
                       />
                       <ListItemSecondaryAction>
-                        <Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                        <Typography
+                          component="span"
+                          variant="subtitle1"
+                          sx={{ fontWeight: 'bold' }}
+                        >
                           ${item.subtotal.toFixed(2)}
                         </Typography>
                       </ListItemSecondaryAction>
@@ -365,34 +447,76 @@ export default function OrderDetailsPage() {
 
               {/* Pricing Breakdown */}
               <Box sx={{ space: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    mb: 1,
+                  }}
+                >
                   <Typography>Subtotal</Typography>
                   <Typography>${order.subtotal.toFixed(2)}</Typography>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    mb: 1,
+                  }}
+                >
                   <Typography>Tax</Typography>
                   <Typography>${order.tax_amount.toFixed(2)}</Typography>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    mb: 1,
+                  }}
+                >
                   <Typography>Delivery Fee</Typography>
                   <Typography>${order.delivery_fee.toFixed(2)}</Typography>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    mb: 1,
+                  }}
+                >
                   <Typography>Tip</Typography>
                   <Typography>${order.tip_amount.toFixed(2)}</Typography>
                 </Box>
                 {order.discount_amount > 0 && (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      mb: 1,
+                    }}
+                  >
                     <Typography>Discount</Typography>
-                    <Typography color="success.main">-${order.discount_amount.toFixed(2)}</Typography>
+                    <Typography color="success.main">
+                      -${order.discount_amount.toFixed(2)}
+                    </Typography>
                   </Box>
                 )}
                 <Divider sx={{ my: 1 }} />
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
                   <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
                     Total
                   </Typography>
-                  <Typography variant="h5" color="primary.main" sx={{ fontWeight: 'bold' }}>
+                  <Typography
+                    variant="h5"
+                    color="primary.main"
+                    sx={{ fontWeight: 'bold' }}
+                  >
                     ${order.total_amount.toFixed(2)}
                   </Typography>
                 </Box>
@@ -401,20 +525,29 @@ export default function OrderDetailsPage() {
 
             {/* Delivery Address */}
             <Paper sx={{ p: 3, mb: 3 }}>
-              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+              >
                 <LocationOnIcon />
                 Delivery Address
               </Typography>
-              
+
               <Typography variant="body1">
                 {order.delivery_address.street}
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                {order.delivery_address.city}, {order.delivery_address.state} {order.delivery_address.zip_code}
+                {order.delivery_address.city}, {order.delivery_address.state}{' '}
+                {order.delivery_address.zip_code}
               </Typography>
-              
+
               {order.delivery_address.instructions && (
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 1, fontStyle: 'italic' }}
+                >
                   Instructions: {order.delivery_address.instructions}
                 </Typography>
               )}
@@ -422,15 +555,19 @@ export default function OrderDetailsPage() {
 
             {/* Payment & Notes */}
             <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+              >
                 <PaymentIcon />
                 Payment & Notes
               </Typography>
-              
+
               <Alert severity="info" sx={{ mb: 2 }}>
                 Payment Method: Cash on Delivery
               </Alert>
-              
+
               {order.notes && (
                 <Box>
                   <Typography variant="subtitle2" sx={{ fontWeight: 'medium' }}>
@@ -448,17 +585,22 @@ export default function OrderDetailsPage() {
           <Grid size={{ xs: 12, md: 4 }}>
             <Card sx={{ position: 'sticky', top: 20 }}>
               <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                >
                   <LocalShippingIcon />
                   Delivery Info
                 </Typography>
-                
+
                 <Typography variant="body2" color="text.secondary" paragraph>
-                  Your order is being carefully prepared and will be delivered as soon as possible.
+                  Your order is being carefully prepared and will be delivered
+                  as soon as possible.
                 </Typography>
-                
+
                 <Divider sx={{ my: 2 }} />
-                
+
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 'medium' }}>
                     Order ID
@@ -467,10 +609,13 @@ export default function OrderDetailsPage() {
                     {order.order_id}
                   </Typography>
                 </Box>
-                
+
                 {order.delivery_user_id && (
                   <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 'medium' }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ fontWeight: 'medium' }}
+                    >
                       Delivery Driver
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -488,16 +633,20 @@ export default function OrderDetailsPage() {
                   >
                     Order Again
                   </Button>
-                  {order.status !== 'delivered' && order.status !== 'cancelled' && (
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      color="error"
-                      disabled={order.status !== 'pending' && order.status !== 'confirmed'}
-                    >
-                      Cancel Order
-                    </Button>
-                  )}
+                  {order.status !== 'delivered' &&
+                    order.status !== 'cancelled' && (
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        color="error"
+                        disabled={
+                          order.status !== 'pending' &&
+                          order.status !== 'confirmed'
+                        }
+                      >
+                        Cancel Order
+                      </Button>
+                    )}
                 </Box>
               </CardContent>
             </Card>

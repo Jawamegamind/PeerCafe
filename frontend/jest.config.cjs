@@ -18,7 +18,8 @@ const customJestConfig = {
     // Handle regular CSS imports (return an empty object)
     '^.+\\.(css|sass|scss)$': '<rootDir>/__mocks__/styleMock.js',
     // Handle static assets
-    '^.+\\.(jpg|jpeg|png|gif|webp|avif|svg)$': '<rootDir>/__mocks__/fileMock.js',
+    '^.+\\.(jpg|jpeg|png|gif|webp|avif|svg)$':
+      '<rootDir>/__mocks__/fileMock.js',
     // If you use absolute imports like "@/components/..."
     '^@/(.*)$': '<rootDir>/$1',
   },
@@ -34,7 +35,7 @@ const customJestConfig = {
     '!**/*.d.ts',
     '!**/node_modules/**',
     '!app/layout.*',
-    '!app/globals.css'
+    '!app/globals.css',
   ],
   // Optional: increase timeout for slow tests
   testTimeout: 30000,

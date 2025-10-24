@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -15,14 +15,14 @@ import {
   IconButton,
   Divider,
   Badge,
-  Chip
+  Chip,
 } from '@mui/material';
 import {
   ShoppingCart as CartIcon,
   Add as AddIcon,
   Remove as RemoveIcon,
   Delete as DeleteIcon,
-  ShoppingBag as CheckoutIcon
+  ShoppingBag as CheckoutIcon,
 } from '@mui/icons-material';
 import { useCart } from '../_contexts/CartContext';
 
@@ -32,8 +32,21 @@ interface CartDropdownProps {
   onClose: () => void;
 }
 
-export const CartDropdown: React.FC<CartDropdownProps> = ({ anchorEl, open, onClose }) => {
-  const { items, restaurant, totalItems, totalPrice, updateQuantity, removeFromCart, clearCart, isCartEmpty } = useCart();
+export const CartDropdown: React.FC<CartDropdownProps> = ({
+  anchorEl,
+  open,
+  onClose,
+}) => {
+  const {
+    items,
+    restaurant,
+    totalItems,
+    totalPrice,
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+    isCartEmpty,
+  } = useCart();
   const router = useRouter();
 
   const handleCheckout = () => {
@@ -41,7 +54,11 @@ export const CartDropdown: React.FC<CartDropdownProps> = ({ anchorEl, open, onCl
     onClose();
   };
 
-  const handleItemQuantityChange = (itemId: number, currentQuantity: number, change: number) => {
+  const handleItemQuantityChange = (
+    itemId: number,
+    currentQuantity: number,
+    change: number
+  ) => {
     const newQuantity = currentQuantity + change;
     if (newQuantity > 0) {
       updateQuantity(itemId, newQuantity);
@@ -73,14 +90,24 @@ export const CartDropdown: React.FC<CartDropdownProps> = ({ anchorEl, open, onCl
             width: 400,
             maxHeight: 500,
             mt: 1,
-          }
-        }
+          },
+        },
       }}
     >
       <Paper elevation={3} sx={{ p: 2 }}>
         {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            mb: 2,
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+          >
             <CartIcon />
             Your Cart
           </Typography>
@@ -99,9 +126,9 @@ export const CartDropdown: React.FC<CartDropdownProps> = ({ anchorEl, open, onCl
         {/* Restaurant Info */}
         {restaurant && (
           <Box sx={{ mb: 2 }}>
-            <Chip 
-              label={`From: ${restaurant.name}`} 
-              color="primary" 
+            <Chip
+              label={`From: ${restaurant.name}`}
+              color="primary"
               size="small"
               variant="outlined"
             />
@@ -127,28 +154,60 @@ export const CartDropdown: React.FC<CartDropdownProps> = ({ anchorEl, open, onCl
                   <ListItem sx={{ px: 0, py: 1 }}>
                     <ListItemText
                       primary={
-                        <Typography component="span" variant="subtitle2" sx={{ fontWeight: 'medium' }}>
+                        <Typography
+                          component="span"
+                          variant="subtitle2"
+                          sx={{ fontWeight: 'medium' }}
+                        >
                           {item.ItemName}
                         </Typography>
                       }
                       secondary={
                         <Box component="div">
-                          <Typography component="span" variant="body2" color="primary.main" sx={{ fontWeight: 'medium', display: 'block' }}>
+                          <Typography
+                            component="span"
+                            variant="body2"
+                            color="primary.main"
+                            sx={{ fontWeight: 'medium', display: 'block' }}
+                          >
                             ${item.Price.toFixed(2)} each
                           </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                              mt: 0.5,
+                            }}
+                          >
                             <IconButton
                               size="small"
-                              onClick={() => handleItemQuantityChange(item.id, item.quantity, -1)}
+                              onClick={() =>
+                                handleItemQuantityChange(
+                                  item.id,
+                                  item.quantity,
+                                  -1
+                                )
+                              }
                             >
                               <RemoveIcon fontSize="small" />
                             </IconButton>
-                            <Typography component="span" variant="body2" sx={{ minWidth: 20, textAlign: 'center' }}>
+                            <Typography
+                              component="span"
+                              variant="body2"
+                              sx={{ minWidth: 20, textAlign: 'center' }}
+                            >
                               {item.quantity}
                             </Typography>
                             <IconButton
                               size="small"
-                              onClick={() => handleItemQuantityChange(item.id, item.quantity, 1)}
+                              onClick={() =>
+                                handleItemQuantityChange(
+                                  item.id,
+                                  item.quantity,
+                                  1
+                                )
+                              }
                             >
                               <AddIcon fontSize="small" />
                             </IconButton>
@@ -157,8 +216,19 @@ export const CartDropdown: React.FC<CartDropdownProps> = ({ anchorEl, open, onCl
                       }
                     />
                     <ListItemSecondaryAction>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
-                        <Typography component="span" variant="body2" sx={{ fontWeight: 'bold' }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'flex-end',
+                          gap: 0.5,
+                        }}
+                      >
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          sx={{ fontWeight: 'bold' }}
+                        >
                           ${(item.Price * item.quantity).toFixed(2)}
                         </Typography>
                         <IconButton
@@ -179,11 +249,22 @@ export const CartDropdown: React.FC<CartDropdownProps> = ({ anchorEl, open, onCl
             <Divider sx={{ my: 2 }} />
 
             {/* Total */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 2,
+              }}
+            >
               <Typography variant="h6">
                 Total ({totalItems} {totalItems === 1 ? 'item' : 'items'})
               </Typography>
-              <Typography variant="h6" color="primary.main" sx={{ fontWeight: 'bold' }}>
+              <Typography
+                variant="h6"
+                color="primary.main"
+                sx={{ fontWeight: 'bold' }}
+              >
                 ${totalPrice.toFixed(2)}
               </Typography>
             </Box>

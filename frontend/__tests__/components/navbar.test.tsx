@@ -32,7 +32,7 @@ const localStorageMock = {
   clear: jest.fn(),
 };
 Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock
+  value: localStorageMock,
 });
 
 // Mock Supabase client
@@ -77,22 +77,22 @@ describe('ResponsiveAppBar Component', () => {
 
   it('renders the navbar with correct branding', () => {
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
-    
+
     // Check for PeerCafe branding (desktop view)
     expect(screen.getByText('PeerCafe')).toBeInTheDocument();
   });
 
   it('displays navigation menu items on desktop', () => {
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
-    
+
     // Check for navigation buttons (visible on desktop)
     expect(screen.getByRole('button', { name: /home/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
-    
+
     // Check for profile icon (now with aria-label)
     const profileButton = screen.getByRole('button', { name: /profile/i });
     expect(profileButton).toBeInTheDocument();
-    
+
     // Check for cart icon
     const cartButton = screen.getByRole('button', { name: /shopping cart/i });
     expect(cartButton).toBeInTheDocument();
@@ -100,21 +100,23 @@ describe('ResponsiveAppBar Component', () => {
 
   it('shows mobile menu when hamburger menu is clicked', () => {
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
-    
+
     // Find and click the hamburger menu (mobile menu trigger)
-    const mobileMenuButton = screen.getByRole('button', { name: /account of current user/i });
+    const mobileMenuButton = screen.getByRole('button', {
+      name: /account of current user/i,
+    });
     fireEvent.click(mobileMenuButton);
-    
+
     // Mobile menu should now be visible
     expect(screen.getByRole('menu')).toBeInTheDocument();
   });
 
   it('navigates to home page when Home button is clicked', async () => {
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
-    
+
     const homeButton = screen.getByRole('button', { name: /home/i });
     fireEvent.click(homeButton);
-    
+
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/homepage');
     });
@@ -125,24 +127,24 @@ describe('ResponsiveAppBar Component', () => {
     const mockUserData = {
       user_id: 'test-user-id',
       IsAdmin: false,
-      name: 'Test User'
+      name: 'Test User',
     };
 
     mockSupabaseClient.auth.getUser.mockResolvedValue({
       data: { user: { id: 'test-user-id' } },
-      error: null
+      error: null,
     });
 
     mockSingle.mockResolvedValue({
       data: mockUserData,
-      error: null
+      error: null,
     });
 
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
-    
+
     const profileButton = screen.getByRole('button', { name: /profile/i });
     fireEvent.click(profileButton);
-    
+
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/user/profile');
     });
@@ -153,24 +155,24 @@ describe('ResponsiveAppBar Component', () => {
     const mockAdminUserData = {
       user_id: 'admin-user-id',
       is_admin: true,
-      name: 'Admin User'
+      name: 'Admin User',
     };
 
     mockSupabaseClient.auth.getUser.mockResolvedValue({
       data: { user: { id: 'admin-user-id' } },
-      error: null
+      error: null,
     });
 
     mockSingle.mockResolvedValue({
       data: mockAdminUserData,
-      error: null
+      error: null,
     });
 
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
-    
+
     const profileButton = screen.getByRole('button', { name: /profile/i });
     fireEvent.click(profileButton);
-    
+
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/admin/profile');
     });
@@ -178,12 +180,12 @@ describe('ResponsiveAppBar Component', () => {
 
   it('handles logout functionality', async () => {
     const { logout } = require('../../app/(authentication)/login/actions');
-    
+
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
-    
+
     const logoutButton = screen.getByRole('button', { name: /logout/i });
     fireEvent.click(logoutButton);
-    
+
     await waitFor(() => {
       expect(logout).toHaveBeenCalled();
       expect(mockPush).toHaveBeenCalledWith('/login');
@@ -192,28 +194,32 @@ describe('ResponsiveAppBar Component', () => {
 
   it('closes mobile menu when clicking outside menu items', () => {
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
-    
+
     // Open mobile menu
-    const mobileMenuButton = screen.getByRole('button', { name: /account of current user/i });
+    const mobileMenuButton = screen.getByRole('button', {
+      name: /account of current user/i,
+    });
     fireEvent.click(mobileMenuButton);
-    
+
     // Menu should be visible
     expect(screen.getByRole('menu')).toBeInTheDocument();
-    
+
     // Click outside (on backdrop) - this would normally close the menu
     // We'll test by clicking on a menu item
-    const homeItem = screen.getAllByText('Home').find(el => el.closest('[role="menuitem"]'));
+    const homeItem = screen
+      .getAllByText('Home')
+      .find(el => el.closest('[role="menuitem"]'));
     if (homeItem) {
       fireEvent.click(homeItem);
     }
-    
+
     // Verify navigation occurred
     expect(mockPush).toHaveBeenCalledWith('/homepage');
   });
 
   it('renders correctly on different screen sizes', () => {
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
-    
+
     // Both desktop and mobile variants of the logo should exist in DOM
     // (Material-UI handles visibility with CSS)
     const logoElements = screen.getAllByText(/PeerCafe|AI LMS/);
@@ -222,8 +228,10 @@ describe('ResponsiveAppBar Component', () => {
 
   it('has proper accessibility attributes', () => {
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
-    
-    const mobileMenuButton = screen.getByRole('button', { name: /account of current user/i });
+
+    const mobileMenuButton = screen.getByRole('button', {
+      name: /account of current user/i,
+    });
     expect(mobileMenuButton).toHaveAttribute('aria-label');
     expect(mobileMenuButton).toHaveAttribute('aria-controls');
     expect(mobileMenuButton).toHaveAttribute('aria-haspopup', 'true');
@@ -232,21 +240,21 @@ describe('ResponsiveAppBar Component', () => {
   // New cart-specific tests
   it('displays cart icon with badge showing item count', () => {
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
-    
+
     // Cart icon should be present
     const cartButton = screen.getByRole('button', { name: /shopping cart/i });
     expect(cartButton).toBeInTheDocument();
-    
+
     // Badge should show 0 items initially (badge may not be visible with 0 items)
     // We just verify the cart button exists
   });
 
   it('opens cart dropdown when cart icon is clicked', () => {
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
-    
+
     const cartButton = screen.getByRole('button', { name: /shopping cart/i });
     fireEvent.click(cartButton);
-    
+
     // Cart dropdown should appear with specific heading
     const cartHeading = screen.getByRole('heading', { name: /your cart/i });
     expect(cartHeading).toBeInTheDocument();
@@ -254,11 +262,13 @@ describe('ResponsiveAppBar Component', () => {
 
   it('shows empty cart message when cart is empty', () => {
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
-    
+
     const cartButton = screen.getByRole('button', { name: /shopping cart/i });
     fireEvent.click(cartButton);
-    
+
     // Should show empty cart message specifically in the body text
-    expect(screen.getByText(/add items from a restaurant to get started/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/add items from a restaurant to get started/i)
+    ).toBeInTheDocument();
   });
 });

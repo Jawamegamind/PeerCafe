@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import * as React from 'react';
 import {
@@ -31,7 +31,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination
+  TablePagination,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -44,10 +44,10 @@ import {
   Cancel as CancelIcon,
   Restaurant as RestaurantIcon,
   AttachMoney as MoneyIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
 } from '@mui/icons-material';
 import { useParams, useRouter } from 'next/navigation';
-import Navbar from "../../../../_components/navbar";
+import Navbar from '../../../../_components/navbar';
 
 interface MenuItem {
   item_id: number;
@@ -83,17 +83,20 @@ export default function AdminRestaurantMenuPage() {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
-  
+
   const [formData, setFormData] = React.useState<MenuItemFormData>({
     item_name: '',
     description: '',
     is_available: true,
     image: '',
     price: '',
-    quantity: '0'
+    quantity: '0',
   });
-  
-  const [alert, setAlert] = React.useState<{type: 'success' | 'error', message: string} | null>(null);
+
+  const [alert, setAlert] = React.useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   React.useEffect(() => {
     if (!restaurantId) {
@@ -107,14 +110,16 @@ export default function AdminRestaurantMenuPage() {
   const fetchRestaurantInfo = async () => {
     try {
       // Mock data for now - replace with actual API call later
-    //   setRestaurantName("Mario's Italian Restaurant");
-        // Send API request to get restaurant info by ID
-        const response = await fetch(`http://localhost:8000/api/restaurants/${restaurantId}`);
-        const data = await response.json();
-        console.log("Restaurant data:", data);
+      //   setRestaurantName("Mario's Italian Restaurant");
+      // Send API request to get restaurant info by ID
+      const response = await fetch(
+        `http://localhost:8000/api/restaurants/${restaurantId}`
+      );
+      const data = await response.json();
+      console.log('Restaurant data:', data);
 
-        // Set restaurant name from fetched data
-        setRestaurantName(data.Name);
+      // Set restaurant name from fetched data
+      setRestaurantName(data.Name);
     } catch (error) {
       console.error('Error fetching restaurant info:', error);
     }
@@ -124,14 +129,16 @@ export default function AdminRestaurantMenuPage() {
     try {
       setLoading(true);
       // Fetch menu items from the API
-      const response = await fetch(`http://localhost:8000/api/restaurants/${restaurantId}/menu`);
-      
+      const response = await fetch(
+        `http://localhost:8000/api/restaurants/${restaurantId}/menu`
+      );
+
       if (!response.ok) {
         throw new Error(`Failed to fetch menu items: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      console.log("Menu items data:", data);
+      console.log('Menu items data:', data);
       setMenuItems(data);
     } catch (error) {
       console.error('Error fetching menu items:', error);
@@ -150,7 +157,7 @@ export default function AdminRestaurantMenuPage() {
         is_available: item.is_available,
         image: item.image || '',
         price: item.price.toString(),
-        quantity: item.quantity.toString()
+        quantity: item.quantity.toString(),
       });
     } else {
       setEditingItem(null);
@@ -160,7 +167,7 @@ export default function AdminRestaurantMenuPage() {
         is_available: true,
         image: '',
         price: '',
-        quantity: '0'
+        quantity: '0',
       });
     }
     setDialogOpen(true);
@@ -171,7 +178,10 @@ export default function AdminRestaurantMenuPage() {
     setEditingItem(null);
   };
 
-  const handleFormChange = (field: keyof MenuItemFormData, value: string | boolean) => {
+  const handleFormChange = (
+    field: keyof MenuItemFormData,
+    value: string | boolean
+  ) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -186,7 +196,10 @@ export default function AdminRestaurantMenuPage() {
       const quantity = parseInt(formData.quantity);
 
       if (isNaN(price) || price <= 0) {
-        setAlert({ type: 'error', message: 'Please enter a valid price greater than 0' });
+        setAlert({
+          type: 'error',
+          message: 'Please enter a valid price greater than 0',
+        });
         return;
       }
 
@@ -201,11 +214,11 @@ export default function AdminRestaurantMenuPage() {
         is_available: formData.is_available,
         image: formData.image.trim(),
         price: price,
-        quantity: quantity
+        quantity: quantity,
       };
 
       let response;
-      
+
       if (editingItem) {
         // Update existing menu item
         response = await fetch(
@@ -234,29 +247,33 @@ export default function AdminRestaurantMenuPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          errorData.detail || `HTTP error! status: ${response.status}`
+        );
       }
 
       const result = await response.json();
-      
+
       if (result.success) {
-        setAlert({ 
-          type: 'success', 
-          message: editingItem ? 'Menu item updated successfully' : 'Menu item created successfully'
+        setAlert({
+          type: 'success',
+          message: editingItem
+            ? 'Menu item updated successfully'
+            : 'Menu item created successfully',
         });
-        
+
         // Refresh the menu items list
         await fetchMenuItems();
         handleCloseDialog();
       } else {
         throw new Error(result.message || 'Failed to save menu item');
       }
-      
     } catch (error) {
       console.error('Error saving menu item:', error);
-      setAlert({ 
-        type: 'error', 
-        message: error instanceof Error ? error.message : 'Failed to save menu item' 
+      setAlert({
+        type: 'error',
+        message:
+          error instanceof Error ? error.message : 'Failed to save menu item',
       });
     }
   };
@@ -275,11 +292,13 @@ export default function AdminRestaurantMenuPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          errorData.detail || `HTTP error! status: ${response.status}`
+        );
       }
 
       const result = await response.json();
-      
+
       if (result.success) {
         setAlert({ type: 'success', message: result.message });
         // Refresh the menu items to get updated data
@@ -289,9 +308,12 @@ export default function AdminRestaurantMenuPage() {
       }
     } catch (error) {
       console.error('Error updating availability:', error);
-      setAlert({ 
-        type: 'error', 
-        message: error instanceof Error ? error.message : 'Failed to update availability' 
+      setAlert({
+        type: 'error',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to update availability',
       });
     }
   };
@@ -314,13 +336,18 @@ export default function AdminRestaurantMenuPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          errorData.detail || `HTTP error! status: ${response.status}`
+        );
       }
 
       const result = await response.json();
-      
+
       if (result.success) {
-        setAlert({ type: 'success', message: 'Menu item deleted successfully' });
+        setAlert({
+          type: 'success',
+          message: 'Menu item deleted successfully',
+        });
         // Refresh the menu items list
         await fetchMenuItems();
       } else {
@@ -328,17 +355,19 @@ export default function AdminRestaurantMenuPage() {
       }
     } catch (error) {
       console.error('Error deleting menu item:', error);
-      setAlert({ 
-        type: 'error', 
-        message: error instanceof Error ? error.message : 'Failed to delete menu item' 
+      setAlert({
+        type: 'error',
+        message:
+          error instanceof Error ? error.message : 'Failed to delete menu item',
       });
     }
   };
 
   // Filter and paginate items
-  const filteredItems = menuItems.filter(item =>
-    item.item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredItems = menuItems.filter(
+    item =>
+      item.item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const paginatedItems = filteredItems.slice(
@@ -350,7 +379,9 @@ export default function AdminRestaurantMenuPage() {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
@@ -361,8 +392,8 @@ export default function AdminRestaurantMenuPage() {
       <Container maxWidth="xl" sx={{ py: 4 }}>
         {/* Alert */}
         {alert && (
-          <Alert 
-            severity={alert.type} 
+          <Alert
+            severity={alert.type}
             onClose={() => setAlert(null)}
             sx={{ mb: 3 }}
           >
@@ -372,7 +403,7 @@ export default function AdminRestaurantMenuPage() {
 
         {/* Breadcrumbs */}
         <Breadcrumbs sx={{ mb: 3 }}>
-          <MuiLink 
+          <MuiLink
             component="button"
             variant="body2"
             onClick={() => router.push('/admin/dashboard')}
@@ -380,7 +411,7 @@ export default function AdminRestaurantMenuPage() {
           >
             Admin Dashboard
           </MuiLink>
-          <MuiLink 
+          <MuiLink
             component="button"
             variant="body2"
             onClick={() => router.push('/admin/restaurants')}
@@ -395,9 +426,23 @@ export default function AdminRestaurantMenuPage() {
 
         {/* Header */}
         <Paper elevation={2} sx={{ p: 4, mb: 4, backgroundColor: '#f8f9fa' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 2,
+            }}
+          >
             <Box>
-              <Typography variant="h4" component="h1" fontWeight="bold" color="primary.main" gutterBottom>
+              <Typography
+                variant="h4"
+                component="h1"
+                fontWeight="bold"
+                color="primary.main"
+                gutterBottom
+              >
                 🍽️ Menu Management
               </Typography>
               <Typography variant="h6" color="text.secondary">
@@ -408,7 +453,7 @@ export default function AdminRestaurantMenuPage() {
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-              <Chip 
+              <Chip
                 label={`${menuItems.length} item${menuItems.length !== 1 ? 's' : ''}`}
                 color="primary"
                 variant="outlined"
@@ -427,11 +472,18 @@ export default function AdminRestaurantMenuPage() {
 
         {/* Search and Controls */}
         <Paper sx={{ p: 3, mb: 3 }}>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 2,
+              alignItems: 'center',
+              flexWrap: 'wrap',
+            }}
+          >
             <TextField
               placeholder="Search menu items..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -452,12 +504,19 @@ export default function AdminRestaurantMenuPage() {
           {loading ? (
             <Box sx={{ p: 4 }}>
               {Array.from({ length: 5 }).map((_, index) => (
-                <Skeleton key={index} variant="rectangular" height={60} sx={{ mb: 1 }} />
+                <Skeleton
+                  key={index}
+                  variant="rectangular"
+                  height={60}
+                  sx={{ mb: 1 }}
+                />
               ))}
             </Box>
           ) : menuItems.length === 0 ? (
             <Box sx={{ p: 6, textAlign: 'center' }}>
-              <FastfoodIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+              <FastfoodIcon
+                sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }}
+              />
               <Typography variant="h6" color="text.secondary" gutterBottom>
                 No menu items yet
               </Typography>
@@ -478,17 +537,31 @@ export default function AdminRestaurantMenuPage() {
                 <Table>
                   <TableHead>
                     <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                      <TableCell><strong>Item Name</strong></TableCell>
-                      <TableCell><strong>Description</strong></TableCell>
-                      <TableCell><strong>Price</strong></TableCell>
-                      <TableCell><strong>Quantity</strong></TableCell>
-                      <TableCell><strong>Status</strong></TableCell>
-                      <TableCell><strong>Updated</strong></TableCell>
-                      <TableCell align="center"><strong>Actions</strong></TableCell>
+                      <TableCell>
+                        <strong>Item Name</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Description</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Price</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Quantity</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Status</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Updated</strong>
+                      </TableCell>
+                      <TableCell align="center">
+                        <strong>Actions</strong>
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {paginatedItems.map((item) => (
+                    {paginatedItems.map(item => (
                       <TableRow key={item.item_id} hover>
                         <TableCell>
                           <Typography variant="subtitle1" fontWeight="medium">
@@ -496,26 +569,30 @@ export default function AdminRestaurantMenuPage() {
                           </Typography>
                         </TableCell>
                         <TableCell>
-                          <Typography 
-                            variant="body2" 
+                          <Typography
+                            variant="body2"
                             color="text.secondary"
                             sx={{
                               maxWidth: 200,
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
+                              whiteSpace: 'nowrap',
                             }}
                           >
                             {item.description || 'No description'}
                           </Typography>
                         </TableCell>
                         <TableCell>
-                          <Typography variant="body1" fontWeight="medium" color="primary.main">
+                          <Typography
+                            variant="body1"
+                            fontWeight="medium"
+                            color="primary.main"
+                          >
                             ${item.price.toFixed(2)}
                           </Typography>
                         </TableCell>
                         <TableCell>
-                          <Chip 
+                          <Chip
                             label={item.quantity}
                             size="small"
                             color={item.quantity > 0 ? 'success' : 'error'}
@@ -523,8 +600,10 @@ export default function AdminRestaurantMenuPage() {
                           />
                         </TableCell>
                         <TableCell>
-                          <Chip 
-                            label={item.is_available ? 'Available' : 'Unavailable'}
+                          <Chip
+                            label={
+                              item.is_available ? 'Available' : 'Unavailable'
+                            }
                             color={item.is_available ? 'success' : 'default'}
                             size="small"
                           />
@@ -535,14 +614,28 @@ export default function AdminRestaurantMenuPage() {
                           </Typography>
                         </TableCell>
                         <TableCell align="center">
-                          <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              gap: 0.5,
+                              justifyContent: 'center',
+                            }}
+                          >
                             <IconButton
                               size="small"
                               onClick={() => handleToggleAvailability(item)}
                               color={item.is_available ? 'success' : 'default'}
-                              title={item.is_available ? 'Mark as unavailable' : 'Mark as available'}
+                              title={
+                                item.is_available
+                                  ? 'Mark as unavailable'
+                                  : 'Mark as available'
+                              }
                             >
-                              {item.is_available ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                              {item.is_available ? (
+                                <VisibilityIcon />
+                              ) : (
+                                <VisibilityOffIcon />
+                              )}
                             </IconButton>
                             <IconButton
                               size="small"
@@ -567,7 +660,7 @@ export default function AdminRestaurantMenuPage() {
                   </TableBody>
                 </Table>
               </TableContainer>
-              
+
               <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
                 component="div"
@@ -591,17 +684,24 @@ export default function AdminRestaurantMenuPage() {
         </Fab>
 
         {/* Menu Item Dialog */}
-        <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+        <Dialog
+          open={dialogOpen}
+          onClose={handleCloseDialog}
+          maxWidth="md"
+          fullWidth
+        >
           <DialogTitle>
             {editingItem ? 'Edit Menu Item' : 'Add New Menu Item'}
           </DialogTitle>
           <DialogContent>
-            <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Box
+              sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}
+            >
               <TextField
                 label="Item Name *"
                 fullWidth
                 value={formData.item_name}
-                onChange={(e) => handleFormChange('item_name', e.target.value)}
+                onChange={e => handleFormChange('item_name', e.target.value)}
               />
 
               <TextField
@@ -610,28 +710,30 @@ export default function AdminRestaurantMenuPage() {
                 multiline
                 rows={3}
                 value={formData.description}
-                onChange={(e) => handleFormChange('description', e.target.value)}
+                onChange={e => handleFormChange('description', e.target.value)}
               />
 
               <Box sx={{ display: 'flex', gap: 2 }}>
                 <TextField
                   label="Price *"
                   type="number"
-                  inputProps={{ step: "0.01", min: "0" }}
+                  inputProps={{ step: '0.01', min: '0' }}
                   InputProps={{
-                    startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                    startAdornment: (
+                      <InputAdornment position="start">$</InputAdornment>
+                    ),
                   }}
                   value={formData.price}
-                  onChange={(e) => handleFormChange('price', e.target.value)}
+                  onChange={e => handleFormChange('price', e.target.value)}
                   sx={{ flex: 1 }}
                 />
 
                 <TextField
                   label="Quantity *"
                   type="number"
-                  inputProps={{ min: "0" }}
+                  inputProps={{ min: '0' }}
                   value={formData.quantity}
-                  onChange={(e) => handleFormChange('quantity', e.target.value)}
+                  onChange={e => handleFormChange('quantity', e.target.value)}
                   sx={{ flex: 1 }}
                 />
               </Box>
@@ -640,7 +742,7 @@ export default function AdminRestaurantMenuPage() {
                 label="Image URL"
                 fullWidth
                 value={formData.image}
-                onChange={(e) => handleFormChange('image', e.target.value)}
+                onChange={e => handleFormChange('image', e.target.value)}
                 placeholder="https://example.com/image.jpg"
               />
 
@@ -648,7 +750,9 @@ export default function AdminRestaurantMenuPage() {
                 control={
                   <Switch
                     checked={formData.is_available}
-                    onChange={(e) => handleFormChange('is_available', e.target.checked)}
+                    onChange={e =>
+                      handleFormChange('is_available', e.target.checked)
+                    }
                   />
                 }
                 label="Available for ordering"
@@ -659,7 +763,11 @@ export default function AdminRestaurantMenuPage() {
             <Button onClick={handleCloseDialog} startIcon={<CancelIcon />}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit} variant="contained" startIcon={<SaveIcon />}>
+            <Button
+              onClick={handleSubmit}
+              variant="contained"
+              startIcon={<SaveIcon />}
+            >
               {editingItem ? 'Update' : 'Create'}
             </Button>
           </DialogActions>
