@@ -8,7 +8,6 @@ import {
   Paper,
   TextField,
   Typography,
-  Grid,
   Alert,
   Snackbar,
   MenuItem,
@@ -149,7 +148,6 @@ export default function AddRestaurantPage() {
       });
 
       if (response.ok) {
-        const result = await response.json();
         setSnackbar({
           open: true,
           message: 'Restaurant added successfully!',
@@ -179,8 +177,7 @@ export default function AddRestaurantPage() {
           severity: 'error',
         });
       }
-    } catch (error) {
-      console.error('Error adding restaurant:', error);
+    } catch {
       setSnackbar({
         open: true,
         message: 'Network error. Please try again.',

@@ -80,10 +80,21 @@ export default function RestaurantsPage() {
         const data = await response.json();
         setRestaurants(data);
       } else {
-        console.error('Failed to fetch restaurants');
+        // console.error('Failed to fetch restaurants');
+        setSnackbar({
+          open: true,
+          message: 'Failed to fetch restaurants',
+          severity: 'error',
+        });
       }
-    } catch (error) {
-      console.error('Error fetching restaurants:', error);
+    } catch {
+      // console.error('Error fetching restaurants:', error);
+      // Show snackbar alert
+      setSnackbar({
+        open: true,
+        message: 'Error fetching restaurants. Please try again.',
+        severity: 'error',
+      });
     } finally {
       setLoading(false);
     }
@@ -131,8 +142,8 @@ export default function RestaurantsPage() {
           severity: 'error',
         });
       }
-    } catch (error) {
-      console.error('Error deleting restaurant:', error);
+    } catch {
+      // console.error('Error deleting restaurant:', error);
       setSnackbar({
         open: true,
         message: 'Network error. Please try again.',
@@ -184,8 +195,8 @@ export default function RestaurantsPage() {
           severity: 'error',
         });
       }
-    } catch (error) {
-      console.error('Error restoring restaurant:', error);
+    } catch {
+      // console.error('Error restoring restaurant:', error);
       setSnackbar({
         open: true,
         message: 'Network error. Please try again.',
@@ -426,10 +437,10 @@ export default function RestaurantsPage() {
                                     title="Edit Restaurant"
                                     onClick={() => {
                                       // TODO: Navigate to edit page
-                                      console.log(
-                                        'Edit restaurant:',
-                                        restaurant.restaurant_id
-                                      );
+                                      // console.log(
+                                      //   'Edit restaurant:',
+                                      //   restaurant.restaurant_id
+                                      // );
                                     }}
                                   >
                                     <EditIcon />
