@@ -402,11 +402,8 @@ describe('Register Page', () => {
     expect(screen.getByRole('link')).toBeInTheDocument();
   });
 
-  it('logs form data to console on submit', async () => {
+  it('calls register action with correct form data on submit', async () => {
     const user = userEvent.setup();
-    const consoleLogSpy = jest
-      .spyOn(console, 'log')
-      .mockImplementation(() => {});
     mockRegister.mockResolvedValue('success');
 
     render(<SignIn />);
@@ -422,13 +419,13 @@ describe('Register Page', () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(consoleLogSpy).toHaveBeenCalledWith({
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        password: 'password123',
-      });
+      expect(mockRegister).toHaveBeenCalledTimes(1);
     });
 
-    consoleLogSpy.mockRestore();
+    // Verify the FormData contains the expected values
+    const formDataArg = mockRegister.mock.calls[0][0] as FormData;
+    expect(formDataArg.get('name')).toBe('John Doe');
+    expect(formDataArg.get('email')).toBe('john.doe@example.com');
+    expect(formDataArg.get('password')).toBe('password123');
   });
 });

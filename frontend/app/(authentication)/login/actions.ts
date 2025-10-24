@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 
 export async function login(formData: FormData) {
-  console.log('login action');
+  // console.log('login action');
   const supabase = await createClient();
 
   // type-casting here for convenience
@@ -21,15 +21,15 @@ export async function login(formData: FormData) {
   const { data, error } = await supabase.auth.signInWithPassword(formdata);
 
   if (error) {
+    // eslint-disable-next-line no-console
     console.error('Error:', error);
 
     // If invalid credentials are provided, we should not login the user
     if (error.code == 'invalid_credentials') {
-      console.log('Invalid credentials');
       return 'Invalid credentials';
     }
   } else {
-    console.log('Data:', data);
+    // console.log('Data:', data);
 
     // Now basically signing in using our backend to retireve the user details
     // const response = await axios.post('http://localhost:8000/api/login', {
@@ -52,11 +52,11 @@ export async function login(formData: FormData) {
         },
       }
     );
-    console.log("The backend's response to signing in user is", response.data);
+    // console.log("The backend's response to signing in user is", response.data);
 
     // Now here we need to check the user's role and based on that redirect to the appropriate dashboard
     const userObject = response.data.user;
-    console.log('The user object is', userObject);
+    // console.log('The user object is', userObject);
 
     // Redirect based on the boolean flags
     if (userObject.is_admin) {
@@ -80,13 +80,14 @@ export async function login(formData: FormData) {
 }
 
 export async function logout() {
-  console.log('logout action');
+  // console.log('logout action');
   const supabase = await createClient();
 
   const { error } = await supabase.auth.signOut();
 
   if (error) {
-    console.error('Error:', error);
+    // console.error('Error:', error);
+    return 'Logout failed';
   }
 
   revalidatePath('/', 'layout');

@@ -61,10 +61,12 @@ export default function SignIn() {
     try {
       setLoading(true);
       await login(formData);
-      setLoading(false);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error:', error);
-      // handleClick("Login failed", "error");
+      handleClick('Login failed', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 

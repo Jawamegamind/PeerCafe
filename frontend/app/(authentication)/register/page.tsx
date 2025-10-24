@@ -55,7 +55,6 @@ export default function SignIn() {
     const name = formData.get('name') as string;
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
-    console.log({ name, email, password });
 
     // Check for empty fields
     if (!name || !email || !password) {
@@ -67,8 +66,6 @@ export default function SignIn() {
     try {
       setLoading(true);
       const response = await register(formData);
-      setLoading(false);
-      // handleClick("Registration successful", "success");
 
       // Check the message returned in the response
       if (response == 'User already exists') {
@@ -77,8 +74,11 @@ export default function SignIn() {
         handleClick('Registration failed', 'error');
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error:', error);
       handleClick('Registration failed', 'error');
+    } finally {
+      setLoading(false);
     }
 
     // // Sending api request to register user
