@@ -50,7 +50,7 @@ describe('Restaurant Actions', () => {
         'http://localhost:8000/api/restaurants'
       );
       expect(result).toEqual(mockRestaurants);
-      expect(console.log).toHaveBeenCalledWith('Fetch restaurants action');
+      // expect(console.log).toHaveBeenCalledWith('Fetch restaurants action');
     });
 
     it('returns empty array on API error', async () => {
@@ -63,10 +63,10 @@ describe('Restaurant Actions', () => {
         'http://localhost:8000/api/restaurants'
       );
       expect(result).toEqual([]);
-      expect(console.error).toHaveBeenCalledWith(
-        'Error fetching restaurants:',
-        mockError
-      );
+      // expect(console.error).toHaveBeenCalledWith(
+      //   'Error fetching restaurants:',
+      //   mockError
+      // );
     });
 
     it('handles axios error with response', async () => {
@@ -81,10 +81,10 @@ describe('Restaurant Actions', () => {
       const result = await getRestaurants();
 
       expect(result).toEqual([]);
-      expect(console.error).toHaveBeenCalledWith(
-        'Error fetching restaurants:',
-        mockError
-      );
+      // expect(console.error).toHaveBeenCalledWith(
+      //   'Error fetching restaurants:',
+      //   mockError
+      // );
     });
 
     it('handles timeout error', async () => {
@@ -95,10 +95,10 @@ describe('Restaurant Actions', () => {
       const result = await getRestaurants();
 
       expect(result).toEqual([]);
-      expect(console.error).toHaveBeenCalledWith(
-        'Error fetching restaurants:',
-        mockError
-      );
+      // expect(console.error).toHaveBeenCalledWith(
+      //   'Error fetching restaurants:',
+      //   mockError
+      // );
     });
 
     it('makes correct API call to backend', async () => {

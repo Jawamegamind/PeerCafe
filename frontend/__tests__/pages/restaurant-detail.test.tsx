@@ -1,5 +1,4 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { useParams } from 'next/navigation';
 import '@testing-library/jest-dom';
 import RestaurantDetailPage from '../../app/(main)/user/restaurants/[restaurantId]/page';
 import { CartProvider } from '../../app/_contexts/CartContext';

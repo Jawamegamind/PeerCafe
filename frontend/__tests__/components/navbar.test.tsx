@@ -1,5 +1,4 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { useRouter } from 'next/navigation';
 import '@testing-library/jest-dom';
 import ResponsiveAppBar from '../../app/_components/navbar';
 import { CartProvider } from '../../app/_contexts/CartContext';
