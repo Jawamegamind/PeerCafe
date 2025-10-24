@@ -44,4 +44,4 @@ jobs:
       - name: Prettier format check
         run: npm run format:check
         working-directory: ./frontend
-        continue-on-error: true
+        # continue-on-error: true
