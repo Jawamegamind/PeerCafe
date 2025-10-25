@@ -13,6 +13,15 @@
 [![Linting: ESLint](https://img.shields.io/badge/linting-eslint-4b32c3)](https://eslint.org/)
 [![Testing: Jest](https://img.shields.io/badge/testing-jest-red)](https://jestjs.io/)
 
+<!-- Backend Code Quality Tool Badges -->
+[![Code Style: Black](https://img.shields.io/badge/code_style-black-000000.svg)](https://github.com/psf/black)
+[![Import Sorting: isort](https://img.shields.io/badge/import_sorting-isort-ef8336.svg)](https://pycqa.github.io/isort/)
+[![Linting: Flake8](https://img.shields.io/badge/linting-flake8-yellowgreen)](https://flake8.pycqa.org/)
+[![Security: Bandit](https://img.shields.io/badge/security-bandit-yellow)](https://github.com/PyCQA/bandit)
+[![Testing: Pytest](https://img.shields.io/badge/testing-pytest-blue)](https://pytest.org/)
+[![Python Version](https://img.shields.io/badge/python-3.10+-blue)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/framework-fastapi-009688)](https://fastapi.tiangolo.com/)
+
 # PeerCafe 🚀
 
 A peer-to-peer delivery system developed as part of CSC 510: Software Engineering offered at NC State University.
