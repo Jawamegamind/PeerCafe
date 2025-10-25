@@ -50,8 +50,8 @@ jobs:
     name: Backend Code Quality
     runs-on: ubuntu-latest
     env:
-      SUPABASE_URL: ${{ secrets.PROJECT_URL }}
-      SUPABASE_KEY: ${{ secrets.API_KEY }}
+      PROJECT_URL: ${{ secrets.PROJECT_URL }}
+      API_KEY: ${{ secrets.API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
