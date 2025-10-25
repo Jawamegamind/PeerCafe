@@ -13,3 +13,11 @@ dependencies:
     - pydantic
     - pytest
     - pytest-cov
+    # Code quality tools
+    - black>=23.0.0          # Code formatter
+    - isort>=5.0.0           # Import sorter
+    - flake8>=6.0.0          # Style guide enforcement
+    - mypy>=1.0.0            # Static type checker
+    - pylint>=2.17.0         # Code linter
+    - bandit>=1.7.0          # Security linter
+    - pre-commit>=3.0.0      # Git hooks framework
