@@ -16,8 +16,7 @@ from models.order_model import (
     OrderStatus,
     OrderUpdate,
 )
-from models.restaurant_model import Restaurant, RestaurantCreate
-from models.user_model import User
+from models.delivery_model import Location
 
 
 class TestUserModel:
@@ -569,3 +568,29 @@ class TestOrderEnums:
         assert OrderStatus.EN_ROUTE == "en_route"
         assert OrderStatus.DELIVERED == "delivered"
         assert OrderStatus.CANCELLED == "cancelled"
+
+
+class TestDeliveryModel:
+    """Test cases for simple Location model used by delivery endpoints"""
+
+    def test_valid_location_creation(self):
+        """Creating a valid Location should succeed"""
+        loc = Location(latitude=35.7796, longitude=-78.6382)
+
+        assert isinstance(loc.latitude, float)
+        assert isinstance(loc.longitude, float)
+        assert loc.latitude == 35.7796
+        assert loc.longitude == -78.6382
+
+    def test_location_missing_fields(self):
+        """Missing required fields should raise ValidationError"""
+        with pytest.raises(ValidationError):
+            Location(latitude=35.7796)
+
+    def test_location_type_coercion(self):
+        """Strings that look like floats should be coerced to floats"""
+        loc = Location(latitude="35.5", longitude="-78.1")
+        assert isinstance(loc.latitude, float)
+        assert isinstance(loc.longitude, float)
+        assert loc.latitude == 35.5
+        assert loc.longitude == -78.1

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from database.supabase_db import create_supabase_client
 from models.delivery_model import Location
 import os
@@ -11,8 +11,11 @@ supabase = create_supabase_client()
 MAPBOX_TOKEN = os.environ.get("MAPBOX_TOKEN")
 MAX_DEST_PER_MATRIX = int(os.environ.get("MAX_DEST_PER_MATRIX", 24))
 
+def location_from_query(latitude: float = Query(...), longitude: float = Query(...)) -> Location:
+    return Location(latitude=latitude, longitude=longitude)
+
 @delivery_router.get("/deliveries/ready", response_model=list)
-async def fetch_ready_orders(source: Location):
+async def fetch_ready_orders(source: Location = Depends(location_from_query)):
     """Fetch all orders that are ready for delivery"""
     try:
         # In Python use None (not null) and the PostgREST client exposes `is_` (with underscore)
@@ -26,6 +29,9 @@ async def fetch_ready_orders(source: Location):
             ).execute()
         orders = result.data or []
 
+        if orders == []:
+            return []
+
 
         restaurant_ids = []
         restaurant_coords_by_id = {}
@@ -33,10 +39,19 @@ async def fetch_ready_orders(source: Location):
             rid = o.get("restaurant_id")
             if rid is not None and rid not in restaurant_ids:
                 restaurant_ids.append(rid)
-            coords = o.get("restaurants", {}).get("latitude"), o.get("restaurants", {}).get("longitude")
-            if coords:
-                # If order row already contains restaurant coords, use them
-                restaurant_coords_by_id[rid] = coords
+            # Safely extract restaurant coords if present in the order payload.
+            rest_info = o.get("restaurants") or {}
+            lat_raw = rest_info.get("latitude")
+            lng_raw = rest_info.get("longitude")
+            try:
+                if lat_raw is not None and lng_raw is not None:
+                    latitude = float(lat_raw)
+                    longitude = float(lng_raw)
+                    # If order row already contains restaurant coords, use them
+                    restaurant_coords_by_id[rid] = (latitude, longitude)
+            except (TypeError, ValueError):
+                # If parsing fails, treat as missing coords and continue
+                pass
 
 
         dests = []
@@ -44,8 +59,11 @@ async def fetch_ready_orders(source: Location):
             coords = restaurant_coords_by_id.get(rid)
             if coords:
                 dests.append({"restaurant_id": rid, "lat": coords[0], "lng": coords[1]})
+            else:
+                dests.append({"restaurant_id": rid, "lat": None, "lng": None})
 
         src_lng, src_lat = float(source.longitude), float(source.latitude)
+        dests = [ri for ri in dests if ri["lat"] is not None and ri["lng"] is not None]
 
         # Helper to break dests into chunks of MAX_DEST_PER_MATRIX size
         chunks = [dests[i:i + MAX_DEST_PER_MATRIX] for i in range(0, len(dests), MAX_DEST_PER_MATRIX)] if dests else []
@@ -118,22 +136,30 @@ async def fetch_ready_orders(source: Location):
             dist_m = distance_by_restaurant.get(rid)
             dur_s = duration_by_restaurant.get(rid)
 
-            o_enriched = dict(o)
-            o_enriched["by_road_distance_meters"] = dist_m
-            o_enriched["by_road_duration_seconds"] = dur_s
+            if dist_m is None and dur_s is None:
+                # unreachable restaurant
+                o_enriched = dict(o)
+                o_enriched["distance_to_restaurant"] = None
+                o_enriched["duration_to_restaurant"] = None
+            
+            else:
+
+                o_enriched = dict(o)
+                o_enriched["distance_to_restaurant"] = dist_m
+                o_enriched["duration_to_restaurant"] = dur_s
 
             if dist_m is not None:
-                o_enriched["by_road_distance_km"] = round(dist_m / 1000.0, 3)
-                o_enriched["is_reachable_by_road"] = True
+                o_enriched["distance_to_restaurant_km"] = round(dist_m / 1000.0, 3)
+                o_enriched["restaurant_reachable_by_road"] = True
             else:
-                o_enriched["by_road_distance_km"] = None
-                o_enriched["is_reachable_by_road"] = False
+                o_enriched["distance_to_restaurant_km"] = None
+                o_enriched["restaurant_reachable_by_road"] = False
 
             if dur_s is not None:
                 # add minutes rounded
-                o_enriched["by_road_duration_minutes"] = round(dur_s / 60.0, 1)
+                o_enriched["duration_to_restaurant_minutes"] = round(dur_s / 60.0, 1)
             else:
-                o_enriched["by_road_duration_minutes"] = None
+                o_enriched["duration_to_restaurant_minutes"] = None
 
             enriched_orders.append(o_enriched)
 
