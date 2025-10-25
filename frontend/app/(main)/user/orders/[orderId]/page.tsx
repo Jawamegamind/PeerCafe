@@ -24,7 +24,7 @@ import {
 import {
   ArrowBack as ArrowBackIcon,
   Receipt as ReceiptIcon,
-  Restaurant as RestaurantIcon,
+  // Restaurant as RestaurantIcon,
   LocationOn as LocationOnIcon,
   Schedule as ScheduleIcon,
   CheckCircle as CheckCircleIcon,
@@ -151,7 +151,7 @@ export default function OrderDetailsPage() {
         } = await supabase.auth.getUser();
 
         if (authError || !user) {
-          console.error('No authenticated user found:', authError);
+          // console.error('No authenticated user found:', authError);
           setError('You must be logged in to view this order');
           router.push('/login');
           return;
@@ -165,14 +165,14 @@ export default function OrderDetailsPage() {
           .single();
 
         if (userError) {
-          console.error('Error fetching user data:', userError);
+          // console.error('Error fetching user data:', userError);
           setError('Failed to load user information');
           return;
         }
 
         setCurrentUser(userData);
-      } catch (err) {
-        console.error('Error getting current user:', err);
+      } catch {
+        // console.error('Error getting current user:', err);
         setError('Authentication error. Please try logging in again.');
         router.push('/login');
       } finally {
@@ -207,7 +207,6 @@ export default function OrderDetailsPage() {
 
         setOrder(orderData);
       } catch (err) {
-        console.error('Error fetching order:', err);
         setError(err instanceof Error ? err.message : 'Failed to load order');
       } finally {
         setLoading(false);
@@ -242,8 +241,9 @@ export default function OrderDetailsPage() {
             setOrder(updatedOrder);
           }
         }
-      } catch (err) {
-        console.error('Error refreshing order status:', err);
+      } catch {
+        setError('Failed to refresh order status');
+        // console.error('Error refreshing order status:', err);
       }
     }, 30000); // 30 seconds
 

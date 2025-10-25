@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
@@ -14,7 +15,7 @@ const protectedRoutes = [
 
 export async function updateSession(request: NextRequest) {
   // Debug: Log which route the middleware is being called for
-  console.log('🔍 Middleware called for route:', request.nextUrl.pathname);
+  // console.log('🔍 Middleware called for route:', request.nextUrl.pathname);
 
   let supabaseResponse = NextResponse.next({
     request,
@@ -80,8 +81,6 @@ export async function updateSession(request: NextRequest) {
   if (isProtectedRoute && session.error) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
-
-  return supabaseResponse;
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:

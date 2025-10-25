@@ -11,12 +11,12 @@ import {
   CardMedia,
   Chip,
   Grid,
-  CircularProgress,
+  // CircularProgress,
   Alert,
   Paper,
-  Divider,
+  // Divider,
   Stack,
-  IconButton,
+  // IconButton,
   Skeleton,
   Button,
   CardActions,
@@ -33,7 +33,7 @@ import {
   Cancel as UnavailableIcon,
   Star as StarIcon,
   ShoppingCart as CartIcon,
-  Add as AddIcon,
+  // Add as AddIcon,
   Warning as WarningIcon,
 } from '@mui/icons-material';
 import Navbar from '../../../../_components/navbar';
@@ -63,7 +63,7 @@ export default function RestaurantDetailPage() {
   const {
     addToCart,
     restaurant: cartRestaurant,
-    clearCart,
+    // clearCart,
     clearCartAndAddItem,
   } = useCart();
   const [menuItems, setMenuItems] = React.useState<MenuItem[]>([]);
@@ -93,7 +93,7 @@ export default function RestaurantDetailPage() {
         const menuResponse = await fetch(
           `http://localhost:8000/api/restaurants/${restaurantId}/menu`
         );
-        console.log('Menu response status:', menuResponse);
+        // console.log('Menu response status:', menuResponse);
         if (!menuResponse.ok) {
           throw new Error('Failed to fetch menu items');
         }
@@ -105,13 +105,13 @@ export default function RestaurantDetailPage() {
           const restaurantResponse = await fetch(
             `http://localhost:8000/api/restaurants/${restaurantId}`
           );
-          console.log('Restaurant response status:', restaurantResponse);
+          // console.log('Restaurant response status:', restaurantResponse);
           if (restaurantResponse.ok) {
             const restaurantData = await restaurantResponse.json();
-            console.log('Restaurant data fetched:', restaurantData);
+            // console.log('Restaurant data fetched:', restaurantData);
             setRestaurant(restaurantData);
           }
-        } catch (restaurantError) {
+        } catch {
           // If restaurant details endpoint doesn't exist, create a basic restaurant object
           setRestaurant({
             restaurant_id: parseInt(restaurantId as string),

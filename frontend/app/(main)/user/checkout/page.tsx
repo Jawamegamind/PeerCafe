@@ -116,7 +116,7 @@ export default function CheckoutPage() {
         } = await supabase.auth.getUser();
 
         if (authError || !user) {
-          console.error('No authenticated user found:', authError);
+          // console.error('No authenticated user found:', authError);
           setError('You must be logged in to place an order');
           router.push('/login');
           return;
@@ -130,14 +130,14 @@ export default function CheckoutPage() {
           .single();
 
         if (userError) {
-          console.error('Error fetching user data:', userError);
+          // console.error('Error fetching user data:', userError);
           setError('Failed to load user information');
           return;
         }
 
         setCurrentUser(userData);
-      } catch (err) {
-        console.error('Error getting current user:', err);
+      } catch {
+        // console.error('Error getting current user:', err);
         setError('Authentication error. Please try logging in again.');
         router.push('/login');
       } finally {
@@ -196,7 +196,7 @@ export default function CheckoutPage() {
         notes: notes || undefined,
       };
 
-      console.log('Submitting order data:', orderData);
+      // console.log('Submitting order data:', orderData);
 
       // Submit order to backend
       const response = await fetch(`http://localhost:8000/api/orders/`, {
@@ -216,14 +216,14 @@ export default function CheckoutPage() {
           try {
             const errorData = await response.json();
             errorMessage = errorData.detail || errorMessage;
-          } catch (parseError) {
-            console.error('Error parsing JSON response:', parseError);
+          } catch {
+            // console.error('Error parsing JSON response:', parseError);
             errorMessage = `Server error (${response.status}): Unable to parse error response`;
           }
         } else {
           // Response is not JSON, likely HTML error page
-          const textResponse = await response.text();
-          console.error('Non-JSON response:', textResponse);
+          // const textResponse = await response.text();
+          // console.error('Non-JSON response:', textResponse);
           errorMessage = `Server error (${response.status}): ${response.statusText}`;
         }
 
@@ -233,8 +233,8 @@ export default function CheckoutPage() {
       // Parse successful response
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
-        const textResponse = await response.text();
-        console.error('Expected JSON but got:', textResponse);
+        // const textResponse = await response.text();
+        // console.error('Expected JSON but got:', textResponse);
         throw new Error('Server returned invalid response format');
       }
 
@@ -249,7 +249,7 @@ export default function CheckoutPage() {
         router.push(`/user/orders/${order.order_id}`);
       }, 2000);
     } catch (err) {
-      console.error('Order placement error:', err);
+      // console.error('Order placement error:', err);
       setError(
         err instanceof Error
           ? err.message

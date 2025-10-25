@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ResponsiveAppBar from '../../app/_components/navbar';
 import { CartProvider } from '../../app/_contexts/CartContext';
@@ -63,6 +69,23 @@ describe('ResponsiveAppBar Component', () => {
     localStorageMock.getItem.mockReturnValue(null);
     localStorageMock.setItem.mockClear();
     localStorageMock.removeItem.mockClear();
+
+    // Mock authenticated regular user (not admin) by default
+    mockSupabaseClient.auth.getUser.mockResolvedValue({
+      data: { user: { id: 'test-user-id' } },
+      error: null,
+    });
+    mockSingle.mockResolvedValue({
+      data: {
+        user_id: 'test-user-id',
+        first_name: 'Test',
+        last_name: 'User',
+        email: 'test@example.com',
+        is_admin: false,
+        is_active: true,
+      },
+      error: null,
+    });
     // Reset Supabase mocks to default values
     mockSupabaseClient.auth.getUser.mockResolvedValue({
       data: { user: { id: 'test-user-id', email: 'test@example.com' } },
@@ -81,10 +104,10 @@ describe('ResponsiveAppBar Component', () => {
     expect(screen.getByText('PeerCafe')).toBeInTheDocument();
   });
 
-  it('displays navigation menu items on desktop', () => {
+  it('displays navigation menu items on desktop', async () => {
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
-    // Check for navigation buttons (visible on desktop)
+    // Check for main navigation items
     expect(screen.getByRole('button', { name: /home/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
 
@@ -92,9 +115,11 @@ describe('ResponsiveAppBar Component', () => {
     const profileButton = screen.getByRole('button', { name: /profile/i });
     expect(profileButton).toBeInTheDocument();
 
-    // Check for cart icon
-    const cartButton = screen.getByRole('button', { name: /shopping cart/i });
-    expect(cartButton).toBeInTheDocument();
+    // Check for cart icon (should be present for regular users after loading)
+    await waitFor(() => {
+      const cartButton = screen.getByRole('button', { name: /shopping cart/i });
+      expect(cartButton).toBeInTheDocument();
+    });
   });
 
   it('shows mobile menu when hamburger menu is clicked', () => {
@@ -141,6 +166,11 @@ describe('ResponsiveAppBar Component', () => {
 
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
+    // Wait for the component to load user data first
+    await waitFor(() => {
+      expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled();
+    });
+
     const profileButton = screen.getByRole('button', { name: /profile/i });
     fireEvent.click(profileButton);
 
@@ -150,11 +180,17 @@ describe('ResponsiveAppBar Component', () => {
   });
 
   it('navigates to admin dashboard when admin user clicks Profile', async () => {
+    // Clear all mocks first
+    jest.clearAllMocks();
+
     // Mock successful user data fetch for admin user
     const mockAdminUserData = {
       user_id: 'admin-user-id',
+      first_name: 'Admin',
+      last_name: 'User',
+      email: 'admin@example.com',
       is_admin: true,
-      name: 'Admin User',
+      is_active: true,
     };
 
     mockSupabaseClient.auth.getUser.mockResolvedValue({
@@ -168,6 +204,17 @@ describe('ResponsiveAppBar Component', () => {
     });
 
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+
+    // Wait for the component to load user data first and verify it's loaded
+    await waitFor(() => {
+      expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled();
+      expect(mockSingle).toHaveBeenCalled();
+    });
+
+    // Add a small delay to ensure state updates are complete
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    });
 
     const profileButton = screen.getByRole('button', { name: /profile/i });
     fireEvent.click(profileButton);
@@ -237,33 +284,63 @@ describe('ResponsiveAppBar Component', () => {
   });
 
   // New cart-specific tests
-  it('displays cart icon with badge showing item count', () => {
+  it('displays cart icon with badge showing item count for regular users', async () => {
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
-    // Cart icon should be present
-    const cartButton = screen.getByRole('button', { name: /shopping cart/i });
-    expect(cartButton).toBeInTheDocument();
-
-    // Badge should show 0 items initially (badge may not be visible with 0 items)
-    // We just verify the cart button exists
+    // Wait for user data to load
+    await waitFor(() => {
+      const cartButton = screen.getByRole('button', { name: /shopping cart/i });
+      expect(cartButton).toBeInTheDocument();
+    });
   });
 
-  it('opens cart dropdown when cart icon is clicked', () => {
+  it('does not display cart icon for admin users', async () => {
+    // Mock admin user
+    mockSingle.mockResolvedValue({
+      data: {
+        user_id: 'admin-user-id',
+        first_name: 'Admin',
+        last_name: 'User',
+        email: 'admin@example.com',
+        is_admin: true,
+        is_active: true,
+      },
+      error: null,
+    });
+
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
-    const cartButton = screen.getByRole('button', { name: /shopping cart/i });
-    fireEvent.click(cartButton);
+    // Wait for user data to load and verify cart is not present
+    await waitFor(() => {
+      const cartButton = screen.queryByRole('button', {
+        name: /shopping cart/i,
+      });
+      expect(cartButton).not.toBeInTheDocument();
+    });
+  });
+
+  it('opens cart dropdown when cart icon is clicked', async () => {
+    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+
+    // Wait for cart to be available
+    await waitFor(() => {
+      const cartButton = screen.getByRole('button', { name: /shopping cart/i });
+      fireEvent.click(cartButton);
+    });
 
     // Cart dropdown should appear with specific heading
     const cartHeading = screen.getByRole('heading', { name: /your cart/i });
     expect(cartHeading).toBeInTheDocument();
   });
 
-  it('shows empty cart message when cart is empty', () => {
+  it('shows empty cart message when cart is empty', async () => {
     render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
-    const cartButton = screen.getByRole('button', { name: /shopping cart/i });
-    fireEvent.click(cartButton);
+    // Wait for cart to be available
+    await waitFor(() => {
+      const cartButton = screen.getByRole('button', { name: /shopping cart/i });
+      fireEvent.click(cartButton);
+    });
 
     // Should show empty cart message specifically in the body text
     expect(

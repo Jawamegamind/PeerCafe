@@ -27,10 +27,10 @@ import {
   Search as SearchIcon,
   LocationOn as LocationIcon,
   Phone as PhoneIcon,
-  Email as EmailIcon,
+  // Email as EmailIcon,
   DeliveryDining as DeliveryIcon,
   Restaurant as RestaurantIcon,
-  Star as StarIcon,
+  // Star as StarIcon,
 } from '@mui/icons-material';
 import Navbar from '../../../_components/navbar';
 import { getRestaurants } from './actions';
@@ -90,11 +90,9 @@ export default function RestaurantsPage() {
           (restaurant: Restaurant) => restaurant.is_active
         );
         setRestaurants(activeRestaurants);
-      } else {
-        console.error('Failed to fetch restaurants');
       }
-    } catch (error) {
-      console.error('Error fetching restaurants:', error);
+    } catch {
+      // console.error('Error fetching restaurants:', error);
     } finally {
       setLoading(false);
     }

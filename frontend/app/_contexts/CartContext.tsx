@@ -59,6 +59,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         setItems(JSON.parse(savedCart));
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error loading cart from localStorage:', error);
       }
     }
@@ -67,6 +68,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         setRestaurant(JSON.parse(savedRestaurant));
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error loading restaurant from localStorage:', error);
       }
     }
