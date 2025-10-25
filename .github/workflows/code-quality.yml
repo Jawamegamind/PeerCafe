@@ -39,7 +39,7 @@ jobs:
       - name: ESLint check (allow warnings)
         run: npm run lint
         working-directory: ./frontend
-        continue-on-error: true
+        # continue-on-error: true
 
       - name: Prettier format check
         run: npm run format:check
