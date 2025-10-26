@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from 'react';
+import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import Navbar from "../../../_components/navbar";
 import {
@@ -29,43 +30,108 @@ import {
     Business as BusinessIcon,
     AttachMoney,
     AccessTime,
-    Restaurant as RestaurantIcon
+    Restaurant as RestaurantIcon,
+    DeliveryDining as DeliveryDiningIcon,
 } from '@mui/icons-material';
 import mapboxgl from "mapbox-gl";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY;
+const backend_url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 interface Order {
-    OrderId: number;
-    RestaurantId: number;
-    RestaurantName: string;
-    DistanceFromRestaurant: number;
-    DeliveryToRestaurant: number;
-    RestaurantAddress: string;
-    Address: string;
-    Phone: string;
-    Email: string;
-    IsActive: boolean;
-    Compensation: number;
-    ExpectedTime: string;
+  order_id: string;
+  user_id: string;
+  restaurant_id: number;
+  delivery_fee: number;
+  tip_amount: number;
+  estimated_pickup_time: string | null;
+  estimated_delivery_time: string | null;
+  latitude: number;
+  longitude: number;
+
+  restaurants: {
+    name: string;
+    latitude: number;
+    longitude: number;
+    address: string;
+  };
+
+  distance_to_restaurant: number;
+  duration_to_restaurant: number;
+  distance_to_restaurant_miles: number;
+  restaurant_reachable_by_road: boolean;
+  duration_to_restaurant_minutes: number;
 }
 
 export default function DeliveryPage() {
 
-    // Map implementations
     const mapContainer = React.useRef<HTMLDivElement>(null);
     const map = React.useRef<mapboxgl.Map | null>(null);
 
-    // Example coordinates (lng, lat)
-    const source: [number, number] = [77.5946, 12.9716]; // e.g. Rider or Hub
-    const destinations: [number, number][] = [
-        [77.61, 12.98],
-        [77.59, 12.96],
-        [77.62, 12.965],
-        [77.57, 12.985],
-    ];
+    const [readyOrders, setReadyOrders] = React.useState<Order[]>([]);
+    // const [location, setLocation] = React.useState<{ latitude: number; longitude: number } | null>(null);
+    const [loading, setLoading] = React.useState(false);
 
-    React.useEffect(() => {
+    // Example coordinates (lng, lat)
+    const [sourceLocation, setSourceLocation] = React.useState<{ latitude : number, longitude : number } | null>(null) // e.g. Rider or Hub
+    const [restaurantLocations , setRestaurantLocations] = React.useState<{ latitude : number, longitude : number }[]>([]); // e.g. Restaurants for ready orders
+
+    const fetchUserLocation = () => {
+        console.log("Fetching user location...");
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    console.log(position.coords);
+                    setSourceLocation({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                    });
+                                        
+                },
+                (error) => {
+                    console.error("Error getting location:", error);
+                    // Need to fetch user's last known location or a default location - something to do for later
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0,
+                }
+            );
+        } else {
+            console.log("Geolocation not supported by this browser.");
+        }
+    }
+
+    const fetchReadyOrders = async (lat: number | undefined, long: number | undefined) => {
+        console.log("User location:", sourceLocation?.latitude, sourceLocation?.longitude);
+        if (lat === undefined || long === undefined) {
+            // Call function to fetch default location based orders
+            console.error("Latitude or Longitude is undefined");
+            return;
+        }
+        try {
+            setLoading(true);
+
+            // API call to fetch ready orders from backend based on user's location
+            axios.get(backend_url + `deliveries/ready?latitude=${lat}&longitude=${long}`)
+                .then(response => {
+                    setReadyOrders(response.data);
+                    // console.log("Fetched ready orders:", response.data);
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+            setLoading(false);
+        }
+        catch (error) {
+            console.error("Error fetching ready orders:", error);
+        }
+    }
+
+    const renderMap = (source: [number, number], destinations: [number, number][]) => {
+
+
         if (!mapContainer.current) return;
 
         // Initialize the map
@@ -100,89 +166,33 @@ export default function DeliveryPage() {
         map.current.fitBounds(bounds, { padding: 50 });
 
         return () => map.current?.remove();
-    }, []);
+    }
 
-    // Sample orders array
-    const ReadyOrders: Order[] = [
-        {
-            OrderId: 101,
-            RestaurantId: 1,
-            RestaurantName: "Taco Haven",
-            RestaurantAddress: "200 Market St, Raleigh, NC", // 🆕
-            DistanceFromRestaurant: 2.4,
-            DeliveryToRestaurant: 0.8,
-            Address: "123 Main St, Raleigh, NC",
-            Phone: "+1-919-555-1023",
-            Email: "contact@tacohaven.com",
-            IsActive: true,
-            Compensation: 5.75,
-            ExpectedTime: "2025-10-19T18:45:00Z",
-        },
-        {
-            OrderId: 102,
-            RestaurantId: 2,
-            RestaurantName: "Bella Italia",
-            RestaurantAddress: "890 Olive Rd, Cary, NC", // 🆕
-            DistanceFromRestaurant: 5.6,
-            DeliveryToRestaurant: 1.2,
-            Address: "456 Oak Ave, Cary, NC",
-            Phone: "+1-919-555-2374",
-            Email: "orders@bellaitalia.com",
-            IsActive: true,
-            Compensation: 7.5,
-            ExpectedTime: "2025-10-19T19:00:00Z",
-        },
-        {
-            OrderId: 103,
-            RestaurantId: 3,
-            RestaurantName: "Sushi World",
-            RestaurantAddress: "55 Sakura Blvd, Durham, NC", // 🆕
-            DistanceFromRestaurant: 3.1,
-            DeliveryToRestaurant: 0.9,
-            Address: "789 Elm St, Durham, NC",
-            Phone: "+1-919-555-4860",
-            Email: "support@sushiworld.com",
-            IsActive: false,
-            Compensation: 6.25,
-            ExpectedTime: "2025-10-19T18:30:00Z",
-        },
-        {
-            OrderId: 104,
-            RestaurantId: 4,
-            RestaurantName: "The Burger Joint",
-            RestaurantAddress: "15 Pine Dr, Apex, NC", // 🆕
-            DistanceFromRestaurant: 1.8,
-            DeliveryToRestaurant: 0.5,
-            Address: "321 Maple Dr, Apex, NC",
-            Phone: "+1-919-555-8745",
-            Email: "hello@burgerjoint.com",
-            IsActive: true,
-            Compensation: 4.95,
-            ExpectedTime: "2025-10-19T18:15:00Z",
-        },
-    ];
-
-
-
-    // Fetch location of user
     React.useEffect(() => {
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    console.log("Latitude:", position.coords.latitude);
-                    console.log("Longitude:", position.coords.longitude);
-                },
-                (error) => {
-                    console.error("Error getting location:", error);
-                }
-            );
-        } else {
-            console.log("Geolocation not supported by this browser.");
-        }
+        // Fetch current location of user and once location is fetched, get the ready orders with distance info accordingly.
+        if (sourceLocation == null || sourceLocation == undefined) fetchUserLocation();
+        
+        // fetchUserLocation();
+        // Once ready orders are fetched, render the map
+        // renderMap(source, destinations);
     }, []);
 
+    React.useEffect(() => {
+        // Once source location is available, fetch ready orders
+        if (sourceLocation != null && sourceLocation != undefined) {
+            fetchReadyOrders(sourceLocation.latitude, sourceLocation.longitude);
+        }
+    }, [sourceLocation]);
 
-    // Order Card Component
+    React.useEffect(() => {
+        // Once ready orders are fetched, update restaurant locations and render map
+        if (readyOrders.length > 0 && sourceLocation != null) {
+            const destinations: [number, number][] = readyOrders.map(order => [order.restaurants.longitude, order.restaurants.latitude]);
+            setRestaurantLocations(destinations.map(coord => ({ latitude: coord[1], longitude: coord[0] })));
+            renderMap([sourceLocation.longitude, sourceLocation.latitude], destinations);
+        }
+    }, [readyOrders]);
+
     const OrderCard = ({ readyOrders }: { readyOrders: Order }) => (
         <Card
             sx={{
@@ -194,112 +204,108 @@ export default function DeliveryPage() {
                     transform: 'translateY(-4px)',
                     boxShadow: 4
                 },
-                border: '1px solid #e0e0e0'
+                border: '1px solid #e0e0e0',
+                borderRadius: 2
             }}
         >
-            {/* Header with Avatar and Basic Info */}
+            {/* Header */}
             <CardContent sx={{ pb: 1 }}>
-
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
                     <Avatar
                         sx={{
                             width: 56,
                             height: 56,
                             mr: 2,
-                            backgroundColor: '#f3e5f5',
+                            backgroundColor: '#e3f2fd',
                             color: 'primary.main',
                             fontSize: '1.5rem'
                         }}
                     >
-                        {readyOrders.RestaurantName.charAt(0).toUpperCase()}
+                        {readyOrders.restaurants.name.charAt(0).toUpperCase()}
                     </Avatar>
+
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography variant="h6" component="h2" fontWeight="bold" noWrap>
-                            {readyOrders.RestaurantName}
+                        <Typography variant="h6" fontWeight="bold" noWrap>
+                            {readyOrders.restaurants.name}
                         </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                            <LocationIcon sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
-                            <Typography
-                                variant='body2'
-                                color='text.secondary'
-                            >
-                                {readyOrders.DistanceFromRestaurant} Miles to restaurant
-                            </Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                            <LocationIcon sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
-                            <Typography
-                                variant='body2'
-                                color='text.secondary'
-                            >
-                                {readyOrders.DeliveryToRestaurant} Miles after pickup
-                            </Typography>
-                        </Box>
+                        <Typography variant="body2" color="text.secondary" noWrap>
+                            {readyOrders.restaurants.address}
+                        </Typography>
                     </Box>
                 </Box>
 
+                <Divider sx={{ my: 1.5 }} />
 
-                {/* Cuisine Type Chip */}
-                {/* <Chip 
-              label={restaurant.CuisineType}
-              size="small"
-              sx={{
-                backgroundColor: cuisineColors[restaurant.CuisineType] || cuisineColors.Other,
-                color: 'primary.main',
-                fontWeight: 'medium',
-                mb: 2
-              }}
-            /> */}
+                {/* Route 1 */}
+                <Box sx={{ mb: 1 }}>
+                    <Typography fontWeight="bold" sx={{ display: 'flex', alignItems: "center" }}>
+                        🧭 You → Restaurant
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        {readyOrders.distance_to_restaurant_miles} miles | {readyOrders.duration_to_restaurant_minutes} min
+                    </Typography>
+                </Box>
 
-                {/* Description */}
-                {/* {restaurant.Description && (
-              <Typography 
-                variant="body2" 
-                color="text.secondary" 
-                sx={{ 
-                  mb: 2,
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                  lineHeight: 1.4
-                }}
-              >
-                {restaurant.Description}
-              </Typography>
-            )} */}
+                {/* Route 2 */}
+                <Box sx={{ mb: 1 }}>
+                    <Typography fontWeight="bold" sx={{ display: 'flex', alignItems: "center" }}>
+                        🧭 Restaurant → Customer
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        {/* {readyOrders.DeliveryToRestaurant} miles | {readyOrders.timeToCustomer} min */}
+                        3.5 miles | 15 min {/* Placeholder values */}
+                    </Typography>
+                </Box>
 
-                <Divider sx={{ my: 2 }} />
+                <Divider sx={{ my: 1.5 }} />
 
-                {/* Restaurant Details */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <AttachMoney sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
-                        Compensation: &nbsp;<span style={{ fontWeight: 'bold' }}>${readyOrders.Compensation}</span>
+                {/* Totals */}
+                <Box sx={{ mb: 1 }}>
+                    <Typography
+                        fontWeight="bold"
+                        sx={{ color: 'success.main' }}
+                    >
+                        {/* Total: {readyOrders.totalDistance} miles | {readyOrders.totalTime} min */}
+                        Total: 7.2 miles | 30 min {/* Placeholder values */}
+                    </Typography>
+                </Box>
 
-                    </Box>
+                <Divider sx={{ my: 1.5 }} />
 
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <AccessTime sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
-                        Expected Time: {readyOrders.ExpectedTime.substring(11, 16)}
+                {/* Delivery Target */}
+                <Box sx={{ mb: 1 }}>
+                    <Typography fontWeight="bold" sx={{ display: 'flex', alignItems: "center" }}>
+                        {/* 📦 Deliver To: {readyOrders.customer.name} */}
+                        📦 Deliver To: John Doe {/* Placeholder name */}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        {/* {readyOrders.customer.address} */}
+                        456 Elm St, Raleigh, NC {/* Placeholder address */}
+                    </Typography>
+                </Box>
 
-                    </Box>
+                <Divider sx={{ my: 1.5 }} />
 
-
+                Compensation & Expected Time
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" fontWeight="600">
+                        💰 ${readyOrders.delivery_fee}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        ⏱ ETA: {readyOrders.estimated_delivery_time==undefined ? '--':readyOrders.estimated_delivery_time.substring(11, 16)}
+                    </Typography>
                 </Box>
             </CardContent>
 
-            {/* Actions */}
+            {/* Primary Action */}
             <CardActions sx={{ mt: 'auto', px: 2, pb: 2 }}>
                 <Button
                     variant="contained"
                     fullWidth
-                    startIcon={<RestaurantIcon />}
-                    onClick={() => {
-                        // router.push(`/user/restaurants/${restaurant.RestaurantId}`);
-                    }}
+                    startIcon={<DeliveryDiningIcon />}
+                    onClick={() => {}}
                 >
-                    View Order Details
+                    Deliver
                 </Button>
             </CardActions>
         </Card>
@@ -307,10 +313,11 @@ export default function DeliveryPage() {
 
 
 
+
     return (
         <>
             <Navbar />
-            <h3 style={{justifySelf: "center", margin: "10px"}}>Browse nearby Orders</h3>
+            <h3 style={{ justifySelf: "center", margin: "10px" }}>Browse nearby Orders</h3>
             <div
                 className="map"
                 ref={mapContainer}
@@ -336,11 +343,9 @@ export default function DeliveryPage() {
                     gap: 3
                 }}>
                     {
-                        ReadyOrders
-                            .slice()
-                            .sort((a, b) => b.Compensation - a.Compensation)
-                            .map((Order) => (
-                                <OrderCard key={Order.OrderId} readyOrders={Order} />
+                        readyOrders
+                            .map((order, index) => (
+                                <OrderCard key={index} readyOrders={order} />
                             ))
                     }
                 </Box>

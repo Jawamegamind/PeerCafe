@@ -21,7 +21,7 @@ async def fetch_ready_orders(source: Location = Depends(location_from_query)):
         # In Python use None (not null) and the PostgREST client exposes `is_` (with underscore)
         # because `is` is a Python keyword. Use `is_` to test IS NULL.
         result = supabase.from_("orders").select(
-            "order_id, user_id, restaurant_id, restaurants(name, latitude, longitude), delivery_fee, tip_amount, estimated_pickup_time, estimated_delivery_time, latitude, longitude"
+            "order_id, user_id, restaurant_id, restaurants(name, latitude, longitude, address), delivery_fee, tip_amount, estimated_pickup_time, estimated_delivery_time, latitude, longitude"
             ).eq(
                 "status", "ready"
             ).is_(
@@ -149,10 +149,10 @@ async def fetch_ready_orders(source: Location = Depends(location_from_query)):
                 o_enriched["duration_to_restaurant"] = dur_s
 
             if dist_m is not None:
-                o_enriched["distance_to_restaurant_km"] = round(dist_m / 1000.0, 3)
+                o_enriched["distance_to_restaurant_miles"] = round(dist_m / 1609.34, 3)
                 o_enriched["restaurant_reachable_by_road"] = True
             else:
-                o_enriched["distance_to_restaurant_km"] = None
+                o_enriched["distance_to_restaurant_miles"] = None
                 o_enriched["restaurant_reachable_by_road"] = False
 
             if dur_s is not None:

@@ -128,7 +128,7 @@ def test_ready_orders_with_distances_single_chunk(client, monkeypatch):
     by_id = {o["order_id"]: o for o in data}
     assert by_id[1]["distance_to_restaurant"] == 1000.0
     assert by_id[1]["duration_to_restaurant"] == 600.0
-    assert pytest.approx(by_id[1]["distance_to_restaurant_km"]) == 1.0
+    assert pytest.approx(by_id[1]["distance_to_restaurant_miles"]) == 0.621
     assert pytest.approx(by_id[1]["duration_to_restaurant_minutes"]) == 10.0
 
 
