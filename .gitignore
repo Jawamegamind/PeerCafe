@@ -65,3 +65,7 @@ env/
 # ------------------------------
 Thumbs.db
 ehthumbs.db
+
+# Ignore local test runner script and its report
+/scripts/run_all_tests.ps1
+/scripts/test_results.txt
