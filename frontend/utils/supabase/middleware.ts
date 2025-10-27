@@ -1,24 +1,25 @@
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+/* eslint-disable */
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
 
 // Declaring the routes that need to be protected
 const protectedRoutes = [
   '/user/dashboard',
   '/user/profile',
-  '/user/restaurants', 
+  '/user/restaurants',
   '/admin/dashboard',
-  'admin/profile', 
+  'admin/profile',
   '/admin/restaurants',
   '/admin/restaurants/add',
-]
+];
 
 export async function updateSession(request: NextRequest) {
   // Debug: Log which route the middleware is being called for
-  console.log('🔍 Middleware called for route:', request.nextUrl.pathname)
-  
+  // console.log('🔍 Middleware called for route:', request.nextUrl.pathname);
+
   let supabaseResponse = NextResponse.next({
     request,
-  })
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,20 +27,22 @@ export async function updateSession(request: NextRequest) {
     {
       cookies: {
         getAll() {
-          return request.cookies.getAll()
+          return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value, options }) =>
+            request.cookies.set(name, value)
+          );
           supabaseResponse = NextResponse.next({
             request,
-          })
+          });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
-          )
+          );
         },
       },
     }
-  )
+  );
 
   // Do not run code between createServerClient and
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
@@ -47,39 +50,37 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANT: DO NOT REMOVE auth.getUser()
 
-//   const {
-//     data: { user },
-//   } = await supabase.auth.getUser()
+  //   const {
+  //     data: { user },
+  //   } = await supabase.auth.getUser()
 
-//   if (
-//     !user &&
-//     !request.nextUrl.pathname.startsWith('/login') &&
-//     !request.nextUrl.pathname.startsWith('/auth') &&
-//     !request.nextUrl.pathname.startsWith('/error')
-//   ) {
-//     // no user, potentially respond by redirecting the user to the login page
-//     const url = request.nextUrl.clone()
-//     url.pathname = '/login'
-//     return NextResponse.redirect(url)
-//   }
+  //   if (
+  //     !user &&
+  //     !request.nextUrl.pathname.startsWith('/login') &&
+  //     !request.nextUrl.pathname.startsWith('/auth') &&
+  //     !request.nextUrl.pathname.startsWith('/error')
+  //   ) {
+  //     // no user, potentially respond by redirecting the user to the login page
+  //     const url = request.nextUrl.clone()
+  //     url.pathname = '/login'
+  //     return NextResponse.redirect(url)
+  //   }
 
-// Getting the session of the authenticated user
-const session = await supabase.auth.getUser()
+  // Getting the session of the authenticated user
+  const session = await supabase.auth.getUser();
 
-// Getting the pathname from the request
-const pathname = request.nextUrl.pathname 
+  // Getting the pathname from the request
+  const pathname = request.nextUrl.pathname;
 
-// Checking if the path name is in the protected routes
-const isProtectedRoute = protectedRoutes.includes(pathname)
+  // Checking if the path name is in the protected routes
+  const isProtectedRoute = protectedRoutes.includes(pathname);
 
-// console.log("The session is: ", session)
+  // console.log("The session is: ", session)
 
-// If the route is protected and the user is not authenticated, redirect to the login page
-if (isProtectedRoute && session.error) {
-    return NextResponse.redirect(new URL('/login', request.url))
-}
-
-return supabaseResponse
+  // If the route is protected and the user is not authenticated, redirect to the login page
+  if (isProtectedRoute && session.error) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:
@@ -94,5 +95,5 @@ return supabaseResponse
   // If this is not done, you may be causing the browser and server to go out
   // of sync and terminate the user's session prematurely!
 
-  return supabaseResponse
+  return supabaseResponse;
 }

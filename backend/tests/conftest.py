@@ -1,16 +1,21 @@
 """
 Configuration and fixtures for pytest
 """
+
+import os
+from unittest.mock import Mock, patch
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import Mock, patch, MagicMock
-import os
+
 from main import app
+
 
 @pytest.fixture
 def client():
     """Create a test client for the FastAPI app"""
     return TestClient(app)
+
 
 @pytest.fixture
 def mock_supabase():
@@ -18,11 +23,20 @@ def mock_supabase():
     mock_client = Mock()
     mock_response = Mock()
     mock_response.data = []
-    mock_client.from_.return_value.select.return_value.eq.return_value.execute.return_value = mock_response
-    mock_client.from_.return_value.select.return_value.execute.return_value = mock_response
-    mock_client.from_.return_value.insert.return_value.execute.return_value = mock_response
-    mock_client.from_.return_value.update.return_value.eq.return_value.execute.return_value = mock_response
+    mock_client.from_.return_value.select.return_value.eq.return_value.execute.return_value = (
+        mock_response
+    )
+    mock_client.from_.return_value.select.return_value.execute.return_value = (
+        mock_response
+    )
+    mock_client.from_.return_value.insert.return_value.execute.return_value = (
+        mock_response
+    )
+    mock_client.from_.return_value.update.return_value.eq.return_value.execute.return_value = (
+        mock_response
+    )
     return mock_client
+
 
 @pytest.fixture
 def sample_user_data():
@@ -35,8 +49,9 @@ def sample_user_data():
         "phone": "+1234567890",
         "is_admin": False,
         "is_active": True,
-        "password": "secure_password_123"
+        "password": "secure_password_123",
     }
+
 
 @pytest.fixture
 def sample_restaurant_data():
@@ -48,8 +63,9 @@ def sample_restaurant_data():
         "phone": "+1234567890",
         "email": "info@mariospizza.com",
         "cuisine_type": "Italian",
-        "delivery_fee": 2.99
+        "delivery_fee": 2.99,
     }
+
 
 @pytest.fixture
 def sample_login_data():
@@ -57,8 +73,9 @@ def sample_login_data():
     return {
         "user_id": "test_user_123",
         "email": "john.doe@example.com",
-        "password": "secure_password_123"
+        "password": "secure_password_123",
     }
+
 
 @pytest.fixture
 def sample_menu_item_data():
@@ -69,14 +86,15 @@ def sample_menu_item_data():
         "price": 12.99,
         "is_available": True,
         "image": "https://example.com/pizza.jpg",
-        "quantity": 10
+        "quantity": 10,
     }
+
 
 @pytest.fixture(autouse=True)
 def setup_test_env():
     """Setup test environment variables"""
-    with patch.dict(os.environ, {
-        'PROJECT_URL': 'https://test.supabase.co',
-        'API_KEY': 'test_api_key'
-    }):
+    with patch.dict(
+        os.environ,
+        {"PROJECT_URL": "https://test.supabase.co", "API_KEY": "test_api_key"},
+    ):
         yield

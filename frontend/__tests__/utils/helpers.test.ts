@@ -47,7 +47,7 @@ describe('Utility Functions', () => {
     it('generates slugs correctly', () => {
       expect(generateSlug('Test Restaurant')).toBe('test-restaurant');
       expect(generateSlug('Pizza & Pasta Place')).toBe('pizza-pasta-place');
-      expect(generateSlug('Joe\'s Diner')).toBe('joes-diner');
+      expect(generateSlug("Joe's Diner")).toBe('joes-diner');
     });
 
     it('handles special characters', () => {
@@ -103,7 +103,7 @@ describe('Utility Functions', () => {
     it('handles overnight hours correctly', () => {
       // Current time: 14:30, restaurant open 22:00-02:00
       expect(isRestaurantOpen('22:00', '02:00')).toBe(false);
-      
+
       // Test with early morning time
       jest.spyOn(Date.prototype, 'getHours').mockReturnValue(1);
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);

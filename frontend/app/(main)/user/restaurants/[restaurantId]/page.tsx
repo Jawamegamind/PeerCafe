@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import * as React from 'react';
 import { useParams } from 'next/navigation';
@@ -11,12 +11,12 @@ import {
   CardMedia,
   Chip,
   Grid,
-  CircularProgress,
+  // CircularProgress,
   Alert,
   Paper,
-  Divider,
+  // Divider,
   Stack,
-  IconButton,
+  // IconButton,
   Skeleton,
   Button,
   CardActions,
@@ -24,7 +24,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Snackbar
+  Snackbar,
 } from '@mui/material';
 import {
   Restaurant as RestaurantIcon,
@@ -33,14 +33,14 @@ import {
   Cancel as UnavailableIcon,
   Star as StarIcon,
   ShoppingCart as CartIcon,
-  Add as AddIcon,
-  Warning as WarningIcon
+  // Add as AddIcon,
+  Warning as WarningIcon,
 } from '@mui/icons-material';
-import Navbar from "../../../../_components/navbar";
-import { useCart } from "../../../../_contexts/CartContext";
+import Navbar from '../../../../_components/navbar';
+import { useCart } from '../../../../_contexts/CartContext';
 
 interface MenuItem {
-  item_id: number;  // Changed from 'id' to match backend API
+  item_id: number; // Changed from 'id' to match backend API
   item_name: string;
   description?: string;
   price: number;
@@ -50,7 +50,7 @@ interface MenuItem {
 }
 
 interface Restaurant {
-  restaurant_id: number;  // Changed from 'id' to match backend API
+  restaurant_id: number; // Changed from 'id' to match backend API
   name: string;
   description?: string;
   cuisine_type?: string;
@@ -60,7 +60,12 @@ interface Restaurant {
 
 export default function RestaurantDetailPage() {
   const { restaurantId } = useParams();
-  const { addToCart, restaurant: cartRestaurant, clearCart, clearCartAndAddItem } = useCart();
+  const {
+    addToCart,
+    restaurant: cartRestaurant,
+    // clearCart,
+    clearCartAndAddItem,
+  } = useCart();
   const [menuItems, setMenuItems] = React.useState<MenuItem[]>([]);
   const [restaurant, setRestaurant] = React.useState<Restaurant | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -74,7 +79,7 @@ export default function RestaurantDetailPage() {
   }>({
     open: false,
     message: '',
-    severity: 'success'
+    severity: 'success',
   });
 
   // console.log("Restaurant ID from params is", restaurantId);
@@ -83,10 +88,12 @@ export default function RestaurantDetailPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch menu items
-        const menuResponse = await fetch(`http://localhost:8000/api/restaurants/${restaurantId}/menu`);
-        console.log("Menu response status:", menuResponse);
+        const menuResponse = await fetch(
+          `http://localhost:8000/api/restaurants/${restaurantId}/menu`
+        );
+        // console.log('Menu response status:', menuResponse);
         if (!menuResponse.ok) {
           throw new Error('Failed to fetch menu items');
         }
@@ -95,25 +102,16 @@ export default function RestaurantDetailPage() {
 
         // Fetch restaurant details (assuming this endpoint exists)
         try {
-          const restaurantResponse = await fetch(`http://localhost:8000/api/restaurants/${restaurantId}`);
-          console.log("Restaurant response status:", restaurantResponse);
+          const restaurantResponse = await fetch(
+            `http://localhost:8000/api/restaurants/${restaurantId}`
+          );
+          // console.log('Restaurant response status:', restaurantResponse);
           if (restaurantResponse.ok) {
             const restaurantData = await restaurantResponse.json();
-            console.log("Restaurant data fetched:", restaurantData);
-            // Normalize to snake_case fields; accept PascalCase from older mocks/tests
-            const rd: any = restaurantData;
-            const normalized: Restaurant = {
-              restaurant_id:
-                rd?.restaurant_id ?? rd?.RestaurantId ?? parseInt(restaurantId as string),
-              name: rd?.name ?? rd?.Name ?? 'Restaurant Name',
-              description: rd?.description ?? rd?.Description,
-              cuisine_type: rd?.cuisine_type ?? rd?.CuisineType,
-              rating: rd?.rating ?? rd?.Rating,
-              address: rd?.address ?? rd?.Address,
-            };
-            setRestaurant(normalized);
+            // console.log('Restaurant data fetched:', restaurantData);
+            setRestaurant(restaurantData);
           }
-        } catch (restaurantError) {
+        } catch {
           // If restaurant details endpoint doesn't exist, create a basic restaurant object
           setRestaurant({
             restaurant_id: parseInt(restaurantId as string),
@@ -143,16 +141,16 @@ export default function RestaurantDetailPage() {
       Price: item.price,
       Image: item.image,
       restaurantId: restaurant.restaurant_id,
-      restaurantName: restaurant.name
+      restaurantName: restaurant.name,
     };
 
     const success = addToCart(cartItem);
-    
+
     if (success) {
       setSnackbar({
         open: true,
         message: `${item.item_name} added to cart!`,
-        severity: 'success'
+        severity: 'success',
       });
     } else {
       // Cart has items from different restaurant
@@ -169,13 +167,13 @@ export default function RestaurantDetailPage() {
         Price: pendingItem.price,
         Image: pendingItem.image,
         restaurantId: restaurant.restaurant_id,
-        restaurantName: restaurant.name
+        restaurantName: restaurant.name,
       };
       clearCartAndAddItem(cartItem);
       setSnackbar({
         open: true,
         message: `Cart cleared and ${pendingItem.item_name} added!`,
-        severity: 'success'
+        severity: 'success',
       });
     }
     setConflictDialogOpen(false);
@@ -187,8 +185,8 @@ export default function RestaurantDetailPage() {
   };
 
   const MenuItemCard: React.FC<{ item: MenuItem }> = ({ item }) => (
-    <Card 
-      sx={{ 
+    <Card
+      sx={{
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -209,8 +207,17 @@ export default function RestaurantDetailPage() {
           sx={{ objectFit: 'cover' }}
         />
       )}
-      <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+      <CardContent
+        sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            mb: 1,
+          }}
+        >
           <Typography variant="h6" component="h3" sx={{ flexGrow: 1, pr: 1 }}>
             {item.item_name}
           </Typography>
@@ -222,18 +229,25 @@ export default function RestaurantDetailPage() {
             variant="outlined"
           />
         </Box>
-        
+
         {item.description && (
-          <Typography 
-            variant="body2" 
-            color="text.secondary" 
+          <Typography
+            variant="body2"
+            color="text.secondary"
             sx={{ mb: 2, flexGrow: 1 }}
           >
             {item.description}
           </Typography>
         )}
-        
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto' }}>
+
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mt: 'auto',
+          }}
+        >
           <Chip
             icon={<PriceIcon />}
             label={`$${item.price.toFixed(2)}`}
@@ -274,7 +288,7 @@ export default function RestaurantDetailPage() {
             <Skeleton variant="text" width="40%" height={24} />
           </Paper>
           <Grid container spacing={3}>
-            {[1, 2, 3, 4, 5, 6].map((item) => (
+            {[1, 2, 3, 4, 5, 6].map(item => (
               <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item}>
                 <Card>
                   <Skeleton variant="rectangular" height={160} />
@@ -282,7 +296,13 @@ export default function RestaurantDetailPage() {
                     <Skeleton variant="text" width="80%" height={28} />
                     <Skeleton variant="text" width="100%" height={20} />
                     <Skeleton variant="text" width="60%" height={20} />
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        mt: 2,
+                      }}
+                    >
                       <Skeleton variant="rounded" width={80} height={32} />
                       <Skeleton variant="rounded" width={60} height={32} />
                     </Box>
@@ -315,63 +335,67 @@ export default function RestaurantDetailPage() {
       <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Restaurant Header */}
         {restaurant && (
-          <Paper 
+          <Paper
             elevation={2}
-            sx={{ 
-              p: 4, 
+            sx={{
+              p: 4,
               mb: 4,
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               color: 'white',
-              borderRadius: 2
+              borderRadius: 2,
             }}
           >
             <Stack spacing={2}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <RestaurantIcon sx={{ fontSize: 40 }} />
-                <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold' }}>
+                <Typography
+                  variant="h3"
+                  component="h1"
+                  sx={{ fontWeight: 'bold' }}
+                >
                   {restaurant.name}
                 </Typography>
               </Box>
-              
+
               {restaurant.description && (
                 <Typography variant="h6" sx={{ opacity: 0.9, maxWidth: '80%' }}>
                   {restaurant.description}
                 </Typography>
               )}
-              
+
               <Stack direction="row" spacing={2} flexWrap="wrap">
                 {restaurant.cuisine_type && (
-                  <Chip 
-                    label={restaurant.cuisine_type} 
-                    variant="outlined" 
-                    sx={{ 
-                      borderColor: 'white', 
+                  <Chip
+                    label={restaurant.cuisine_type}
+                    variant="outlined"
+                    sx={{
+                      borderColor: 'white',
                       color: 'white',
-                      '& .MuiChip-label': { fontWeight: 'medium' }
-                    }} 
+                      '& .MuiChip-label': { fontWeight: 'medium' },
+                    }}
                   />
                 )}
                 {restaurant.rating && (
-                  <Chip 
+                  <Chip
                     icon={<StarIcon />}
-                    label={`${restaurant.rating}/5`} 
-                    variant="outlined" 
-                    sx={{ 
-                      borderColor: 'white', 
+                    label={`${restaurant.rating}/5`}
+                    variant="outlined"
+                    sx={{
+                      borderColor: 'white',
                       color: 'white',
-                      '& .MuiChip-label': { fontWeight: 'medium' }
-                    }} 
+                      '& .MuiChip-label': { fontWeight: 'medium' },
+                    }}
                   />
                 )}
                 {restaurant.address && (
-                  <Chip 
-                    label={restaurant.address} 
-                    variant="outlined" 
-                    sx={{ 
-                      borderColor: 'white', 
+                  <Chip
+                    label={restaurant.address}
+                    variant="outlined"
+                    sx={{
+                      borderColor: 'white',
                       color: 'white',
-                      '& .MuiChip-label': { fontWeight: 'medium' }
-                    }} 
+                      '& .MuiChip-label': { fontWeight: 'medium' },
+                    }}
                   />
                 )}
               </Stack>
@@ -382,7 +406,9 @@ export default function RestaurantDetailPage() {
         {/* Menu Items */}
         {menuItems.length === 0 ? (
           <Paper sx={{ p: 4, textAlign: 'center' }}>
-            <RestaurantIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+            <RestaurantIcon
+              sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }}
+            />
             <Typography variant="h5" gutterBottom color="text.secondary">
               No menu items available
             </Typography>
@@ -392,30 +418,30 @@ export default function RestaurantDetailPage() {
           </Paper>
         ) : (
           <Box>
-            <Typography 
-              variant="h4" 
-              component="h2" 
-              gutterBottom 
-              sx={{ 
+            <Typography
+              variant="h4"
+              component="h2"
+              gutterBottom
+              sx={{
                 fontWeight: 'bold',
                 color: 'primary.main',
                 mb: 3,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 1
+                gap: 1,
               }}
             >
               Menu
-              <Chip 
-                label={`${menuItems.length} items`} 
-                size="small" 
-                variant="outlined" 
+              <Chip
+                label={`${menuItems.length} items`}
+                size="small"
+                variant="outlined"
                 color="primary"
               />
             </Typography>
-            
+
             <Grid container spacing={3}>
-              {menuItems.map((item) => (
+              {menuItems.map(item => (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.item_id}>
                   <MenuItemCard item={item} />
                 </Grid>
@@ -426,8 +452,8 @@ export default function RestaurantDetailPage() {
       </Container>
 
       {/* Restaurant Conflict Dialog */}
-      <Dialog 
-        open={conflictDialogOpen} 
+      <Dialog
+        open={conflictDialogOpen}
         onClose={() => setConflictDialogOpen(false)}
         maxWidth="sm"
         fullWidth
@@ -438,20 +464,20 @@ export default function RestaurantDetailPage() {
         </DialogTitle>
         <DialogContent>
           <Typography variant="body1" paragraph>
-            Your cart contains items from <strong>{cartRestaurant?.name}</strong>.
+            Your cart contains items from{' '}
+            <strong>{cartRestaurant?.name}</strong>.
           </Typography>
           <Typography variant="body1" paragraph>
-            You can only order from one restaurant at a time. Would you like to clear your current cart and add this item from <strong>{restaurant?.name}</strong>?
+            You can only order from one restaurant at a time. Would you like to
+            clear your current cart and add this item from{' '}
+            <strong>{restaurant?.name}</strong>?
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button 
-            onClick={() => setConflictDialogOpen(false)}
-            color="inherit"
-          >
+          <Button onClick={() => setConflictDialogOpen(false)} color="inherit">
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={handleReplaceCart}
             variant="contained"
             color="primary"
@@ -468,7 +494,11 @@ export default function RestaurantDetailPage() {
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>

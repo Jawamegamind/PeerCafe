@@ -44,25 +44,28 @@ export function truncateText(text: string, maxLength: number): string {
 export function isRestaurantOpen(openTime: string, closeTime: string): boolean {
   const now = new Date();
   const currentTime = now.getHours() * 60 + now.getMinutes();
-  
+
   const [openHour, openMinute] = openTime.split(':').map(Number);
   const [closeHour, closeMinute] = closeTime.split(':').map(Number);
-  
+
   const openMinutes = openHour * 60 + openMinute;
   const closeMinutes = closeHour * 60 + closeMinute;
-  
+
   // Handle overnight hours (e.g., 22:00 - 02:00)
   if (closeMinutes < openMinutes) {
     return currentTime >= openMinutes || currentTime <= closeMinutes;
   }
-  
+
   return currentTime >= openMinutes && currentTime <= closeMinutes;
 }
 
 /**
  * Calculate delivery time estimate
  */
-export function calculateDeliveryTime(distance: number, trafficFactor: number = 1): number {
+export function calculateDeliveryTime(
+  distance: number,
+  trafficFactor: number = 1
+): number {
   const baseTime = 20; // Base 20 minutes
   const additionalTime = Math.ceil(distance * 2 * trafficFactor);
   return baseTime + additionalTime;

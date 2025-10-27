@@ -1,0 +1,107 @@
+name: Code Quality 🔍
+
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: code-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend-quality:
+    name: Frontend Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./frontend
+
+      - name: TypeScript type check
+        run: npm run type-check
+        working-directory: ./frontend
+
+      - name: ESLint check (allow warnings)
+        run: npm run lint
+        working-directory: ./frontend
+        # continue-on-error: true
+
+      - name: Prettier format check
+        run: npm run format:check
+        working-directory: ./frontend
+        # continue-on-error: true
+
+  backend-quality:
+    name: Backend Code Quality
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_URL: ${{ secrets.PROJECT_URL }}
+      API_KEY: ${{ secrets.API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          python-version: '3.10'
+          environment-file: ./backend/requirements.yaml
+          activate-environment: backend
+
+      - name: Install dependencies
+        shell: bash -el {0}
+        run: |
+          cd backend
+          pip install -e .
+
+      - name: Code formatting check (Black)
+        shell: bash -el {0}
+        run: |
+          cd backend
+          black --check --diff .
+
+      - name: Import sorting check (isort)
+        shell: bash -el {0}
+        run: |
+          cd backend
+          isort --check-only --diff .
+
+      - name: Linting check (Flake8)
+        shell: bash -el {0}
+        run: |
+          cd backend
+          flake8 .
+
+      - name: Security check (Bandit)
+        shell: bash -el {0}
+        run: |
+          cd backend
+          bandit -r . -f json -o bandit-report.json --skip B101,B105 --exclude tests/
+        continue-on-error: true  # Allow bandit to fail initially
+
+      - name: Run tests
+        shell: bash -el {0}
+        run: |
+          cd backend
+          pytest --cov=. --cov-report=term
