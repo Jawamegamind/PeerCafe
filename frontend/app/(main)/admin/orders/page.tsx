@@ -66,12 +66,17 @@ const STATUS_PRIORITY = [
 export default function AdminOrdersPage() {
   const router = useRouter();
   // API base can be configured via NEXT_PUBLIC_API_URL (e.g. http://localhost:8000/api)
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [restaurants, setRestaurants] = React.useState<Restaurant[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [filter, setFilter] = React.useState('');
-  const [snackbar, setSnackbar] = React.useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [snackbar, setSnackbar] = React.useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error',
+  });
 
   React.useEffect(() => {
     fetchData();
@@ -94,7 +99,11 @@ export default function AdminOrdersPage() {
       setOrders(ordersData);
       setRestaurants(restaurantsData);
     } catch (err: any) {
-      setSnackbar({ open: true, message: err.message || 'Failed to load data', severity: 'error' });
+      setSnackbar({
+        open: true,
+        message: err.message || 'Failed to load data',
+        severity: 'error',
+      });
     } finally {
       setLoading(false);
     }
@@ -107,9 +116,12 @@ export default function AdminOrdersPage() {
 
   const updateOrderStatus = async (order_id: string, newStatus: string) => {
     try {
-      const res = await fetch(`${API_BASE}/orders/${order_id}/status?new_status=${newStatus}`, {
-        method: 'PATCH',
-      });
+      const res = await fetch(
+        `${API_BASE}/orders/${order_id}/status?new_status=${newStatus}`,
+        {
+          method: 'PATCH',
+        }
+      );
 
       if (!res.ok) {
         const err = await res.json();
@@ -117,19 +129,34 @@ export default function AdminOrdersPage() {
       }
 
       const updated = await res.json();
-      setOrders(prev => prev.map(o => (o.order_id === updated.order_id ? updated : o)));
-      setSnackbar({ open: true, message: `Order ${order_id} updated to ${newStatus}`, severity: 'success' });
+      setOrders(prev =>
+        prev.map(o => (o.order_id === updated.order_id ? updated : o))
+      );
+      setSnackbar({
+        open: true,
+        message: `Order ${order_id} updated to ${newStatus}`,
+        severity: 'success',
+      });
     } catch (err: any) {
-      setSnackbar({ open: true, message: err.message || 'Failed to update order', severity: 'error' });
+      setSnackbar({
+        open: true,
+        message: err.message || 'Failed to update order',
+        severity: 'error',
+      });
     }
   };
 
   const filtered = React.useMemo(() => {
     const lower = filter.trim().toLowerCase();
-    let list = orders.map(o => ({ ...o, restaurant_name: getRestaurantName(o.restaurant_id) } as any));
+    let list = orders.map(
+      o =>
+        ({ ...o, restaurant_name: getRestaurantName(o.restaurant_id) }) as any
+    );
 
     if (lower) {
-      list = list.filter((o: any) => o.restaurant_name.toLowerCase().includes(lower));
+      list = list.filter((o: any) =>
+        o.restaurant_name.toLowerCase().includes(lower)
+      );
     }
 
     // sort by status priority, then created_at desc
@@ -153,16 +180,38 @@ export default function AdminOrdersPage() {
       <Navbar />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Breadcrumbs sx={{ mb: 3 }}>
-          <Link color="inherit" href="/admin/dashboard" sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <Link
+            color="inherit"
+            href="/admin/dashboard"
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              textDecoration: 'none',
+            }}
+          >
             Admin Dashboard
           </Link>
           <Typography color="text.primary">Orders</Typography>
         </Breadcrumbs>
 
         <Paper elevation={3} sx={{ p: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h4" color="primary.main" fontWeight="bold">Order Management</Typography>
-            <TextField label="Filter by restaurant" value={filter} onChange={e => setFilter(e.target.value)} size="small" />
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 3,
+            }}
+          >
+            <Typography variant="h4" color="primary.main" fontWeight="bold">
+              Order Management
+            </Typography>
+            <TextField
+              label="Filter by restaurant"
+              value={filter}
+              onChange={e => setFilter(e.target.value)}
+              size="small"
+            />
           </Box>
 
           <Divider sx={{ mb: 3 }} />
@@ -176,51 +225,120 @@ export default function AdminOrdersPage() {
               <Table>
                 <TableHead>
                   <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                    <TableCell><strong>Order ID</strong></TableCell>
-                    <TableCell><strong>Restaurant</strong></TableCell>
-                    <TableCell><strong>Total</strong></TableCell>
-                    <TableCell><strong>Status</strong></TableCell>
-                    <TableCell><strong>Created</strong></TableCell>
-                    <TableCell align="center"><strong>Actions</strong></TableCell>
+                    <TableCell>
+                      <strong>Order ID</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Restaurant</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Total</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Status</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Created</strong>
+                    </TableCell>
+                    <TableCell align="center">
+                      <strong>Actions</strong>
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {filtered.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                        <Typography variant="body1" color="text.secondary">No orders found.</Typography>
+                        <Typography variant="body1" color="text.secondary">
+                          No orders found.
+                        </Typography>
                       </TableCell>
                     </TableRow>
                   ) : (
                     filtered.map((order: any) => (
                       <TableRow key={order.order_id} hover>
                         <TableCell>
-                          <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>{order.order_id}</Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{ fontFamily: 'monospace' }}
+                          >
+                            {order.order_id}
+                          </Typography>
                         </TableCell>
                         <TableCell>
-                          <Chip label={order.restaurant_name} size="small" color="primary" />
+                          <Chip
+                            label={order.restaurant_name}
+                            size="small"
+                            color="primary"
+                          />
                         </TableCell>
                         <TableCell>
-                          <Typography variant="body2">${order.total_amount?.toFixed?.(2) ?? order.total_amount}</Typography>
+                          <Typography variant="body2">
+                            $
+                            {order.total_amount?.toFixed?.(2) ??
+                              order.total_amount}
+                          </Typography>
                         </TableCell>
                         <TableCell>
-                          <Chip label={order.status} size="small" color="default" />
+                          <Chip
+                            label={order.status}
+                            size="small"
+                            color="default"
+                          />
                         </TableCell>
                         <TableCell>
-                          <Typography variant="body2" color="text.secondary">{order.created_at ? new Date(order.created_at).toLocaleString() : '-'}</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {order.created_at
+                              ? new Date(order.created_at).toLocaleString()
+                              : '-'}
+                          </Typography>
                         </TableCell>
                         <TableCell align="center">
-                          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              gap: 1,
+                              justifyContent: 'center',
+                            }}
+                          >
                             {order.status === 'pending' && (
-                              <Button size="small" variant="contained" color="primary" onClick={() => updateOrderStatus(order.order_id, 'confirmed')}>Accept</Button>
+                              <Button
+                                size="small"
+                                variant="contained"
+                                color="primary"
+                                onClick={() =>
+                                  updateOrderStatus(order.order_id, 'confirmed')
+                                }
+                              >
+                                Accept
+                              </Button>
                             )}
 
-                            {(order.status === 'confirmed' || order.status === 'preparing') && (
-                              <Button size="small" variant="contained" color="success" onClick={() => updateOrderStatus(order.order_id, 'ready')}>Mark Ready</Button>
+                            {(order.status === 'confirmed' ||
+                              order.status === 'preparing') && (
+                              <Button
+                                size="small"
+                                variant="contained"
+                                color="success"
+                                onClick={() =>
+                                  updateOrderStatus(order.order_id, 'ready')
+                                }
+                              >
+                                Mark Ready
+                              </Button>
                             )}
 
-                            <Button size="small" variant="outlined" onClick={() => router.push(`/admin/restaurants/${order.restaurant_id}`)}>View Restaurant</Button>
-
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() =>
+                                router.push(
+                                  `/admin/restaurants/${order.restaurant_id}`
+                                )
+                              }
+                            >
+                              View Restaurant
+                            </Button>
                           </Box>
                         </TableCell>
                       </TableRow>
@@ -232,8 +350,15 @@ export default function AdminOrdersPage() {
           )}
         </Paper>
 
-        <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => setSnackbar(s => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
-          <Alert severity={snackbar.severity} variant="filled">{snackbar.message}</Alert>
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert severity={snackbar.severity} variant="filled">
+            {snackbar.message}
+          </Alert>
         </Snackbar>
       </Container>
     </>

@@ -1,10 +1,4 @@
-import {
-  render,
-  screen,
-  fireEvent,
-  waitFor,
-  act,
-} from '../../test-utils';
+import { render, screen, fireEvent, waitFor, act } from '../../test-utils';
 import '@testing-library/jest-dom';
 import ResponsiveAppBar from '../../app/_components/navbar';
 import { CartProvider } from '../../app/_contexts/CartContext';
@@ -105,7 +99,7 @@ describe('ResponsiveAppBar Component', () => {
   });
 
   it('displays navigation menu items on desktop', async () => {
-  await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+    await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     // Check for main navigation items
     expect(screen.getByRole('button', { name: /home/i })).toBeInTheDocument();
@@ -136,7 +130,7 @@ describe('ResponsiveAppBar Component', () => {
   });
 
   it('navigates to home page when Home button is clicked', async () => {
-  await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+    await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     const homeButton = screen.getByRole('button', { name: /home/i });
     fireEvent.click(homeButton);
@@ -164,7 +158,7 @@ describe('ResponsiveAppBar Component', () => {
       error: null,
     });
 
-  await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+    await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     // Wait for the component to load user data first
     // Wait for the component to load user data (auth.getUser and DB single)
@@ -205,7 +199,7 @@ describe('ResponsiveAppBar Component', () => {
       error: null,
     });
 
-  await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+    await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     // Wait for the component to load user data first and verify it's loaded
     await waitFor(() => {
@@ -229,7 +223,7 @@ describe('ResponsiveAppBar Component', () => {
   it('handles logout functionality', async () => {
     const { logout } = require('../../app/(authentication)/login/actions');
 
-  await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+    await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     const logoutButton = screen.getByRole('button', { name: /logout/i });
     fireEvent.click(logoutButton);
@@ -310,7 +304,7 @@ describe('ResponsiveAppBar Component', () => {
       error: null,
     });
 
-  await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+    await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     // Wait for user data to load and verify cart is not present
     await waitFor(() => {
