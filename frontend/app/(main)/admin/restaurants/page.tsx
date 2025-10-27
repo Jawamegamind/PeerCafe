@@ -75,12 +75,9 @@ export default function RestaurantsPage() {
 
   const fetchRestaurants = async () => {
     try {
-      console.log('Fetching restaurants from API...');
       const response = await fetch('http://localhost:8000/api/restaurants');
-      console.log('Response status:', response.status);
       if (response.ok) {
         const data = await response.json();
-        console.log('Fetched restaurants:', data);
         setRestaurants(data);
       } else {
         // console.error('Failed to fetch restaurants');

@@ -19,7 +19,6 @@ import {
   Divider,
   CircularProgress,
   TextField,
-  IconButton,
   Snackbar,
   Alert,
 } from '@mui/material';
@@ -95,7 +94,6 @@ export default function AdminOrdersPage() {
       setOrders(ordersData);
       setRestaurants(restaurantsData);
     } catch (err: any) {
-      console.error('Error fetching admin orders data', err);
       setSnackbar({ open: true, message: err.message || 'Failed to load data', severity: 'error' });
     } finally {
       setLoading(false);
@@ -122,7 +120,6 @@ export default function AdminOrdersPage() {
       setOrders(prev => prev.map(o => (o.order_id === updated.order_id ? updated : o)));
       setSnackbar({ open: true, message: `Order ${order_id} updated to ${newStatus}`, severity: 'success' });
     } catch (err: any) {
-      console.error('Failed to update order', err);
       setSnackbar({ open: true, message: err.message || 'Failed to update order', severity: 'error' });
     }
   };
