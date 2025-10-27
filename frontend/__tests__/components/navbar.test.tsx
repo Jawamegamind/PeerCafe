@@ -4,7 +4,7 @@ import {
   fireEvent,
   waitFor,
   act,
-} from '@testing-library/react';
+} from '../../test-utils';
 import '@testing-library/jest-dom';
 import ResponsiveAppBar from '../../app/_components/navbar';
 import { CartProvider } from '../../app/_contexts/CartContext';
@@ -97,15 +97,15 @@ describe('ResponsiveAppBar Component', () => {
     });
   });
 
-  it('renders the navbar with correct branding', () => {
-    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+  it('renders the navbar with correct branding', async () => {
+    await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     // Check for PeerCafe branding (desktop view)
     expect(screen.getByText('PeerCafe')).toBeInTheDocument();
   });
 
   it('displays navigation menu items on desktop', async () => {
-    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+  await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     // Check for main navigation items
     expect(screen.getByRole('button', { name: /home/i })).toBeInTheDocument();
@@ -122,8 +122,8 @@ describe('ResponsiveAppBar Component', () => {
     });
   });
 
-  it('shows mobile menu when hamburger menu is clicked', () => {
-    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+  it('shows mobile menu when hamburger menu is clicked', async () => {
+    await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     // Find and click the hamburger menu (mobile menu trigger)
     const mobileMenuButton = screen.getByRole('button', {
@@ -136,7 +136,7 @@ describe('ResponsiveAppBar Component', () => {
   });
 
   it('navigates to home page when Home button is clicked', async () => {
-    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+  await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     const homeButton = screen.getByRole('button', { name: /home/i });
     fireEvent.click(homeButton);
@@ -164,11 +164,13 @@ describe('ResponsiveAppBar Component', () => {
       error: null,
     });
 
-    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+  await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     // Wait for the component to load user data first
+    // Wait for the component to load user data (auth.getUser and DB single)
     await waitFor(() => {
       expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled();
+      expect(mockSingle).toHaveBeenCalled();
     });
 
     const profileButton = screen.getByRole('button', { name: /profile/i });
@@ -203,7 +205,7 @@ describe('ResponsiveAppBar Component', () => {
       error: null,
     });
 
-    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+  await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     // Wait for the component to load user data first and verify it's loaded
     await waitFor(() => {
@@ -227,7 +229,7 @@ describe('ResponsiveAppBar Component', () => {
   it('handles logout functionality', async () => {
     const { logout } = require('../../app/(authentication)/login/actions');
 
-    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+  await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     const logoutButton = screen.getByRole('button', { name: /logout/i });
     fireEvent.click(logoutButton);
@@ -238,8 +240,8 @@ describe('ResponsiveAppBar Component', () => {
     });
   });
 
-  it('closes mobile menu when clicking outside menu items', () => {
-    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+  it('closes mobile menu when clicking outside menu items', async () => {
+    await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     // Open mobile menu
     const mobileMenuButton = screen.getByRole('button', {
@@ -263,8 +265,8 @@ describe('ResponsiveAppBar Component', () => {
     expect(mockPush).toHaveBeenCalledWith('/homepage');
   });
 
-  it('renders correctly on different screen sizes', () => {
-    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+  it('renders correctly on different screen sizes', async () => {
+    await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     // Both desktop and mobile variants of the logo should exist in DOM
     // (Material-UI handles visibility with CSS)
@@ -272,8 +274,8 @@ describe('ResponsiveAppBar Component', () => {
     expect(logoElements.length).toBeGreaterThan(0);
   });
 
-  it('has proper accessibility attributes', () => {
-    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+  it('has proper accessibility attributes', async () => {
+    await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     const mobileMenuButton = screen.getByRole('button', {
       name: /account of current user/i,
@@ -285,7 +287,7 @@ describe('ResponsiveAppBar Component', () => {
 
   // New cart-specific tests
   it('displays cart icon with badge showing item count for regular users', async () => {
-    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+    await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     // Wait for user data to load
     await waitFor(() => {
@@ -308,7 +310,7 @@ describe('ResponsiveAppBar Component', () => {
       error: null,
     });
 
-    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+  await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     // Wait for user data to load and verify cart is not present
     await waitFor(() => {
@@ -320,7 +322,7 @@ describe('ResponsiveAppBar Component', () => {
   });
 
   it('opens cart dropdown when cart icon is clicked', async () => {
-    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+    await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     // Wait for cart to be available
     await waitFor(() => {
@@ -334,7 +336,7 @@ describe('ResponsiveAppBar Component', () => {
   });
 
   it('shows empty cart message when cart is empty', async () => {
-    render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+    await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     // Wait for cart to be available
     await waitFor(() => {
