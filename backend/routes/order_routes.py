@@ -66,6 +66,55 @@ def _get_db_table(client, table_name: str):
     return getattr(client, "table")(table_name)
 
 
+def _safe_float(val, default=None):
+    try:
+        return float(val) if val is not None else default
+    except Exception:
+        return default
+
+
+def _compute_item_subtotal(it) -> float:
+    """Return a numeric subtotal for a single order item, resilient to malformed data."""
+    if not it:
+        return 0.0
+    if isinstance(it, dict) and ("subtotal" in it):
+        return _safe_float(it.get("subtotal"), 0) or 0
+    price = _safe_float(getattr(it, "get", lambda k, d=None: d)("price", 0), 0) or 0
+    qty = _safe_float(getattr(it, "get", lambda k, d=None: d)("quantity", 1), 1) or 1
+    try:
+        return float(price * qty)
+    except Exception:
+        return 0.0
+
+
+def _compute_subtotal(items) -> float:
+    total = 0.0
+    for it in items:
+        try:
+            total += _compute_item_subtotal(it)
+        except Exception:
+            # skip malformed items
+            continue
+    return total
+
+
+def _recompute_total(o: dict):
+    """Recompute total_amount from components and indicate whether it changed.
+
+    Returns a tuple: (changed: bool, old_total_value_or_None, new_total_or_None)
+    """
+    tax = _safe_float(o.get("tax_amount"), 0) or 0
+    delivery_fee = _safe_float(o.get("delivery_fee"), 0) or 0
+    tip = _safe_float(o.get("tip_amount"), 0) or 0
+    discount = _safe_float(o.get("discount_amount"), 0) or 0
+    computed_total = round(o.get("subtotal", 0) + tax + delivery_fee + tip - discount, 2)
+    stored_total = o.get("total_amount")
+    stored_total_val = _safe_float(stored_total)
+    if stored_total_val is None or abs((stored_total_val or 0) - computed_total) > 0.01:
+        return True, stored_total_val, computed_total
+    return False, stored_total_val, None
+
+
 @router.get("/sanitization-metrics", response_model=dict)
 async def sanitization_metrics():
     """Return in-memory sanitization metrics."""
@@ -73,9 +122,7 @@ async def sanitization_metrics():
         return dict(_sanitization_counts)
 
 
-def _sanitize_order_record(
-    order: dict,
-) -> dict:  # noqa: C901  (complexity - tracked for future refactor)
+def _sanitize_order_record(order: dict) -> dict:  # noqa: C901  (complexity tracked; consider refactor)
     """Fix simple data inconsistencies in an order record.
 
     - Recomputes subtotal from order_items when it disagrees with stored subtotal.
@@ -86,38 +133,10 @@ def _sanitize_order_record(
     """
     try:
         items = order.get("order_items") or []
-        computed_sub = 0.0
-        for it in items:
-            # Prefer explicit subtotal on item, otherwise compute price*quantity
-            if it is None:
-                continue
-            item_sub = (
-                it.get("subtotal")
-                if isinstance(it, dict) and ("subtotal" in it)
-                else None
-            )
-            if item_sub is None:
-                try:
-                    price = float(it.get("price", 0) or 0)
-                except Exception:
-                    price = 0.0
-                try:
-                    qty = float(it.get("quantity", 1) or 1)
-                except Exception:
-                    qty = 1.0
-                item_sub = price * qty
-            try:
-                computed_sub += float(item_sub or 0)
-            except Exception:
-                # Skip malformed item
-                continue
+        computed_sub = _compute_subtotal(items)
 
         # compare with stored subtotal (allow tiny rounding diffs)
-        stored_sub = order.get("subtotal")
-        try:
-            stored_sub_val = float(stored_sub) if stored_sub is not None else None
-        except Exception:
-            stored_sub_val = None
+        stored_sub_val = _safe_float(order.get("subtotal"))
 
         subtotal_changed = False
         total_changed = False
@@ -129,27 +148,9 @@ def _sanitize_order_record(
 
         # Try to recompute total_amount when components are present
         try:
-            tax = float(order.get("tax_amount") or 0)
-            delivery_fee = float(order.get("delivery_fee") or 0)
-            tip = float(order.get("tip_amount") or 0)
-            discount = float(order.get("discount_amount") or 0)
-            computed_total = round(
-                order.get("subtotal", 0) + tax + delivery_fee + tip - discount, 2
-            )
-            stored_total = order.get("total_amount")
-            try:
-                stored_total_val = (
-                    float(stored_total) if stored_total is not None else None
-                )
-            except Exception:
-                stored_total_val = None
-
-            if (
-                stored_total_val is None
-                or abs((stored_total_val or 0) - computed_total) > 0.01
-            ):
-                old_total = stored_total_val
-                order["total_amount"] = computed_total
+            changed_flag, old_total, new_total = _recompute_total(order)
+            if changed_flag:
+                order["total_amount"] = new_total
                 total_changed = True
         except Exception:
             # If anything fails, leave total_amount as-is
