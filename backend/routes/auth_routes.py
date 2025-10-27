@@ -1,5 +1,5 @@
 import bcrypt
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Header, HTTPException, status
 
 from database.supabase_db import create_supabase_client
 from models.login_model import LoginRequestModel
@@ -8,6 +8,14 @@ from models.user_model import User
 auth_router = APIRouter()
 # Initialize once; may be None if env vars missing. Tests patch this symbol directly.
 supabase = create_supabase_client()
+
+
+def get_supabase_client():
+    global supabase
+    if supabase is not None:
+        return supabase
+    supabase = create_supabase_client()
+    return supabase
 
 
 def user_exists(key: str = "email", value: str = None):

@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 
 from database.supabase_db import create_supabase_client
 from models.menu_item_model import MenuItemCreate
@@ -8,6 +8,14 @@ from models.menu_item_model import MenuItemCreate
 menu_router = APIRouter()
 # Initialize once; may be None if env vars missing. Tests may patch this symbol.
 supabase = create_supabase_client()
+
+
+def get_supabase_client():
+    global supabase
+    if supabase is not None:
+        return supabase
+    supabase = create_supabase_client()
+    return supabase
 
 
 @menu_router.get("/restaurants/{restaurant_id}/menu", response_model=List[dict])
