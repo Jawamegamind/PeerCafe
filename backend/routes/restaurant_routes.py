@@ -43,7 +43,10 @@ async def create_restaurant(restaurant: RestaurantCreate):
     try:
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
         # Insert restaurant data
         restaurant_data = {
             "name": restaurant.name,
@@ -84,7 +87,10 @@ async def get_all_restaurants():
     try:
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
         result = _get_db_table(client, "restaurants").select("*").execute()
         return result.data or []
     except Exception as e:
@@ -98,7 +104,10 @@ async def get_restaurant(restaurant_id: int):
     try:
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
         result = (
             _get_db_table(client, "restaurants")
             .select("*")
@@ -124,7 +133,10 @@ async def update_restaurant(restaurant_id: int, restaurant: RestaurantCreate):
     try:
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
         update_data = {
             "name": restaurant.name,
             "description": restaurant.description,
@@ -167,7 +179,10 @@ async def delete_restaurant(restaurant_id: int):
         # Soft delete by setting is_active to False
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
         result = (
             _get_db_table(client, "restaurants")
             .update({"is_active": False})
@@ -194,7 +209,10 @@ async def restore_restaurant(restaurant_id: int):
         # Restore by setting is_active to True
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
         result = (
             _get_db_table(client, "restaurants")
             .update({"is_active": True})

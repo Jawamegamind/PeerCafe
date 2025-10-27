@@ -39,6 +39,7 @@ def read_root():
 @app.get("/test-supabase")
 def test_supabase():
     from fastapi import HTTPException, status
+
     # If the client is not configured, return a clear service unavailable error
     if supabase is None:
         raise HTTPException(

@@ -1,5 +1,10 @@
 """Tests for order sanitization helpers"""
-from routes.order_routes import _sanitize_order_record, _sanitization_counts, _sanitization_lock
+
+from routes.order_routes import (
+    _sanitization_counts,
+    _sanitization_lock,
+    _sanitize_order_record,
+)
 
 
 def test_subtotal_and_total_correction():

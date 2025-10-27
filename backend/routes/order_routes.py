@@ -2,10 +2,10 @@
 Order management routes for PeerCafe backend
 """
 
-import uuid
-from datetime import datetime, timedelta
 import logging
 import threading
+import uuid
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -89,7 +89,11 @@ def _sanitize_order_record(order: dict) -> dict:
             # Prefer explicit subtotal on item, otherwise compute price*quantity
             if it is None:
                 continue
-            item_sub = it.get("subtotal") if isinstance(it, dict) and ("subtotal" in it) else None
+            item_sub = (
+                it.get("subtotal")
+                if isinstance(it, dict) and ("subtotal" in it)
+                else None
+            )
             if item_sub is None:
                 try:
                     price = float(it.get("price", 0) or 0)
@@ -127,14 +131,21 @@ def _sanitize_order_record(order: dict) -> dict:
             delivery_fee = float(order.get("delivery_fee") or 0)
             tip = float(order.get("tip_amount") or 0)
             discount = float(order.get("discount_amount") or 0)
-            computed_total = round(order.get("subtotal", 0) + tax + delivery_fee + tip - discount, 2)
+            computed_total = round(
+                order.get("subtotal", 0) + tax + delivery_fee + tip - discount, 2
+            )
             stored_total = order.get("total_amount")
             try:
-                stored_total_val = float(stored_total) if stored_total is not None else None
+                stored_total_val = (
+                    float(stored_total) if stored_total is not None else None
+                )
             except Exception:
                 stored_total_val = None
 
-            if stored_total_val is None or abs((stored_total_val or 0) - computed_total) > 0.01:
+            if (
+                stored_total_val is None
+                or abs((stored_total_val or 0) - computed_total) > 0.01
+            ):
                 old_total = stored_total_val
                 order["total_amount"] = computed_total
                 total_changed = True
@@ -148,7 +159,10 @@ def _sanitize_order_record(order: dict) -> dict:
             if subtotal_changed:
                 changed["subtotal"] = {"old": old, "new": order.get("subtotal")}
             if total_changed:
-                changed["total_amount"] = {"old": old_total, "new": order.get("total_amount")}
+                changed["total_amount"] = {
+                    "old": old_total,
+                    "new": order.get("total_amount"),
+                }
 
             try:
                 order_id = order.get("order_id") or order.get("id")
@@ -209,7 +223,10 @@ async def place_order(order_data: OrderCreate):
         # Insert order into database
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
         response = _get_db_table(client, "orders").insert(order_db_data).execute()
 
         if not response.data:
@@ -238,7 +255,10 @@ async def list_orders(limit: int = 1000, offset: int = 0):
     try:
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
         response = (
             _get_db_table(client, "orders")
             .select("*")
@@ -267,7 +287,10 @@ async def get_user_orders(user_id: str, limit: int = 20, offset: int = 0):
     try:
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
         response = (
             _get_db_table(client, "orders")
             .select("*")
@@ -299,8 +322,15 @@ async def get_restaurant_orders(
     try:
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
-        query = _get_db_table(client, "orders").select("*").eq("restaurant_id", restaurant_id)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
+        query = (
+            _get_db_table(client, "orders")
+            .select("*")
+            .eq("restaurant_id", restaurant_id)
+        )
 
         if status_filter:
             query = query.eq("status", status_filter.value)
@@ -328,9 +358,15 @@ async def get_order_by_id(order_id: str):
     try:
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
         response = (
-            _get_db_table(client, "orders").select("*").eq("order_id", order_id).execute()
+            _get_db_table(client, "orders")
+            .select("*")
+            .eq("order_id", order_id)
+            .execute()
         )
 
         if not response.data:
@@ -358,11 +394,17 @@ async def update_order_status(order_id: str, new_status: OrderStatus):
     try:
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
 
         # First check if order exists
         existing_order = (
-            _get_db_table(client, "orders").select("*").eq("order_id", order_id).execute()
+            _get_db_table(client, "orders")
+            .select("*")
+            .eq("order_id", order_id)
+            .execute()
         )
 
         if not existing_order.data:
@@ -415,11 +457,17 @@ async def assign_delivery_user(order_id: str, delivery_user_id: str):
     try:
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
 
         # Check if order exists and is ready for assignment
         existing_order = (
-            _get_db_table(client, "orders").select("*").eq("order_id", order_id).execute()
+            _get_db_table(client, "orders")
+            .select("*")
+            .eq("order_id", order_id)
+            .execute()
         )
 
         if not existing_order.data:
@@ -482,7 +530,10 @@ async def get_delivery_user_orders(
     try:
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
 
         query = (
             _get_db_table(client, "orders")
@@ -516,10 +567,16 @@ async def cancel_order(order_id: str):
     try:
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
 
         existing_order = (
-            _get_db_table(client, "orders").select("*").eq("order_id", order_id).execute()
+            _get_db_table(client, "orders")
+            .select("*")
+            .eq("order_id", order_id)
+            .execute()
         )
 
         if not existing_order.data:
@@ -557,7 +614,11 @@ async def cancel_order(order_id: str):
 
         # sanitize returned order for consistency
         sanitized = _sanitize_order_record(response.data[0])
-        return {"message": "Order cancelled successfully", "order_id": order_id, "order": sanitized}
+        return {
+            "message": "Order cancelled successfully",
+            "order_id": order_id,
+            "order": sanitized,
+        }
 
     except HTTPException:
         raise

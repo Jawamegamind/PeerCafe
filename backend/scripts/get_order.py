@@ -7,11 +7,12 @@ Usage:
 import argparse
 import os
 import sys
-from typing import Optional
 
 # Ensure the backend package directory is on sys.path so imports like
 # `database.supabase_db` work when running this script directly.
 from pathlib import Path
+from typing import Optional
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 # backend/scripts -> parent is backend
 BACKEND_DIR = str(SCRIPT_DIR.parent)
@@ -39,7 +40,9 @@ def main(order_id: Optional[str]):
         sys.exit(2)
 
     if client is None:
-        print("Supabase client is not configured. Ensure PROJECT_URL and API_KEY (or NEXT_PUBLIC_* envs) are set.")
+        print(
+            "Supabase client is not configured. Ensure PROJECT_URL and API_KEY (or NEXT_PUBLIC_* envs) are set."
+        )
         sys.exit(2)
 
     try:
@@ -53,7 +56,9 @@ def main(order_id: Optional[str]):
             resp = table.select("*").eq("order_id", order_id).execute()
         else:
             # fetch most recent order
-            resp = table.select("*").order("created_at", desc=True).range(0, 0).execute()
+            resp = (
+                table.select("*").order("created_at", desc=True).range(0, 0).execute()
+            )
 
         # supabase python client returns an object with `data` attribute
         data = getattr(resp, "data", None)
@@ -74,6 +79,8 @@ def main(order_id: Optional[str]):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--order-id", dest="order_id", help="Order ID to fetch (optional)")
+    parser.add_argument(
+        "--order-id", dest="order_id", help="Order ID to fetch (optional)"
+    )
     args = parser.parse_args()
     sys.exit(main(args.order_id))

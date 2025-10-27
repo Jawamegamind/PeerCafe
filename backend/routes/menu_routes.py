@@ -40,7 +40,10 @@ async def create_menu_item(restaurant_id: int, menu_item: MenuItemCreate):
     try:
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
         # Verify restaurant exists
         restaurant_check = (
             supabase.from_("restaurants")
@@ -109,7 +112,10 @@ async def update_menu_item(restaurant_id: int, item_id: int, menu_item: MenuItem
     try:
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
         update_data = {
             "item_name": menu_item.item_name,
             "description": menu_item.description,
@@ -173,7 +179,10 @@ async def toggle_menu_item_availability(restaurant_id: int, item_id: int):
     try:
         client = get_supabase_client()
         if client is None:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase is not configured.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
         # First get current availability status
         current_item = (
             supabase.from_("menu_items")
