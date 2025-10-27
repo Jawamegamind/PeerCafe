@@ -58,7 +58,84 @@ jest.mock('mapbox-gl', () => {
   };
 });
 
-// Import the Delivery page component after the mapbox mock is registered
+// Provide a full mock for axios so no network calls are made during tests.
+// This must be set before importing the component so the component's
+// axios usage uses the mocked implementation.
+const mockReadyOrders = [
+  {
+    order_id: '1',
+    user_id: 'u1',
+    restaurant_id: 10,
+    delivery_fee: 7.5,
+    tip_amount: 2.0,
+    estimated_pickup_time: '2025-10-27T12:00:00Z',
+    estimated_delivery_time: '2025-10-27T12:30:00Z',
+    latitude: 35.78,
+    longitude: -78.64,
+    restaurants: { name: 'Bella Italia', latitude: 35.781, longitude: -78.640, address: '123 Pizza St' },
+    distance_to_restaurant: 1609.34,
+    duration_to_restaurant: 600,
+    distance_to_restaurant_miles: 1.0,
+    restaurant_reachable_by_road: true,
+    duration_to_restaurant_minutes: 10,
+  },
+  {
+    order_id: '2',
+    user_id: 'u2',
+    restaurant_id: 20,
+    delivery_fee: 6.25,
+    tip_amount: 1.5,
+    estimated_pickup_time: '2025-10-27T12:05:00Z',
+    estimated_delivery_time: '2025-10-27T12:40:00Z',
+    latitude: 35.79,
+    longitude: -78.65,
+    restaurants: { name: 'Sushi World', latitude: 35.792, longitude: -78.650, address: '456 Sushi Ave' },
+    distance_to_restaurant: 1207.0,
+    duration_to_restaurant: 480,
+    distance_to_restaurant_miles: 0.75,
+    restaurant_reachable_by_road: true,
+    duration_to_restaurant_minutes: 8,
+  },
+  {
+    order_id: '3',
+    user_id: 'u3',
+    restaurant_id: 30,
+    delivery_fee: 5.75,
+    tip_amount: 0.0,
+    estimated_pickup_time: null,
+    estimated_delivery_time: null,
+    latitude: 35.80,
+    longitude: -78.66,
+    restaurants: { name: 'Taco Haven', latitude: 35.803, longitude: -78.660, address: '789 Taco Rd' },
+    distance_to_restaurant: null,
+    duration_to_restaurant: null,
+    distance_to_restaurant_miles: null,
+    restaurant_reachable_by_road: false,
+    duration_to_restaurant_minutes: null,
+  },
+  {
+    order_id: '4',
+    user_id: 'u4',
+    restaurant_id: 40,
+    delivery_fee: 4.95,
+    tip_amount: 0.5,
+    estimated_pickup_time: '2025-10-27T12:10:00Z',
+    estimated_delivery_time: '2025-10-27T12:50:00Z',
+    latitude: 35.81,
+    longitude: -78.67,
+    restaurants: { name: 'The Burger Joint', latitude: 35.813, longitude: -78.670, address: '101 Burger Blvd' },
+    distance_to_restaurant: 800.0,
+    duration_to_restaurant: 300,
+    distance_to_restaurant_miles: 0.5,
+    restaurant_reachable_by_road: true,
+    duration_to_restaurant_minutes: 5,
+  },
+];
+
+// Mock axios before importing the component
+// @ts-ignore
+jest.mock('axios', () => ({ get: jest.fn(() => Promise.resolve({ data: mockReadyOrders })) }));
+
 import DeliveryPage from '../../app/(main)/user/delivery/page';
 
 // Mock the Navbar component used by the page to keep tests focused
@@ -95,17 +172,26 @@ describe('Delivery Page', () => {
     expect(document.body).toBeTruthy();
   });
 
-  it('renders all ready orders as cards (View Order Details buttons)', () => {
+  it('renders all ready orders as cards (Deliver buttons)', async () => {
     render(<DeliveryPage />);
-    const viewButtons = screen.getAllByRole('button', { name: /View Order Details/i });
-    // There are 4 orders in the hard-coded ReadyOrders array
-    expect(viewButtons.length).toBe(4);
+    // Wait for orders to be rendered from the mocked axios response
+    const deliverButtons = await screen.findAllByRole('button', { name: /Deliver/i });
+    // There are 4 orders in the mocked readyOrders array
+    expect(deliverButtons.length).toBe(mockReadyOrders.length);
+
+    // Ensure axios.get was called and the request included the deliveries/ready path
+    const axios = require('axios');
+    expect(axios.get).toHaveBeenCalled();
+    expect(axios.get.mock.calls[0][0]).toEqual(expect.stringContaining('deliveries/ready'));
   });
 
-  it('initializes the map and creates markers/popups', () => {
+  it('initializes the map and creates markers/popups', async () => {
     const mapbox = require('mapbox-gl');
 
     render(<DeliveryPage />);
+
+    // Wait for at least one restaurant name to appear so the map render effect has run
+    await screen.findByText(/Bella Italia/i);
 
     // Map constructor should be called once
     expect(mapbox.Map).toHaveBeenCalled();
@@ -115,26 +201,25 @@ describe('Delivery Page', () => {
     expect(firstCallArgs).toBeDefined();
     expect(firstCallArgs.container).toBeInstanceOf(HTMLElement);
 
-    // There should be 1 source marker + 4 destination markers = 5 Marker constructions
-    expect(mapbox.Marker).toHaveBeenCalledTimes(5);
+    // There should be 1 source marker + N destination markers
+    expect(mapbox.Marker).toHaveBeenCalledTimes(1 + mockReadyOrders.length);
 
     // Popups should have been created and setText called for Source and Destinations
-    expect(mapbox.Popup).toHaveBeenCalledTimes(5);
+    expect(mapbox.Popup).toHaveBeenCalledTimes(1 + mockReadyOrders.length);
     // First popup should be for "Source"
     const popupInstances = mapbox.Popup.mock.instances;
     expect(popupInstances[0].setText).toHaveBeenCalledWith('Source');
-    // Subsequent popups should include "Destination 1" .. "Destination 4"
-    expect(popupInstances[1].setText).toHaveBeenCalledWith('Destination 1');
-    expect(popupInstances[2].setText).toHaveBeenCalledWith('Destination 2');
-    expect(popupInstances[3].setText).toHaveBeenCalledWith('Destination 3');
-    expect(popupInstances[4].setText).toHaveBeenCalledWith('Destination 4');
+    // Subsequent popups should include "Destination 1" .. "Destination N"
+    for (let i = 0; i < mockReadyOrders.length; i++) {
+      expect(popupInstances[i + 1].setText).toHaveBeenCalledWith(`Destination ${i + 1}`);
+    }
   });
 
-  it('displays restaurant names and compensation values', () => {
+  it('displays restaurant names and compensation values', async () => {
     render(<DeliveryPage />);
 
-    // Check for one of the restaurants
-    expect(screen.getByText(/Bella Italia/i)).toBeInTheDocument();
+    // Wait for restaurants to render
+    expect(await screen.findByText(/Bella Italia/i)).toBeInTheDocument();
     expect(screen.getByText(/Sushi World/i)).toBeInTheDocument();
     expect(screen.getByText(/Taco Haven/i)).toBeInTheDocument();
     expect(screen.getByText(/The Burger Joint/i)).toBeInTheDocument();

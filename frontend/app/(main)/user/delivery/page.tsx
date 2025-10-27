@@ -23,7 +23,12 @@ import {
     MenuItem,
     Paper,
     Avatar,
-    Divider
+    Divider,
+    Stepper,
+    Step,
+    StepLabel,
+    LinearProgress,
+    IconButton
 } from '@mui/material';
 import {
     LocationOn as LocationIcon,
@@ -32,6 +37,8 @@ import {
     AccessTime,
     Restaurant as RestaurantIcon,
     DeliveryDining as DeliveryDiningIcon,
+    LocalPhone as PhoneIcon,
+    Navigation as NavigationIcon,
 } from '@mui/icons-material';
 import mapboxgl from "mapbox-gl";
 
@@ -39,28 +46,45 @@ mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY;
 const backend_url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 interface Order {
-  order_id: string;
-  user_id: string;
-  restaurant_id: number;
-  delivery_fee: number;
-  tip_amount: number;
-  estimated_pickup_time: string | null;
-  estimated_delivery_time: string | null;
-  latitude: number;
-  longitude: number;
-
-  restaurants: {
-    name: string;
+    order_id: string;
+    user_id: string;
+    restaurant_id: number;
+    delivery_fee: number;
+    tip_amount: number;
+    estimated_pickup_time: string | null;
+    estimated_delivery_time: string | null;
     latitude: number;
     longitude: number;
-    address: string;
-  };
 
-  distance_to_restaurant: number;
-  duration_to_restaurant: number;
-  distance_to_restaurant_miles: number;
-  restaurant_reachable_by_road: boolean;
-  duration_to_restaurant_minutes: number;
+    restaurants: {
+        name: string;
+        latitude: number;
+        longitude: number;
+        address: string;
+    };
+
+    distance_to_restaurant: number;
+    duration_to_restaurant: number;
+    distance_to_restaurant_miles: number;
+    restaurant_reachable_by_road: boolean;
+    duration_to_restaurant_minutes: number;
+}
+
+interface ActiveOrder{
+    order_id: string;
+    status: string;
+    restaurants: {
+        name: string;
+        address: string;
+    };
+    customer: {
+        name: string;
+        address: string;
+    };
+    distance_to_restaurant_miles: number;
+    duration_to_restaurant_minutes: number;
+    delivery_fee: number;
+    estimated_delivery_time: string | null;
 }
 
 export default function DeliveryPage() {
@@ -73,8 +97,8 @@ export default function DeliveryPage() {
     const [loading, setLoading] = React.useState(false);
 
     // Example coordinates (lng, lat)
-    const [sourceLocation, setSourceLocation] = React.useState<{ latitude : number, longitude : number } | null>(null) // e.g. Rider or Hub
-    const [restaurantLocations , setRestaurantLocations] = React.useState<{ latitude : number, longitude : number }[]>([]); // e.g. Restaurants for ready orders
+    const [sourceLocation, setSourceLocation] = React.useState<{ latitude: number, longitude: number } | null>(null) // e.g. Rider or Hub
+    const [restaurantLocations, setRestaurantLocations] = React.useState<{ latitude: number, longitude: number }[]>([]); // e.g. Restaurants for ready orders
 
     const fetchUserLocation = () => {
         console.log("Fetching user location...");
@@ -86,7 +110,7 @@ export default function DeliveryPage() {
                         latitude: position.coords.latitude,
                         longitude: position.coords.longitude,
                     });
-                                        
+
                 },
                 (error) => {
                     console.error("Error getting location:", error);
@@ -171,7 +195,7 @@ export default function DeliveryPage() {
     React.useEffect(() => {
         // Fetch current location of user and once location is fetched, get the ready orders with distance info accordingly.
         if (sourceLocation == null || sourceLocation == undefined) fetchUserLocation();
-        
+
         // fetchUserLocation();
         // Once ready orders are fetched, render the map
         // renderMap(source, destinations);
@@ -192,6 +216,136 @@ export default function DeliveryPage() {
             renderMap([sourceLocation.longitude, sourceLocation.latitude], destinations);
         }
     }, [readyOrders]);
+
+    const getPrimaryAction = (stepIndex : number) => {
+        switch (stepIndex) {
+            case 0:
+            return "Mark Picked-Up";
+            case 1:
+            return "Start Navigation";
+            case 2:
+            return "Arrived";
+            case 3:
+            return "Mark Delivered";
+            default:
+            return "Completed";
+        }
+    };
+
+    const steps = [
+        "Ready",
+        "Picked-Up",
+        "Out for Delivery",
+        "Arrived",
+        "Delivered",
+    ];
+
+    const ActiveOrderCard = () => (
+        <Card sx={{ borderRadius: 3, mb: 2, boxShadow: 4, width: '80%', justifySelf: 'center' }}>
+            <CardContent>
+                {/* Header */}
+                <Box display="flex" justifyContent="space-between">
+                    <Box>
+                        <Typography variant="subtitle1" fontWeight={600}>
+                            {/* {restaurantName} */}
+                            Restaurant XYZ
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            {/* Order #{orderId} */}
+                            Order #12345
+                        </Typography>
+                        <Box display="flex" alignItems="center" gap={2} mt={1}>
+                            <Box display="flex" alignItems="center" gap={0.5}>
+                                <NavigationIcon fontSize="small" />
+                                <Typography variant="body2">3.15 Miles</Typography>
+                            </Box>
+
+                            <Box display="flex" alignItems="center" gap={0.5}>
+                                <AccessTime fontSize="small" />
+                                <Typography variant="body2"> 15 mins </Typography>
+                            </Box>
+
+                            <Box display="flex" alignItems="center" gap={0.5}>
+                                <AttachMoney fontSize="small" />
+                                <Typography variant="body2" fontWeight={600} color="success.main">
+                                4.00
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Box>
+                    <Chip
+                        label="Out For Delivery"
+                        color="warning"
+                        size="small"
+                        sx={{ fontWeight: 600 }}
+                    />
+                </Box>
+
+                {/* Stepper */}
+                <Stepper activeStep={2} alternativeLabel sx={{ mt: 2 }}>
+                    {steps.map((label) => (
+                        <Step key={label}>
+                            <StepLabel>{label}</StepLabel>
+                        </Step>
+                    ))}
+                </Stepper>
+
+                {/* Linear Progress */}
+                <LinearProgress
+                    variant="determinate"
+                    value={30}
+                    sx={{ borderRadius: 5, mt: 2, height: 8 }}
+                />
+            </CardContent>
+
+            {/* Button Area */}
+            <CardActions style={{display:'flex', flexDirection:'column'}} sx={{ px: 2, pb: 1 }}>
+                
+                <Button variant="contained" fullWidth>
+                    {getPrimaryAction(2)}
+                </Button>
+                
+            </CardActions>
+            
+
+            <Divider />
+
+            {/* Expandable Details */}
+            {/* <Box
+                onClick={() => setExpanded(false)}
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                px={2}
+                py={1}
+                sx={{ cursor: "pointer" }}
+            >
+                <Typography variant="body2" fontWeight={500}>
+                    Delivery Details
+                </Typography>
+                <ExpandMoreIcon
+                    sx={{
+                        transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+                        transition: "0.3s",
+                    }}
+                />
+            </Box> */}
+
+            {/* <Collapse in={expanded} timeout="auto" unmountOnExit>
+                <CardContent pt={0}>
+                    <Typography variant="body2">
+                        <strong>Customer:</strong> {customerName}
+                    </Typography>
+                    <Typography variant="body2" mt={1}>
+                        <strong>Address:</strong> {address}
+                    </Typography>
+                    <Typography variant="body2" mt={1}>
+                        <strong>Payment:</strong> {payment}
+                    </Typography>
+                </CardContent>
+            </Collapse> */}
+        </Card>
+    );
 
     const OrderCard = ({ readyOrders }: { readyOrders: Order }) => (
         <Card
@@ -292,7 +446,7 @@ export default function DeliveryPage() {
                         💰 ${readyOrders.delivery_fee}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        ⏱ ETA: {readyOrders.estimated_delivery_time==undefined ? '--':readyOrders.estimated_delivery_time.substring(11, 16)}
+                        ⏱ ETA: {readyOrders.estimated_delivery_time == undefined ? '--' : readyOrders.estimated_delivery_time.substring(11, 16)}
                     </Typography>
                 </Box>
             </CardContent>
@@ -303,7 +457,7 @@ export default function DeliveryPage() {
                     variant="contained"
                     fullWidth
                     startIcon={<DeliveryDiningIcon />}
-                    onClick={() => {}}
+                    onClick={() => { }}
                 >
                     Deliver
                 </Button>
@@ -317,8 +471,20 @@ export default function DeliveryPage() {
     return (
         <>
             <Navbar />
-            <h3 style={{ justifySelf: "center", margin: "10px" }}>Browse nearby Orders</h3>
-            <div
+            
+            
+            <Container maxWidth="lg" sx={{ py: 4 }}>
+                <h3 style={{ justifySelf: "center", marginBottom: "20px" }}>Current Active Order</h3>
+                <ActiveOrderCard />
+
+                <Divider sx={{bgcolor:'gray', }}/>
+                <Divider sx={{bgcolor:'gray', }}/>
+                <Divider sx={{bgcolor:'gray', }}/>
+                {/* <Divider/> */}
+                {/* <hr /> */}
+
+                <h3 style={{ justifySelf: "center", marginTop: "30px" }}>Browse nearby Orders</h3>
+                <div
                 className="map"
                 ref={mapContainer}
                 style={{
@@ -331,7 +497,6 @@ export default function DeliveryPage() {
                     boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
                 }}
             />
-            <Container maxWidth="lg" sx={{ py: 4 }}>
 
                 <Box sx={{
                     display: 'grid',
