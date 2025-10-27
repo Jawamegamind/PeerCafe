@@ -73,7 +73,9 @@ async def sanitization_metrics():
         return dict(_sanitization_counts)
 
 
-def _sanitize_order_record(order: dict) -> dict:  # noqa: C901  (complexity - tracked for future refactor)
+def _sanitize_order_record(
+    order: dict,
+) -> dict:  # noqa: C901  (complexity - tracked for future refactor)
     """Fix simple data inconsistencies in an order record.
 
     - Recomputes subtotal from order_items when it disagrees with stored subtotal.

@@ -19,7 +19,9 @@ BACKEND_DIR = str(SCRIPT_DIR.parent)
 if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
 
-from database.supabase_db import create_supabase_client  # noqa: E402 (sys.path modified above to allow local import)
+from database.supabase_db import (
+    create_supabase_client,
+)  # noqa: E402 (sys.path modified above to allow local import)
 
 
 def _get_db_table(client, table_name: str):
