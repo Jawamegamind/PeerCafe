@@ -1,0 +1,94 @@
+PeerCafe Table Description Sheet
+
+\*Bolded items are primary keys and italicized items are foreign
+
+- “Address” Table  
+  - **AddressId**, int8, address specific id for gps routing  
+  - Street, varchar, entered street address for gps routing  
+  - City, varchar, entered city for gps routing  
+  - State, varchar, entered state for gps routing  
+  - Zip, varchar, entered zip code for gps routing  
+  - Latitude, varchar, entered latitude for gps routing  
+  - Longitude, varchar, entered longitude for gps routing  
+  - IsDefault, bool,   
+  - AddressType, text, more specifications on type of location  
+  - UserId, text, unique id for user  
+- “menu\_items” Table  
+  - **item\_id**, int8, unique id for a food item listed on orders.  
+  - *restaurand\_id*, int8, unique id for restaurants listed on orders.  
+  - item\_name, varchar, name of selling item  
+  - description, varchar, details on seeling item  
+  - is\_available, bool, true if item is in stock, false if not  
+  - image, varchar, picture of item  
+  - price, float8, value of price of food \- in USD  
+  - created\_at, timestamp, when the item was added into the system  
+  - updated\_at, timestamp, when the item was last updated  
+  - quantity, int8, how many of this item are available  
+- “restaurants” Table  
+  - **restaurant\_id**, int8, unique id for restaurants listed on orders.  
+  - name, varchar, name of restaurant  
+  - primary\_admin\_id, int8, id of the admin who added the entry to the table  
+  - logo, varchar, logo of restaurant  
+  - is\_active, bool, are they serving food?  
+  - created\_at, timestamp, when the item was added into the system  
+  - updated\_at, timestamp, when the item was last updated  
+  - description, text, details on what the restaurant is like  
+  - address, text, where the restaurant is  
+  - phone, text, restaurant’s number  
+  - email, text, restaurant’s contact info  
+  - cuisine\_type, text, type of food served,  
+  - rating, float8, google or yelp rating ?  
+  - delivery\_fee, float8, added price for delivering from this place.  
+- “users” Table  
+  - **user\_id**, text, id unique to a specific user  
+  - first\_name, varchar  
+    lLast\_name, varchar  
+  - email, varchar, user’s contact info  
+  - phone, varchar, user’s contact info  
+  - is\_admin, bool, are they an admin?  
+  - \-s\_active, bool, are they active on the app?  
+  - created\_at, timestamp, when the user was added into the system  
+  - updated\_at, timestamp, when the uer was last updated  
+  - password, varchar, passkey to get into account  
+- “orders” Table  
+  - **order\_id**, uuid, unique order id  
+  - *user\_id*, text, unique order id  
+  - *delivery\_user\_id*, text, unique deliverer id  
+  - *restaurant\_id*, int8, unique restaurant id  
+  - order items, jsonb, list of items in order and details  
+  - subtotal, numeric  
+  - tax\_amount, numeric  
+  - delivery\_fee, numeric  
+  - tip\_amount, numeric  
+  - discount\_amount, numeric  
+  - total\_amount, numeric  
+  - delivery\_address, jsonb  
+  - status, text  
+  - estimated\_pickup\_time, timestamptz  
+  - estimated\_delivery\_time, timestamptz  
+  - actual\_pickip\_time, timestamptz  
+  - actual\_delivery\_time, timestamptz  
+  - notes, text  
+  - created\_at, timestamptz  
+  - updated\_at, timestampz
+- "spatial_ref_sys" Table
+  - **srid**, int4
+  - auth name, varchar
+  - auth\_srid, int4
+  - srtext, varchar,
+  - proj4text, varchar
+- "geography_columns" Table
+  - f\_table\_catalog, name
+  - f\_table\_schema, name
+  - f\_table\_name, name
+  - f\_geography\_column, name
+  - coord\_dimension, name
+  - srid, int4
+- "geometry columns" Table
+  - f\_table\_catalog, name
+  - f\_table\_schema, name
+  - f\_table\_name, name
+  - f\_geography\_column, name
+  - coord\_dimension, name
+  - srid, int4
+
