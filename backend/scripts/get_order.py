@@ -5,13 +5,13 @@ Usage:
   python get_order.py            # fetch most recent order
 """
 import argparse
-import os
 import sys
+import json
+from pathlib import Path
+from typing import Optional
 
 # Ensure the backend package directory is on sys.path so imports like
 # `database.supabase_db` work when running this script directly.
-from pathlib import Path
-from typing import Optional
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 # backend/scripts -> parent is backend
@@ -19,7 +19,7 @@ BACKEND_DIR = str(SCRIPT_DIR.parent)
 if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
 
-from database.supabase_db import create_supabase_client
+from database.supabase_db import create_supabase_client  # noqa: E402 (sys.path modified above to allow local import)
 
 
 def _get_db_table(client, table_name: str):
@@ -67,8 +67,6 @@ def main(order_id: Optional[str]):
             sys.exit(1)
 
         # print pretty result
-        import json
-
         print(json.dumps(data[0], indent=2, default=str))
         return 0
 

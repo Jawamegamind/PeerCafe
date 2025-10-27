@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 
 from database.supabase_db import create_supabase_client
 from models.order_model import Order, OrderCreate, OrderStatus
@@ -73,7 +73,7 @@ async def sanitization_metrics():
         return dict(_sanitization_counts)
 
 
-def _sanitize_order_record(order: dict) -> dict:
+def _sanitize_order_record(order: dict) -> dict:  # noqa: C901  (complexity - tracked for future refactor)
     """Fix simple data inconsistencies in an order record.
 
     - Recomputes subtotal from order_items when it disagrees with stored subtotal.
