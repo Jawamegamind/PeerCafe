@@ -1,5 +1,4 @@
 import pytest
-
 from fastapi import HTTPException
 
 from routes import order_routes as orr
@@ -87,9 +86,20 @@ async def test_get_order_by_id_success(monkeypatch):
         "user_id": "u1",
         "restaurant_id": 1,
         "order_items": [
-            {"item_id": 1, "item_name": "X", "price": 2.5, "quantity": 2, "subtotal": 5.0}
+            {
+                "item_id": 1,
+                "item_name": "X",
+                "price": 2.5,
+                "quantity": 2,
+                "subtotal": 5.0,
+            }
         ],
-        "delivery_address": {"street": "s", "city": "c", "state": "ST", "zip_code": "12345"},
+        "delivery_address": {
+            "street": "s",
+            "city": "c",
+            "state": "ST",
+            "zip_code": "12345",
+        },
         "subtotal": 5.0,
         "tax_amount": 0.5,
         "delivery_fee": 0,
@@ -124,9 +134,20 @@ async def test_update_order_status_success(monkeypatch):
         "user_id": "u1",
         "restaurant_id": 1,
         "order_items": [
-            {"item_id": 1, "item_name": "X", "price": 2.5, "quantity": 2, "subtotal": 5.0}
+            {
+                "item_id": 1,
+                "item_name": "X",
+                "price": 2.5,
+                "quantity": 2,
+                "subtotal": 5.0,
+            }
         ],
-        "delivery_address": {"street": "s", "city": "c", "state": "ST", "zip_code": "12345"},
+        "delivery_address": {
+            "street": "s",
+            "city": "c",
+            "state": "ST",
+            "zip_code": "12345",
+        },
         "subtotal": 5.0,
         "tax_amount": 0,
         "delivery_fee": 0,

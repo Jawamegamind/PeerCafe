@@ -107,7 +107,9 @@ def _recompute_total(o: dict):
     delivery_fee = _safe_float(o.get("delivery_fee"), 0) or 0
     tip = _safe_float(o.get("tip_amount"), 0) or 0
     discount = _safe_float(o.get("discount_amount"), 0) or 0
-    computed_total = round(o.get("subtotal", 0) + tax + delivery_fee + tip - discount, 2)
+    computed_total = round(
+        o.get("subtotal", 0) + tax + delivery_fee + tip - discount, 2
+    )
     stored_total = o.get("total_amount")
     stored_total_val = _safe_float(stored_total)
     if stored_total_val is None or abs((stored_total_val or 0) - computed_total) > 0.01:
@@ -122,7 +124,9 @@ async def sanitization_metrics():
         return dict(_sanitization_counts)
 
 
-def _sanitize_order_record(order: dict) -> dict:  # noqa: C901  (complexity tracked; consider refactor)
+def _sanitize_order_record(
+    order: dict,
+) -> dict:  # noqa: C901  (complexity tracked; consider refactor)
     """Fix simple data inconsistencies in an order record.
 
     - Recomputes subtotal from order_items when it disagrees with stored subtotal.

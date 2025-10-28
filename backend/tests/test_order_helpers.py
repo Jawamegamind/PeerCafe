@@ -1,12 +1,10 @@
-import types
-
 import pytest
 
 from routes.order_routes import (
-    _safe_float,
     _compute_item_subtotal,
     _compute_subtotal,
     _recompute_total,
+    _safe_float,
 )
 
 
@@ -61,7 +59,13 @@ def test_compute_subtotal_sums_items():
 
 
 def test_recompute_total_detects_change_and_computes_correctly():
-    order = {"subtotal": 10, "tax_amount": "1", "delivery_fee": "2", "tip_amount": 0, "discount_amount": "1"}
+    order = {
+        "subtotal": 10,
+        "tax_amount": "1",
+        "delivery_fee": "2",
+        "tip_amount": 0,
+        "discount_amount": "1",
+    }
     changed, old, new = _recompute_total(order)
     assert changed is True
     assert old is None
@@ -69,7 +73,14 @@ def test_recompute_total_detects_change_and_computes_correctly():
 
 
 def test_recompute_total_no_change():
-    order = {"subtotal": 10, "tax_amount": 1, "delivery_fee": 2, "tip_amount": 0, "discount_amount": 1, "total_amount": 12}
+    order = {
+        "subtotal": 10,
+        "tax_amount": 1,
+        "delivery_fee": 2,
+        "tip_amount": 0,
+        "discount_amount": 1,
+        "total_amount": 12,
+    }
     changed, old, new = _recompute_total(order)
     assert changed is False
     assert old == pytest.approx(12)

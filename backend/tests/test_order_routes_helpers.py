@@ -1,5 +1,3 @@
-import types
-
 import pytest
 
 from routes import order_routes as orr
@@ -84,11 +82,9 @@ def test__get_db_table_uses_table_then_from_():
         def table(self, name):
             return f"table:{name}"
 
-
     class C2:
         def from_(self, name):
             return f"from:{name}"
-
 
     assert orr._get_db_table(C1(), "orders") == "table:orders"
     assert orr._get_db_table(C2(), "orders") == "from:orders"
