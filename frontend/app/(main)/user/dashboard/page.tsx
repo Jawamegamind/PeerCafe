@@ -1,12 +1,42 @@
 'use client';
 
 import * as React from 'react';
+import { useSearchParams } from 'next/navigation';
 import Navbar from '../../../_components/navbar';
 
 export default function UserDashboard() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get('error');
+
   return (
     <>
       <Navbar />
+
+      {/* Show error message if user was redirected due to insufficient permissions */}
+      {error === 'insufficient_permissions' && (
+        <div
+          style={{
+            backgroundColor: '#fee2e2',
+            border: '1px solid #fecaca',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            margin: '20px auto',
+            maxWidth: '600px',
+            textAlign: 'center',
+          }}
+        >
+          <div
+            style={{ color: '#dc2626', fontSize: '1.1rem', fontWeight: 'bold' }}
+          >
+            🚫 Access Denied
+          </div>
+          <div style={{ color: '#7f1d1d', marginTop: '4px' }}>
+            You don't have permission to access admin areas. Contact an
+            administrator if you believe this is an error.
+          </div>
+        </div>
+      )}
+
       <div
         style={{
           display: 'flex',

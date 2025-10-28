@@ -1,12 +1,42 @@
 'use client';
 
 import * as React from 'react';
+import { useSearchParams } from 'next/navigation';
 import Navbar from '../../../_components/navbar';
 
 export default function AdminDashboard() {
+  const searchParams = useSearchParams();
+  const info = searchParams.get('info');
+
   return (
     <>
       <Navbar />
+
+      {/* Show info message if admin was redirected from user routes */}
+      {info === 'admin_redirect' && (
+        <div
+          style={{
+            backgroundColor: '#dbeafe',
+            border: '1px solid #93c5fd',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            margin: '20px auto',
+            maxWidth: '600px',
+            textAlign: 'center',
+          }}
+        >
+          <div
+            style={{ color: '#1e40af', fontSize: '1.1rem', fontWeight: 'bold' }}
+          >
+            ℹ️ Admin Access Notice
+          </div>
+          <div style={{ color: '#1e3a8a', marginTop: '4px' }}>
+            You've been redirected to the admin dashboard. Admin accounts cannot
+            access regular user areas.
+          </div>
+        </div>
+      )}
+
       <div
         style={{
           display: 'flex',
@@ -127,6 +157,10 @@ export default function AdminDashboard() {
           }}
         >
           <strong>Current Route:</strong> /admin/dashboard
+          <br />
+          <small style={{ color: '#64748b' }}>
+            URL Parameters: {searchParams.toString() || 'none'}
+          </small>
         </div>
       </div>
     </>
