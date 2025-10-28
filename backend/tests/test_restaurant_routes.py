@@ -74,7 +74,7 @@ class TestRestaurantRoutes:
         self, mock_supabase, client, sample_restaurant_data
     ):
         """Test successful retrieval of all restaurants"""
-        # Mock restaurants data
+        # Mock restaurants data in snake_case (as returned by Supabase)
         restaurants_data = [
             {
                 **sample_restaurant_data,

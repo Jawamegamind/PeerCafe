@@ -1,12 +1,21 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 
 from database.supabase_db import create_supabase_client
 from models.menu_item_model import MenuItemCreate
 
 menu_router = APIRouter()
+# Initialize once; may be None if env vars missing. Tests may patch this symbol.
 supabase = create_supabase_client()
+
+
+def get_supabase_client():
+    global supabase
+    if supabase is not None:
+        return supabase
+    supabase = create_supabase_client()
+    return supabase
 
 
 @menu_router.get("/restaurants/{restaurant_id}/menu", response_model=List[dict])
@@ -29,6 +38,12 @@ async def get_menu_items(restaurant_id: int):
 async def create_menu_item(restaurant_id: int, menu_item: MenuItemCreate):
     """Create a new menu item for a restaurant"""
     try:
+        client = get_supabase_client()
+        if client is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
         # Verify restaurant exists
         restaurant_check = (
             supabase.from_("restaurants")
@@ -95,6 +110,12 @@ async def get_menu_item(restaurant_id: int, item_id: int):
 async def update_menu_item(restaurant_id: int, item_id: int, menu_item: MenuItemCreate):
     """Update a menu item"""
     try:
+        client = get_supabase_client()
+        if client is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
         update_data = {
             "item_name": menu_item.item_name,
             "description": menu_item.description,
@@ -156,6 +177,12 @@ async def delete_menu_item(restaurant_id: int, item_id: int):
 async def toggle_menu_item_availability(restaurant_id: int, item_id: int):
     """Toggle menu item availability"""
     try:
+        client = get_supabase_client()
+        if client is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
         # First get current availability status
         current_item = (
             supabase.from_("menu_items")

@@ -5,7 +5,8 @@
 /**
  * Format currency for display
  */
-export function formatCurrency(amount: number): string {
+export function formatCurrency(amount: number | undefined | null): string {
+  if (amount === undefined || amount === null) return '$0.00';
   return `$${amount.toFixed(2)}`;
 }
 
@@ -73,7 +74,8 @@ export function calculateDeliveryTime(
 /**
  * Format rating for display
  */
-export function formatRating(rating: number): string {
+export function formatRating(rating: number | undefined | null): string {
+  if (rating === undefined || rating === null) return '0.0';
   return rating.toFixed(1);
 }
 

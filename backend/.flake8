@@ -23,4 +23,6 @@ per-file-ignores =
     __init__.py:F401
     # Allow star imports in __init__.py files
     __init__.py:F403
+    # Allow higher complexity in order_routes since it's tracked for refactor later
+    # (removed — complexity now handled by refactor)
 max-complexity = 10
