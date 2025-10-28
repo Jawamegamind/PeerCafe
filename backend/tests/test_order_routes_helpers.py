@@ -112,3 +112,33 @@ def test_compute_and_update_total_helper():
     assert old_total is None
     assert new_total == pytest.approx(6.0)
     assert order["total_amount"] == pytest.approx(6.0)
+
+
+def test_compute_subtotal_skips_malformed_item():
+    items = [
+        {"price": 5, "quantity": 2},
+        {"price": "not-a-number", "quantity": 3},
+        {"price": 2.5, "quantity": 1},
+    ]
+
+    sub = orr._compute_subtotal(items)
+
+    # First and third items compute to 10 and 2.5; malformed middle item treated as 0
+    assert sub == pytest.approx(12.5)
+
+
+def test_sanitize_order_record_updates_subtotal_for_malformed_items():
+    order = {
+        "order_id": "mal1",
+        "order_items": [{"price": 3, "quantity": 1}, {"price": "x", "quantity": 2}],
+        "subtotal": 0,
+        "tax_amount": 0,
+        "delivery_fee": 0,
+        "tip_amount": 0,
+        "discount_amount": 0,
+    }
+
+    sanitized = orr._sanitize_order_record(order.copy())
+
+    # subtotal should be recomputed from items -> 3.0 (malformed item ignored)
+    assert sanitized["subtotal"] == pytest.approx(3.0)

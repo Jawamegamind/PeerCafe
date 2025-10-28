@@ -89,11 +89,16 @@ def _compute_item_subtotal(it) -> float:
 
 def _compute_subtotal(items) -> float:
     total = 0.0
-    for it in items:
+    for idx, it in enumerate(items):
         try:
             total += _compute_item_subtotal(it)
-        except Exception:
-            # skip malformed items
+        except (TypeError, ValueError, AttributeError) as e:
+            # skip malformed items but log for visibility — avoid swallowing BaseException
+            logger.warning(
+                "Skipping malformed order item at index %s while computing subtotal: %s",
+                idx,
+                e,
+            )
             continue
     return total
 
