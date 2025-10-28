@@ -133,7 +133,7 @@ def _compute_and_update_subtotal(order: dict) -> tuple[bool, Optional[float]]:
     return False, stored_sub_val
 
 
-def _compute_and_update_total(order: dict) -> tuple[bool, object, object]:
+def _compute_and_update_total(order: dict) -> tuple[bool, Optional[float], Optional[float]]:
     """Attempt to recompute total_amount from components. Returns
 
     (total_changed: bool, old_total_value_or_None, new_total_or_None)
