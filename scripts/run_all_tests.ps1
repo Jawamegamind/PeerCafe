@@ -30,23 +30,24 @@ function Write-ReportLine {
 "Test run at: $(Get-Date -Format 'u')" | Out-File -FilePath $reportFile -Encoding utf8
 "Repository: $(Get-Location)" | Out-File -FilePath $reportFile -Encoding utf8 -Append
 
-function Run-Section {
+function Invoke-Section {
     param(
         [string]$title,
         [scriptblock]$action
     )
-
     "`n===== $title =====`n" | Out-File -FilePath $reportFile -Encoding utf8 -Append
     try {
-        # Capture output from the action and coerce into a single string to avoid PowerShell
-        # trying to format/expand objects (which can cause errors like missing properties).
-        $raw = & $action 2>&1
-        if ($null -eq $raw) { $text = '' }
-        elseif ($raw -is [System.Array]) { $text = ($raw -join "`n") }
-        else { $text = $raw.ToString() }
+        # Execute the action and capture all output (stdout + stderr) as a single string.
+        # Out-String preserves unicode characters and prevents PowerShell from emitting
+        # escaped sequences into the file when the captured output is an array/object.
+        $text = & $action 2>&1 | Out-String -Width 4096
 
+        if ($null -eq $text) { $text = '' }
+
+        # Ensure we write using UTF8 to preserve characters across platforms.
         $text | Out-File -FilePath $reportFile -Encoding utf8 -Append
 
+        # Capture the exit code of the last external command if set
         $exit = $LASTEXITCODE
         if ($null -ne $exit -and $exit -ne 0) {
             "`n*** EXIT CODE: $exit`n" | Out-File -FilePath $reportFile -Encoding utf8 -Append
@@ -59,7 +60,7 @@ function Run-Section {
 # --------------------
 # Backend: pytest
 # --------------------
-Run-Section -title 'BACKEND: pytest (with coverage if available)' -action {
+Invoke-Section -title 'BACKEND: pytest (with coverage if available)' -action {
     Push-Location -Path (Join-Path $scriptDir '..\backend')
     try {
         # Prefer pytest CLI if available, else python -m pytest
@@ -87,7 +88,7 @@ Run-Section -title 'BACKEND: pytest (with coverage if available)' -action {
 # --------------------
 # Frontend: Jest
 # --------------------
-Run-Section -title 'FRONTEND: Jest (with coverage)' -action {
+Invoke-Section -title 'FRONTEND: Jest (with coverage)' -action {
     # Use Start-Process with redirected output to avoid PowerShell formatting issues
     $frontendPath = Join-Path $scriptDir '..\frontend'
     $tmpOut = [System.IO.Path]::GetTempFileName()
@@ -102,11 +103,16 @@ Run-Section -title 'FRONTEND: Jest (with coverage)' -action {
         # Run via cmd.exe to capture raw stdout/stderr to a file
         $proc = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c', $cmd -WorkingDirectory $frontendPath -RedirectStandardOutput $tmpOut -RedirectStandardError $tmpErr -NoNewWindow -Wait -PassThru
 
-        # Read the captured output and emit it so Run-Section will append it to the report
-        Get-Content -Path $tmpOut -Encoding utf8
+    # Read the captured output, filter noisy Next.js warnings, and emit it so Invoke-Section will append it to the report
+        $outLines = Get-Content -Path $tmpOut -Encoding utf8
+        # Remove specific Next.js workspace-root inference warnings which are noisy in CI-local runs
+        $filteredOut = $outLines | Where-Object { $_ -notmatch 'Next\.js inferred your workspace root|Detected additional lockfiles' }
+        $filteredOut
         if (Test-Path $tmpErr) {
             "`n--- STDERR (frontend) ---`n" | Write-Output
-            Get-Content -Path $tmpErr -Encoding utf8
+            $errLines = Get-Content -Path $tmpErr -Encoding utf8
+            $filteredErr = $errLines | Where-Object { $_ -notmatch 'Next\.js inferred your workspace root|Detected additional lockfiles' }
+            $filteredErr
         }
 
         if (Test-Path 'coverage') {
@@ -121,7 +127,7 @@ Run-Section -title 'FRONTEND: Jest (with coverage)' -action {
 # --------------------
 # Backend: code quality (black/isort/flake8/bandit)
 # --------------------
-Run-Section -title 'BACKEND: code-quality (black/isort/flake8/bandit)' -action {
+Invoke-Section -title 'BACKEND: code-quality (black/isort/flake8/bandit)' -action {
     Push-Location -Path (Join-Path $scriptDir '..\backend')
     try {
         if (Test-Path '.\check_code.ps1') {
