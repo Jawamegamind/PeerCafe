@@ -117,6 +117,37 @@ def _recompute_total(o: dict):
     return False, stored_total_val, None
 
 
+def _compute_and_update_subtotal(order: dict) -> tuple[bool, object]:
+    """Compute subtotal from order_items and update order if it differs.
+
+    Returns (subtotal_changed: bool, old_subtotal_value_or_None)
+    """
+    items = order.get("order_items") or []
+    computed_sub = _compute_subtotal(items)
+    stored_sub_val = _safe_float(order.get("subtotal"))
+
+    if stored_sub_val is None or abs((stored_sub_val or 0) - computed_sub) > 0.01:
+        old = stored_sub_val
+        order["subtotal"] = round(computed_sub, 2)
+        return True, old
+    return False, stored_sub_val
+
+
+def _compute_and_update_total(order: dict) -> tuple[bool, object, object]:
+    """Attempt to recompute total_amount from components. Returns
+
+    (total_changed: bool, old_total_value_or_None, new_total_or_None)
+    """
+    try:
+        changed_flag, old_total, new_total = _recompute_total(order)
+        if changed_flag:
+            order["total_amount"] = new_total
+            return True, old_total, new_total
+        return False, old_total, None
+    except Exception:
+        return False, None, None
+
+
 @router.get("/sanitization-metrics", response_model=dict)
 async def sanitization_metrics():
     """Return in-memory sanitization metrics."""
@@ -136,29 +167,8 @@ def _sanitize_order_record(
     when there are legacy rows with inconsistent values.
     """
     try:
-        items = order.get("order_items") or []
-        computed_sub = _compute_subtotal(items)
-
-        # compare with stored subtotal (allow tiny rounding diffs)
-        stored_sub_val = _safe_float(order.get("subtotal"))
-
-        subtotal_changed = False
-        total_changed = False
-
-        if stored_sub_val is None or abs((stored_sub_val or 0) - computed_sub) > 0.01:
-            old = stored_sub_val
-            order["subtotal"] = round(computed_sub, 2)
-            subtotal_changed = True
-
-        # Try to recompute total_amount when components are present
-        try:
-            changed_flag, old_total, new_total = _recompute_total(order)
-            if changed_flag:
-                order["total_amount"] = new_total
-                total_changed = True
-        except Exception:
-            # If anything fails, leave total_amount as-is
-            total_changed = False
+        subtotal_changed, old = _compute_and_update_subtotal(order)
+        total_changed, old_total, new_total = _compute_and_update_total(order)
 
         # If any changes occurred, log and increment metrics
         if subtotal_changed or total_changed:

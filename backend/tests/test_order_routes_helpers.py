@@ -88,3 +88,27 @@ def test__get_db_table_uses_table_then_from_():
 
     assert orr._get_db_table(C1(), "orders") == "table:orders"
     assert orr._get_db_table(C2(), "orders") == "from:orders"
+
+
+def test_compute_and_update_subtotal_helper():
+    order = {"order_items": [{"price": "2", "quantity": "2"}], "subtotal": 10}
+    changed, old = orr._compute_and_update_subtotal(order)
+    assert changed is True
+    assert old == 10
+    assert order["subtotal"] == pytest.approx(4.0)
+
+
+def test_compute_and_update_total_helper():
+    order = {
+        "subtotal": 5,
+        "tax_amount": "1",
+        "delivery_fee": 0,
+        "tip_amount": 0,
+        "discount_amount": 0,
+        "total_amount": None,
+    }
+    changed, old_total, new_total = orr._compute_and_update_total(order)
+    assert changed is True
+    assert old_total is None
+    assert new_total == pytest.approx(6.0)
+    assert order["total_amount"] == pytest.approx(6.0)
