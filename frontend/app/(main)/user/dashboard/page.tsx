@@ -26,9 +26,7 @@ function UserErrorNotification() {
         textAlign: 'center',
       }}
     >
-      <div
-        style={{ color: '#dc2626', fontSize: '1.1rem', fontWeight: 'bold' }}
-      >
+      <div style={{ color: '#dc2626', fontSize: '1.1rem', fontWeight: 'bold' }}>
         🚫 Access Denied
       </div>
       <div style={{ color: '#7f1d1d', marginTop: '4px' }}>

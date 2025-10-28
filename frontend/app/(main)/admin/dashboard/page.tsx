@@ -26,9 +26,7 @@ function AdminNotification() {
         textAlign: 'center',
       }}
     >
-      <div
-        style={{ color: '#1e40af', fontSize: '1.1rem', fontWeight: 'bold' }}
-      >
+      <div style={{ color: '#1e40af', fontSize: '1.1rem', fontWeight: 'bold' }}>
         ℹ️ Admin Access Notice
       </div>
       <div style={{ color: '#1e3a8a', marginTop: '4px' }}>
@@ -42,7 +40,7 @@ function AdminNotification() {
 // Component for debug info that uses useSearchParams
 function DebugInfo() {
   const searchParams = useSearchParams();
-  
+
   return (
     <div
       style={{
@@ -182,7 +180,21 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <Suspense fallback={<div style={{ marginTop: '30px', padding: '15px', backgroundColor: '#f1f5f9', borderRadius: '8px', border: '2px solid #e2e8f0' }}>Loading debug info...</div>}>
+        <Suspense
+          fallback={
+            <div
+              style={{
+                marginTop: '30px',
+                padding: '15px',
+                backgroundColor: '#f1f5f9',
+                borderRadius: '8px',
+                border: '2px solid #e2e8f0',
+              }}
+            >
+              Loading debug info...
+            </div>
+          }
+        >
           <DebugInfo />
         </Suspense>
       </div>
