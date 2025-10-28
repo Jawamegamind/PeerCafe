@@ -1,41 +1,76 @@
 'use client';
 
 import * as React from 'react';
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Navbar from '../../../_components/navbar';
 
-export default function AdminDashboard() {
+// Component that uses useSearchParams - needs to be wrapped in Suspense
+function AdminNotification() {
   const searchParams = useSearchParams();
   const info = searchParams.get('info');
 
+  if (info !== 'admin_redirect') {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        backgroundColor: '#dbeafe',
+        border: '1px solid #93c5fd',
+        borderRadius: '8px',
+        padding: '12px 16px',
+        margin: '20px auto',
+        maxWidth: '600px',
+        textAlign: 'center',
+      }}
+    >
+      <div
+        style={{ color: '#1e40af', fontSize: '1.1rem', fontWeight: 'bold' }}
+      >
+        ℹ️ Admin Access Notice
+      </div>
+      <div style={{ color: '#1e3a8a', marginTop: '4px' }}>
+        You've been redirected to the admin dashboard. Admin accounts cannot
+        access regular user areas.
+      </div>
+    </div>
+  );
+}
+
+// Component for debug info that uses useSearchParams
+function DebugInfo() {
+  const searchParams = useSearchParams();
+  
+  return (
+    <div
+      style={{
+        marginTop: '30px',
+        padding: '15px',
+        backgroundColor: '#f1f5f9',
+        borderRadius: '8px',
+        border: '2px solid #e2e8f0',
+      }}
+    >
+      <strong>Current Route:</strong> /admin/dashboard
+      <br />
+      <small style={{ color: '#64748b' }}>
+        URL Parameters: {searchParams.toString() || 'none'}
+      </small>
+    </div>
+  );
+}
+
+export default function AdminDashboard() {
   return (
     <>
       <Navbar />
 
       {/* Show info message if admin was redirected from user routes */}
-      {info === 'admin_redirect' && (
-        <div
-          style={{
-            backgroundColor: '#dbeafe',
-            border: '1px solid #93c5fd',
-            borderRadius: '8px',
-            padding: '12px 16px',
-            margin: '20px auto',
-            maxWidth: '600px',
-            textAlign: 'center',
-          }}
-        >
-          <div
-            style={{ color: '#1e40af', fontSize: '1.1rem', fontWeight: 'bold' }}
-          >
-            ℹ️ Admin Access Notice
-          </div>
-          <div style={{ color: '#1e3a8a', marginTop: '4px' }}>
-            You've been redirected to the admin dashboard. Admin accounts cannot
-            access regular user areas.
-          </div>
-        </div>
-      )}
+      <Suspense fallback={null}>
+        <AdminNotification />
+      </Suspense>
 
       <div
         style={{
@@ -147,21 +182,9 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div
-          style={{
-            marginTop: '30px',
-            padding: '15px',
-            backgroundColor: '#f1f5f9',
-            borderRadius: '8px',
-            border: '2px solid #e2e8f0',
-          }}
-        >
-          <strong>Current Route:</strong> /admin/dashboard
-          <br />
-          <small style={{ color: '#64748b' }}>
-            URL Parameters: {searchParams.toString() || 'none'}
-          </small>
-        </div>
+        <Suspense fallback={<div style={{ marginTop: '30px', padding: '15px', backgroundColor: '#f1f5f9', borderRadius: '8px', border: '2px solid #e2e8f0' }}>Loading debug info...</div>}>
+          <DebugInfo />
+        </Suspense>
       </div>
     </>
   );
