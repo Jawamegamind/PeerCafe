@@ -138,10 +138,25 @@ Invoke-Section -title 'BACKEND: code-quality (black/isort/flake8/bandit)' -actio
     Push-Location -Path (Join-Path $scriptDir '..\backend')
     try {
         if (Test-Path '.\check_code.ps1') {
-            # Run the backend style/lint script directly in this session to avoid
-            # nested PowerShell invocation which produced an error record for
-            # emoji/unicode output from child processes. Capture output as string.
-            & .\check_code.ps1 2>&1 | Out-String -Width 4096
+            # Run the backend style/lint script via Start-Process with redirected
+            # stdout/stderr to temp files. This lets us capture only stdout (the
+            # program's normal output) into the report and avoid PowerShell
+            # ErrorRecord wrappers that otherwise appear in the combined file.
+            $qcOut = [System.IO.Path]::GetTempFileName()
+            $qcErr = [System.IO.Path]::GetTempFileName()
+            try {
+                $p = Start-Process -FilePath 'powershell' -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','./check_code.ps1' -WorkingDirectory (Get-Location) -RedirectStandardOutput $qcOut -RedirectStandardError $qcErr -NoNewWindow -Wait -PassThru
+
+                # Read only the stdout produced by the script
+                if (Test-Path $qcOut) {
+                    $qcLines = Get-Content -Path $qcOut -Encoding utf8
+                    # Filter noisy lines and write to the report
+                    $qcFiltered = $qcLines | Where-Object { $_ -notmatch '(?i)\bwarning\b|deprecated|pydanticdeprecated|we detected multiple lockfiles|nativecommanderror|^\s*At .*check_code\.ps1:|^\s*CategoryInfo|^\s*FullyQualifiedErrorId|^[^:]+\s*:' }
+                    $qcFiltered | Out-File -FilePath $reportFile -Encoding utf8 -Append
+                }
+            } finally {
+                Remove-Item -Path $qcOut,$qcErr -ErrorAction SilentlyContinue
+            }
         } else {
             Write-Output "No backend/check_code.ps1 found"
         }
