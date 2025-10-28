@@ -1,5 +1,6 @@
-import pytest
 import asyncio
+
+import pytest
 from fastapi import HTTPException
 
 from routes import order_routes as orr
