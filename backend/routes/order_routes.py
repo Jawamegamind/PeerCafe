@@ -117,7 +117,7 @@ def _recompute_total(o: dict):
     return False, stored_total_val, None
 
 
-def _compute_and_update_subtotal(order: dict) -> tuple[bool, object]:
+def _compute_and_update_subtotal(order: dict) -> tuple[bool, Optional[float]]:
     """Compute subtotal from order_items and update order if it differs.
 
     Returns (subtotal_changed: bool, old_subtotal_value_or_None)
