@@ -37,15 +37,22 @@ function Invoke-Section {
     )
     "`n===== $title =====`n" | Out-File -FilePath $reportFile -Encoding utf8 -Append
     try {
-        # Execute the action and capture all output (stdout + stderr) as a single string.
-        # Out-String preserves unicode characters and prevents PowerShell from emitting
-        # escaped sequences into the file when the captured output is an array/object.
-        $text = & $action 2>&1 | Out-String -Width 4096
 
-        if ($null -eq $text) { $text = '' }
+    # Execute the action and capture all output (stdout + stderr) as a single string.
+    # Out-String preserves unicode characters and prevents PowerShell from emitting
+    # escaped sequences into the file when the captured output is an array/object.
+    $text = & $action 2>&1 | Out-String -Width 4096
 
-        # Ensure we write using UTF8 to preserve characters across platforms.
-        $text | Out-File -FilePath $reportFile -Encoding utf8 -Append
+    if ($null -eq $text) { $text = '' }
+
+    # Filter out noisy warning/deprecation lines so the report focuses on results.
+    # We apply a case-insensitive regex matching common warning markers.
+    $lines = $text -split "`n"
+    $filtered = $lines | Where-Object { $_ -notmatch '(?i)\bwarning\b|deprecated|pydanticdeprecated|we detected multiple lockfiles|nativecommanderror' }
+    $filteredText = $filtered -join "`n"
+
+    # Ensure we write using UTF8 to preserve characters across platforms.
+    $filteredText | Out-File -FilePath $reportFile -Encoding utf8 -Append
 
         # Capture the exit code of the last external command if set
         $exit = $LASTEXITCODE
