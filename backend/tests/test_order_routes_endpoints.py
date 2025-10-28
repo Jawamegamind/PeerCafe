@@ -1,4 +1,5 @@
 import pytest
+import asyncio
 from fastapi import HTTPException
 
 from routes import order_routes as orr
@@ -47,40 +48,36 @@ class MockQuery:
         return MockResponse(self._select_data)
 
 
-@pytest.mark.asyncio
-async def test_list_orders_raises_when_no_client(monkeypatch):
+def test_list_orders_raises_when_no_client(monkeypatch):
     monkeypatch.setattr(orr, "get_supabase_client", lambda: None)
     with pytest.raises(HTTPException) as exc:
-        await orr.list_orders()
+        asyncio.run(orr.list_orders())
     # list_orders wraps internal HTTPExceptions and rethrows as 500
     assert exc.value.status_code == 500
 
 
-@pytest.mark.asyncio
-async def test_list_orders_success(monkeypatch):
+def test_list_orders_success(monkeypatch):
     # return a query that yields two orders
     q = MockQuery(select_data=[{"order_id": "o1"}, {"order_id": "o2"}])
     monkeypatch.setattr(orr, "get_supabase_client", lambda: object())
     monkeypatch.setattr(orr, "_get_db_table", lambda client, name: q)
 
-    res = await orr.list_orders(limit=2, offset=0)
+    res = asyncio.run(orr.list_orders(limit=2, offset=0))
     assert isinstance(res, list)
     assert len(res) == 2
 
 
-@pytest.mark.asyncio
-async def test_get_order_by_id_not_found(monkeypatch):
+def test_get_order_by_id_not_found(monkeypatch):
     q = MockQuery(select_data=[])
     monkeypatch.setattr(orr, "get_supabase_client", lambda: object())
     monkeypatch.setattr(orr, "_get_db_table", lambda client, name: q)
 
     with pytest.raises(HTTPException) as exc:
-        await orr.get_order_by_id("nope")
+        asyncio.run(orr.get_order_by_id("nope"))
     assert exc.value.status_code == 404
 
 
-@pytest.mark.asyncio
-async def test_get_order_by_id_success(monkeypatch):
+def test_get_order_by_id_success(monkeypatch):
     order = {
         "order_id": "o1",
         "user_id": "u1",
@@ -111,24 +108,22 @@ async def test_get_order_by_id_success(monkeypatch):
     monkeypatch.setattr(orr, "get_supabase_client", lambda: object())
     monkeypatch.setattr(orr, "_get_db_table", lambda client, name: q)
 
-    res = await orr.get_order_by_id("o1")
+    res = asyncio.run(orr.get_order_by_id("o1"))
     # should return an Order model instance (pydantic) with order_id
     assert getattr(res, "order_id") == "o1"
 
 
-@pytest.mark.asyncio
-async def test_update_order_status_not_found(monkeypatch):
+def test_update_order_status_not_found(monkeypatch):
     q = MockQuery(select_data=[])
     monkeypatch.setattr(orr, "get_supabase_client", lambda: object())
     monkeypatch.setattr(orr, "_get_db_table", lambda client, name: q)
 
     with pytest.raises(HTTPException) as exc:
-        await orr.update_order_status("x", orr.OrderStatus.CONFIRMED)
+        asyncio.run(orr.update_order_status("x", orr.OrderStatus.CONFIRMED))
     assert exc.value.status_code == 404
 
 
-@pytest.mark.asyncio
-async def test_update_order_status_success(monkeypatch):
+def test_update_order_status_success(monkeypatch):
     existing = {
         "order_id": "x",
         "user_id": "u1",
@@ -163,43 +158,40 @@ async def test_update_order_status_success(monkeypatch):
     sanitized_result = {**existing, "status": orr.OrderStatus.PICKED_UP.value}
     monkeypatch.setattr(orr, "_sanitize_order_record", lambda o: sanitized_result)
 
-    res = await orr.update_order_status("x", orr.OrderStatus.PICKED_UP)
+    res = asyncio.run(orr.update_order_status("x", orr.OrderStatus.PICKED_UP))
     assert getattr(res, "order_id") == "x"
     assert getattr(res, "status") == orr.OrderStatus.PICKED_UP.value
 
 
-@pytest.mark.asyncio
-async def test_assign_delivery_user_bad_status(monkeypatch):
+def test_assign_delivery_user_bad_status(monkeypatch):
     existing = {"order_id": "a1", "status": orr.OrderStatus.PENDING.value}
     q = MockQuery(select_data=[existing])
     monkeypatch.setattr(orr, "get_supabase_client", lambda: object())
     monkeypatch.setattr(orr, "_get_db_table", lambda client, name: q)
 
     with pytest.raises(HTTPException) as exc:
-        await orr.assign_delivery_user("a1", "du1")
+        asyncio.run(orr.assign_delivery_user("a1", "du1"))
     assert exc.value.status_code == 400
 
 
-@pytest.mark.asyncio
-async def test_cancel_order_success(monkeypatch):
+def test_cancel_order_success(monkeypatch):
     existing = {"order_id": "c1", "status": orr.OrderStatus.CONFIRMED.value}
     q = MockQuery(select_data=[existing])
     monkeypatch.setattr(orr, "get_supabase_client", lambda: object())
     monkeypatch.setattr(orr, "_get_db_table", lambda client, name: q)
 
-    res = await orr.cancel_order("c1")
+    res = asyncio.run(orr.cancel_order("c1"))
     assert isinstance(res, dict)
     assert res["order_id"] == "c1"
     assert res["message"] == "Order cancelled successfully"
 
 
-@pytest.mark.asyncio
-async def test_cancel_order_cannot_cancel_delivered(monkeypatch):
+def test_cancel_order_cannot_cancel_delivered(monkeypatch):
     existing = {"order_id": "c2", "status": orr.OrderStatus.DELIVERED.value}
     q = MockQuery(select_data=[existing])
     monkeypatch.setattr(orr, "get_supabase_client", lambda: object())
     monkeypatch.setattr(orr, "_get_db_table", lambda client, name: q)
 
     with pytest.raises(HTTPException) as exc:
-        await orr.cancel_order("c2")
+        asyncio.run(orr.cancel_order("c2"))
     assert exc.value.status_code == 400
