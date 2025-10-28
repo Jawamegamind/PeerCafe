@@ -101,12 +101,12 @@ Invoke-Section -title 'FRONTEND: Jest (with coverage)' -action {
         elseif (Test-Path 'yarn.lock') { $cmd = 'yarn run test:coverage --silent' }
 
         # Run via cmd.exe to capture raw stdout/stderr to a file
-        $proc = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c', $cmd -WorkingDirectory $frontendPath -RedirectStandardOutput $tmpOut -RedirectStandardError $tmpErr -NoNewWindow -Wait -PassThru
+        Start-Process -FilePath 'cmd.exe' -ArgumentList '/c', $cmd -WorkingDirectory $frontendPath -RedirectStandardOutput $tmpOut -RedirectStandardError $tmpErr -NoNewWindow -Wait
 
-    # Read the captured output, filter noisy Next.js warnings, and emit it so Invoke-Section will append it to the report
-        $outLines = Get-Content -Path $tmpOut -Encoding utf8
-        # Remove specific Next.js workspace-root inference warnings which are noisy in CI-local runs
-        $filteredOut = $outLines | Where-Object { $_ -notmatch 'Next\.js inferred your workspace root|Detected additional lockfiles' }
+        # Read the captured output, filter noisy Next.js warnings, and emit it so Invoke-Section will append it to the report
+    $outLines = Get-Content -Path $tmpOut -Encoding utf8
+    # Remove specific Next.js workspace-root inference warnings which are noisy in CI-local runs
+    $filteredOut = $outLines | Where-Object { $_ -notmatch 'Next\.js inferred your workspace root|Detected additional lockfiles|We detected multiple lockfiles' }
         $filteredOut
         if (Test-Path $tmpErr) {
             "`n--- STDERR (frontend) ---`n" | Write-Output
@@ -131,8 +131,10 @@ Invoke-Section -title 'BACKEND: code-quality (black/isort/flake8/bandit)' -actio
     Push-Location -Path (Join-Path $scriptDir '..\backend')
     try {
         if (Test-Path '.\check_code.ps1') {
-            # Run the backend style/lint script and capture its output
-            & powershell -NoProfile -ExecutionPolicy Bypass -File ".\check_code.ps1" 2>&1
+            # Run the backend style/lint script directly in this session to avoid
+            # nested PowerShell invocation which produced an error record for
+            # emoji/unicode output from child processes. Capture output as string.
+            & .\check_code.ps1 2>&1 | Out-String -Width 4096
         } else {
             Write-Output "No backend/check_code.ps1 found"
         }
