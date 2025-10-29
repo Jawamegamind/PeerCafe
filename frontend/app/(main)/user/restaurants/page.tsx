@@ -44,8 +44,10 @@ interface Restaurant {
   email: string;
   cuisine_type: string;
   is_active: boolean;
-  rating: number;
-  delivery_fee: number;
+  // rating may sometimes be a string/null from the API; tolerate it
+  rating?: number | string | null;
+  // delivery_fee can sometimes come back as a string, null, or number depending on source
+  delivery_fee?: number | string | null;
 }
 
 const cuisineColors: Record<string, string> = {
@@ -166,14 +168,26 @@ export default function RestaurantsPage() {
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
               <Rating
-                value={restaurant.rating}
+                value={(() => {
+                  const raw = restaurant.rating;
+                  const n = typeof raw === 'number' ? raw : Number(raw);
+                  return Number.isFinite(n) ? n : null;
+                })()}
                 readOnly
                 size="small"
                 precision={0.1}
                 sx={{ mr: 1 }}
               />
               <Typography variant="body2" color="text.secondary">
-                ({restaurant.rating.toFixed(1)})
+                (
+                {(() => {
+                  const raw = restaurant.rating;
+                  if (raw === null || raw === undefined || raw === '')
+                    return 'N/A';
+                  const r = typeof raw === 'number' ? raw : Number(raw);
+                  return Number.isFinite(r) ? r.toFixed(1) : 'N/A';
+                })()}
+                )
               </Typography>
             </Box>
           </Box>
@@ -236,7 +250,15 @@ export default function RestaurantsPage() {
             />
             <Typography variant="body2" color="text.secondary">
               Delivery Fee:{' '}
-              <strong>${restaurant.delivery_fee.toFixed(2)}</strong>
+              <strong>
+                {(() => {
+                  const raw = restaurant.delivery_fee;
+                  if (raw === null || raw === undefined || raw === '')
+                    return 'N/A';
+                  const fee = typeof raw === 'number' ? raw : Number(raw);
+                  return Number.isFinite(fee) ? `$${fee.toFixed(2)}` : 'N/A';
+                })()}
+              </strong>
             </Typography>
           </Box>
         </Box>

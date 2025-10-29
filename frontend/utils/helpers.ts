@@ -5,9 +5,12 @@
 /**
  * Format currency for display
  */
-export function formatCurrency(amount: number | undefined | null): string {
-  if (amount === undefined || amount === null) return '$0.00';
-  return `$${amount.toFixed(2)}`;
+export function formatCurrency(
+  amount: number | string | undefined | null
+): string {
+  if (amount === undefined || amount === null || amount === '') return '$0.00';
+  const n = typeof amount === 'number' ? amount : Number(amount);
+  return Number.isFinite(n) ? `$${n.toFixed(2)}` : '$0.00';
 }
 
 /**
@@ -74,9 +77,12 @@ export function calculateDeliveryTime(
 /**
  * Format rating for display
  */
-export function formatRating(rating: number | undefined | null): string {
-  if (rating === undefined || rating === null) return '0.0';
-  return rating.toFixed(1);
+export function formatRating(
+  rating: number | string | undefined | null
+): string {
+  if (rating === undefined || rating === null || rating === '') return '0.0';
+  const r = typeof rating === 'number' ? rating : Number(rating);
+  return Number.isFinite(r) ? r.toFixed(1) : '0.0';
 }
 
 /**

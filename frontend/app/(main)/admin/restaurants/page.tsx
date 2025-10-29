@@ -38,6 +38,7 @@ import {
   MenuBook as MenuBookIcon,
 } from '@mui/icons-material';
 import Navbar from '../../../_components/navbar';
+import { formatCurrency, formatRating } from '../../../../utils/helpers';
 import { useRouter } from 'next/navigation';
 
 interface Restaurant {
@@ -389,13 +390,13 @@ export default function RestaurantsPage() {
                           <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                               <Typography variant="body2">
-                                ⭐ {restaurant.rating.toFixed(1)}
+                                ⭐ {formatRating(restaurant.rating)}
                               </Typography>
                             </Box>
                           </TableCell>
                           <TableCell>
                             <Typography variant="body2" fontWeight="medium">
-                              ${restaurant.delivery_fee.toFixed(2)}
+                              {formatCurrency(restaurant.delivery_fee)}
                             </Typography>
                           </TableCell>
                           <TableCell>
