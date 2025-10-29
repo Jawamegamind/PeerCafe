@@ -12,14 +12,23 @@ const routeConfig = {
     '/user/dashboard',
     '/user/profile',
     '/user/checkout',
+    '/user/orders',
+    // include dynamic order route prefix
+    '/user/orders/',
     '/user/restaurants',
+    // include dynamic restaurant route prefix
+    '/user/restaurants/',
   ],
 
   // Admin routes (requires authentication + admin role)
   admin: [
     '/admin/dashboard',
+    '/admin/orders',
+    // include orders prefix (covers /admin/orders)
     '/admin/profile',
     '/admin/restaurants',
+    // include dynamic restaurant id and add page
+    '/admin/restaurants/',
     '/admin/restaurants/add',
   ],
 };
