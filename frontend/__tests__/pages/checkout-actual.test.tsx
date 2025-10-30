@@ -40,7 +40,7 @@ const mockCartContext = {
     {
       id: 2,
       ItemName: 'Caesar Salad',
-      Price: 12.50,
+      Price: 12.5,
       quantity: 1,
     },
   ],
@@ -183,7 +183,9 @@ describe('CheckoutPage', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Your cart is empty')).toBeInTheDocument();
-        expect(screen.getByText('Add some items to your cart before checking out.')).toBeInTheDocument();
+        expect(
+          screen.getByText('Add some items to your cart before checking out.')
+        ).toBeInTheDocument();
       });
     });
 
@@ -246,8 +248,12 @@ describe('CheckoutPage', () => {
     });
 
     it('has proper heading structure', () => {
-      expect(screen.getByRole('heading', { name: 'Checkout' })).toBeInTheDocument();
-      expect(screen.getAllByRole('heading', { name: 'Order Summary' })).toHaveLength(2); // Two "Order Summary" headings
+      expect(
+        screen.getByRole('heading', { name: 'Checkout' })
+      ).toBeInTheDocument();
+      expect(
+        screen.getAllByRole('heading', { name: 'Order Summary' })
+      ).toHaveLength(2); // Two "Order Summary" headings
     });
 
     it('has accessible buttons', () => {

@@ -51,7 +51,7 @@ const mockRestaurants = [
     cuisine_type: 'Chinese',
     is_active: true,
     rating: 4.2,
-    delivery_fee: 3.50,
+    delivery_fee: 3.5,
   },
   {
     restaurant_id: 3,
@@ -78,16 +78,22 @@ describe('RestaurantsPage', () => {
 
   describe('Rendering and Loading States', () => {
     it('renders loading skeletons initially', () => {
-      (getRestaurants as jest.Mock).mockImplementation(() => new Promise(() => {})); // Never resolves
+      (getRestaurants as jest.Mock).mockImplementation(
+        () => new Promise(() => {})
+      ); // Never resolves
 
       render(<RestaurantsPage />);
 
       expect(screen.getByTestId('navbar')).toBeInTheDocument();
       expect(screen.getByText('🍽️ Discover Restaurants')).toBeInTheDocument();
-      expect(screen.getByText(/Explore amazing local restaurants/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Explore amazing local restaurants/)
+      ).toBeInTheDocument();
 
       // Should show search and filter inputs even while loading
-      expect(screen.getByPlaceholderText('Search restaurants, cuisines...')).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText('Search restaurants, cuisines...')
+      ).toBeInTheDocument();
       expect(screen.getAllByText('Cuisine Type')[0]).toBeInTheDocument();
     });
 
@@ -118,7 +124,7 @@ describe('RestaurantsPage', () => {
           cuisine_type: 'Other',
           is_active: false,
           rating: 2.0,
-          delivery_fee: 5.00,
+          delivery_fee: 5.0,
         },
       ];
 
@@ -139,15 +145,17 @@ describe('RestaurantsPage', () => {
     beforeEach(async () => {
       (getRestaurants as jest.Mock).mockResolvedValue(mockRestaurants);
       render(<RestaurantsPage />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Pizza Palace')).toBeInTheDocument();
       });
     });
 
     it('filters restaurants by search term', async () => {
-      const searchInput = screen.getByPlaceholderText('Search restaurants, cuisines...');
-      
+      const searchInput = screen.getByPlaceholderText(
+        'Search restaurants, cuisines...'
+      );
+
       fireEvent.change(searchInput, { target: { value: 'pizza' } });
 
       await waitFor(() => {
@@ -162,9 +170,9 @@ describe('RestaurantsPage', () => {
     it('filters restaurants by cuisine type', async () => {
       // Find the select component by its container or button role
       const cuisineSelect = screen.getByRole('combobox');
-      
+
       fireEvent.mouseDown(cuisineSelect);
-      
+
       await waitFor(() => {
         const italianOption = screen.getByRole('option', { name: 'Italian' });
         fireEvent.click(italianOption);
@@ -177,19 +185,25 @@ describe('RestaurantsPage', () => {
     });
 
     it('shows clear filters button when filters are applied', async () => {
-      const searchInput = screen.getByPlaceholderText('Search restaurants, cuisines...');
-      
+      const searchInput = screen.getByPlaceholderText(
+        'Search restaurants, cuisines...'
+      );
+
       fireEvent.change(searchInput, { target: { value: 'nonexistent' } });
 
       await waitFor(() => {
-        expect(screen.getByText('No restaurants match your search criteria')).toBeInTheDocument();
+        expect(
+          screen.getByText('No restaurants match your search criteria')
+        ).toBeInTheDocument();
         expect(screen.getByText('Clear Filters')).toBeInTheDocument();
       });
     });
 
     it('clears filters when clear button is clicked', async () => {
-      const searchInput = screen.getByPlaceholderText('Search restaurants, cuisines...');
-      
+      const searchInput = screen.getByPlaceholderText(
+        'Search restaurants, cuisines...'
+      );
+
       fireEvent.change(searchInput, { target: { value: 'nonexistent' } });
 
       await waitFor(() => {
@@ -210,7 +224,7 @@ describe('RestaurantsPage', () => {
     beforeEach(async () => {
       (getRestaurants as jest.Mock).mockResolvedValue(mockRestaurants);
       render(<RestaurantsPage />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Pizza Palace')).toBeInTheDocument();
       });
@@ -218,7 +232,7 @@ describe('RestaurantsPage', () => {
 
     it('navigates to restaurant detail page when View Menu is clicked', async () => {
       const viewMenuButtons = screen.getAllByText('View Menu');
-      
+
       fireEvent.click(viewMenuButtons[0]); // Click first restaurant's button
 
       expect(mockPush).toHaveBeenCalledWith('/user/restaurants/1');
@@ -227,8 +241,12 @@ describe('RestaurantsPage', () => {
     it('displays restaurant information correctly', () => {
       // Check Pizza Palace details
       expect(screen.getByText('Pizza Palace')).toBeInTheDocument();
-      expect(screen.getByText('Authentic Italian pizza with fresh ingredients')).toBeInTheDocument();
-      expect(screen.getByText('123 Main St, San Francisco, CA')).toBeInTheDocument();
+      expect(
+        screen.getByText('Authentic Italian pizza with fresh ingredients')
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('123 Main St, San Francisco, CA')
+      ).toBeInTheDocument();
       expect(screen.getByText('(555) 123-4567')).toBeInTheDocument();
       expect(screen.getByText('$2.99')).toBeInTheDocument();
 
@@ -244,7 +262,9 @@ describe('RestaurantsPage', () => {
         rating: r.name === 'Pizza Palace' ? null : r.rating,
       }));
 
-      (getRestaurants as jest.Mock).mockResolvedValue(restaurantsWithNullRating);
+      (getRestaurants as jest.Mock).mockResolvedValue(
+        restaurantsWithNullRating
+      );
 
       render(<RestaurantsPage />);
 
@@ -262,24 +282,32 @@ describe('RestaurantsPage', () => {
       render(<RestaurantsPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('No restaurants available at the moment')).toBeInTheDocument();
+        expect(
+          screen.getByText('No restaurants available at the moment')
+        ).toBeInTheDocument();
       });
     });
 
     it('shows search empty state when no results match filters', async () => {
       (getRestaurants as jest.Mock).mockResolvedValue(mockRestaurants);
-      
+
       render(<RestaurantsPage />);
 
       await waitFor(() => {
         expect(screen.getByText('Pizza Palace')).toBeInTheDocument();
       });
 
-      const searchInput = screen.getByPlaceholderText('Search restaurants, cuisines...');
-      fireEvent.change(searchInput, { target: { value: 'nonexistent restaurant' } });
+      const searchInput = screen.getByPlaceholderText(
+        'Search restaurants, cuisines...'
+      );
+      fireEvent.change(searchInput, {
+        target: { value: 'nonexistent restaurant' },
+      });
 
       await waitFor(() => {
-        expect(screen.getByText('No restaurants match your search criteria')).toBeInTheDocument();
+        expect(
+          screen.getByText('No restaurants match your search criteria')
+        ).toBeInTheDocument();
       });
     });
   });
@@ -293,7 +321,9 @@ describe('RestaurantsPage', () => {
       await waitFor(() => {
         // Should still show the page structure even if API fails
         expect(screen.getByText('🍽️ Discover Restaurants')).toBeInTheDocument();
-        expect(screen.getByText('No restaurants available at the moment')).toBeInTheDocument();
+        expect(
+          screen.getByText('No restaurants available at the moment')
+        ).toBeInTheDocument();
       });
     });
   });
@@ -302,7 +332,7 @@ describe('RestaurantsPage', () => {
     beforeEach(async () => {
       (getRestaurants as jest.Mock).mockResolvedValue(mockRestaurants);
       render(<RestaurantsPage />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Pizza Palace')).toBeInTheDocument();
       });
@@ -314,7 +344,9 @@ describe('RestaurantsPage', () => {
     });
 
     it('has accessible form controls', () => {
-      const searchInput = screen.getByPlaceholderText('Search restaurants, cuisines...');
+      const searchInput = screen.getByPlaceholderText(
+        'Search restaurants, cuisines...'
+      );
       expect(searchInput).toBeInTheDocument();
 
       const cuisineSelect = screen.getByRole('combobox');
@@ -322,9 +354,11 @@ describe('RestaurantsPage', () => {
     });
 
     it('has accessible buttons', () => {
-      const viewMenuButtons = screen.getAllByRole('button', { name: /View Menu/ });
+      const viewMenuButtons = screen.getAllByRole('button', {
+        name: /View Menu/,
+      });
       expect(viewMenuButtons.length).toBe(3);
-      
+
       viewMenuButtons.forEach(button => {
         expect(button).toBeEnabled();
       });

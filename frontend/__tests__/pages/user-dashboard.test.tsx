@@ -43,7 +43,9 @@ describe('UserDashboard', () => {
       render(<UserDashboard />);
 
       expect(screen.getByText(/Welcome to PeerCafe/)).toBeInTheDocument();
-      expect(screen.getByText(/Your gateway to delicious local restaurants/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Your gateway to delicious local restaurants/)
+      ).toBeInTheDocument();
       expect(screen.getByTestId('navbar')).toBeInTheDocument();
     });
 
@@ -59,7 +61,9 @@ describe('UserDashboard', () => {
 
       // Browse Restaurants card (active)
       expect(screen.getByText('Browse Restaurants')).toBeInTheDocument();
-      expect(screen.getByText(/Discover amazing local restaurants/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Discover amazing local restaurants/)
+      ).toBeInTheDocument();
 
       // My Orders card (coming soon)
       expect(screen.getByText('My Orders')).toBeInTheDocument();
@@ -79,7 +83,9 @@ describe('UserDashboard', () => {
 
       render(<UserDashboard />);
 
-      const browseRestaurantsCard = screen.getByText('Browse Restaurants').closest('div');
+      const browseRestaurantsCard = screen
+        .getByText('Browse Restaurants')
+        .closest('div');
       expect(browseRestaurantsCard).toBeInTheDocument();
 
       // Simulate click
@@ -99,30 +105,42 @@ describe('UserDashboard', () => {
       render(<UserDashboard />);
 
       expect(screen.queryByText('🚫 Access Denied')).not.toBeInTheDocument();
-      expect(screen.queryByText(/You don't have permission to access admin areas/)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/You don't have permission to access admin areas/)
+      ).not.toBeInTheDocument();
     });
 
     it('shows access denied message when error parameter is insufficient_permissions', async () => {
       (useSearchParams as jest.Mock).mockReturnValue({
-        get: jest.fn().mockImplementation((param) => 
-          param === 'error' ? 'insufficient_permissions' : null
-        ),
+        get: jest
+          .fn()
+          .mockImplementation(param =>
+            param === 'error' ? 'insufficient_permissions' : null
+          ),
       });
 
       render(<UserDashboard />);
 
       await waitFor(() => {
         expect(screen.getByText('🚫 Access Denied')).toBeInTheDocument();
-        expect(screen.getByText(/You don't have permission to access admin areas/)).toBeInTheDocument();
-        expect(screen.getByText(/Contact an administrator if you believe this is an error/)).toBeInTheDocument();
+        expect(
+          screen.getByText(/You don't have permission to access admin areas/)
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText(
+            /Contact an administrator if you believe this is an error/
+          )
+        ).toBeInTheDocument();
       });
     });
 
     it('does not show error message for other error types', () => {
       (useSearchParams as jest.Mock).mockReturnValue({
-        get: jest.fn().mockImplementation((param) => 
-          param === 'error' ? 'other_error' : null
-        ),
+        get: jest
+          .fn()
+          .mockImplementation(param =>
+            param === 'error' ? 'other_error' : null
+          ),
       });
 
       render(<UserDashboard />);
@@ -143,7 +161,9 @@ describe('UserDashboard', () => {
     it('has interactive elements that are clickable', () => {
       render(<UserDashboard />);
 
-      const browseRestaurantsCard = screen.getByText('Browse Restaurants').closest('div');
+      const browseRestaurantsCard = screen
+        .getByText('Browse Restaurants')
+        .closest('div');
       expect(browseRestaurantsCard).toHaveStyle({ cursor: 'pointer' });
     });
   });
@@ -152,7 +172,9 @@ describe('UserDashboard', () => {
     it('applies responsive grid layout', () => {
       render(<UserDashboard />);
 
-      const gridContainer = screen.getByText('Browse Restaurants').closest('div')?.parentElement;
+      const gridContainer = screen
+        .getByText('Browse Restaurants')
+        .closest('div')?.parentElement;
       expect(gridContainer).toHaveStyle({
         display: 'grid',
         'grid-template-columns': 'repeat(auto-fit, minmax(280px, 1fr))',
