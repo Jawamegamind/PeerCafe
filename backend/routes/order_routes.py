@@ -221,6 +221,21 @@ async def assign_delivery_user(
     Assign a delivery user to an order
     """
     try:
+        print(f"Attempting to assign order {order_id} to delivery user {delivery_user_id}")
+        
+        # Check if delivery user already has an active order
+        active_orders = supabase.table("orders")\
+            .select("*")\
+            .eq("delivery_user_id", delivery_user_id)\
+            .in_("status", ["assigned", "picked_up", "en_route"])\
+            .execute()
+        
+        if active_orders.data and len(active_orders.data) > 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Driver already has an active delivery. Complete current delivery before accepting new orders."
+            )
+        
         # Check if order exists and is ready for assignment
         existing_order = supabase.table("orders")\
             .select("*")\
@@ -228,16 +243,19 @@ async def assign_delivery_user(
             .execute()
         
         if not existing_order.data:
+            print(f"Order {order_id} not found in database")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Order not found"
             )
         
         order = existing_order.data[0]
+        print(f"Found order with status: {order['status']}")
+        
         if order["status"] not in [OrderStatus.READY.value, OrderStatus.CONFIRMED.value]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Order is not ready for delivery assignment"
+                detail=f"Order is not ready for delivery assignment. Current status: {order['status']}"
             )
         
         # Assign delivery user and update status
@@ -247,22 +265,29 @@ async def assign_delivery_user(
             "updated_at": datetime.now().isoformat()
         }
         
+        print(f"Updating order with data: {update_data}")
+        
         response = supabase.table("orders")\
             .update(update_data)\
             .eq("order_id", order_id)\
             .execute()
         
         if not response.data:
+            print(f"Failed to update order {order_id}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to assign delivery user"
             )
         
+        print(f"Successfully assigned order {order_id} to driver {delivery_user_id}")
         return Order(**response.data[0])
         
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Error in assign_delivery_user: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to assign delivery user: {str(e)}"

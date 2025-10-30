@@ -41,9 +41,14 @@ import {
     Navigation as NavigationIcon,
 } from '@mui/icons-material';
 import mapboxgl from "mapbox-gl";
+// Creating a supabase client to access user id and assign orders
+import { createClient } from "@/utils/supabase/client";
 
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY;
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY || "";
 const backend_url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
+const supabase = createClient();
+
 
 interface Order {
     order_id: string;
@@ -93,12 +98,84 @@ export default function DeliveryPage() {
     const map = React.useRef<mapboxgl.Map | null>(null);
 
     const [readyOrders, setReadyOrders] = React.useState<Order[]>([]);
-    // const [location, setLocation] = React.useState<{ latitude: number; longitude: number } | null>(null);
     const [loading, setLoading] = React.useState(false);
+    const [acceptingOrder, setAcceptingOrder] = React.useState<string | null>(null);
+    const [activeOrder, setActiveOrder] = React.useState<Order | null>(null);
+    const [currentUser, setCurrentUser] = React.useState<any>(null);
+    const [authLoading, setAuthLoading] = React.useState<boolean>(true);
 
     // Example coordinates (lng, lat)
     const [sourceLocation, setSourceLocation] = React.useState<{ latitude: number, longitude: number } | null>(null) // e.g. Rider or Hub
     const [restaurantLocations, setRestaurantLocations] = React.useState<{ latitude: number, longitude: number }[]>([]); // e.g. Restaurants for ready orders
+
+    const getCurrentUser = async () => {
+        try {
+            setAuthLoading(true);
+
+            // Get current authenticated user
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+            if (authError || !user) {
+                console.error('No authenticated user found:', authError);
+                alert('Please log in to access the delivery page.');
+                return;
+            }
+
+            // Get user details from users table
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('*')
+                .eq('user_id', user.id)
+                .single();
+
+            if (userError || !userData) {
+                console.error('Error fetching user data:', userError);
+                alert('Error loading user profile.');
+                return;
+            }
+
+            setCurrentUser(userData);
+
+            // Check if driver has any active orders
+            const { data: activeOrders, error: activeOrderError } = await supabase
+                .from('orders')
+                .select('*, restaurants(name, latitude, longitude, address)')
+                .eq('delivery_user_id', user.id)
+                .in('status', ['assigned', 'picked_up', 'en_route'])
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            if (activeOrderError) {
+                console.error('Error fetching active orders:', activeOrderError);
+            } else if (activeOrders && activeOrders.length > 0) {
+                // Driver has an active order, set it
+                const active = activeOrders[0];
+                setActiveOrder({
+                    order_id: active.order_id,
+                    user_id: active.user_id,
+                    restaurant_id: active.restaurant_id,
+                    delivery_fee: active.delivery_fee,
+                    tip_amount: active.tip_amount,
+                    estimated_pickup_time: active.estimated_pickup_time,
+                    estimated_delivery_time: active.estimated_delivery_time,
+                    latitude: active.latitude,
+                    longitude: active.longitude,
+                    restaurants: active.restaurants,
+                    distance_to_restaurant: 0, // Will be calculated if needed
+                    duration_to_restaurant: 0,
+                    distance_to_restaurant_miles: 0,
+                    restaurant_reachable_by_road: true,
+                    duration_to_restaurant_minutes: 0
+                });
+                console.log('Found active order:', active.order_id);
+            }
+        } catch (error) {
+            console.error('Authentication error:', error);
+            alert('Authentication error. Please try logging in again.');
+        } finally {
+            setAuthLoading(false);
+        }
+    };
 
     const fetchUserLocation = () => {
         console.log("Fetching user location...");
@@ -138,7 +215,7 @@ export default function DeliveryPage() {
             setLoading(true);
 
             // API call to fetch ready orders from backend based on user's location
-            axios.get(backend_url + `deliveries/ready?latitude=${lat}&longitude=${long}`)
+            axios.get(`${backend_url}/api/deliveries/ready?latitude=${lat}&longitude=${long}`)
                 .then(response => {
                     setReadyOrders(response.data);
                     // console.log("Fetched ready orders:", response.data);
@@ -153,10 +230,64 @@ export default function DeliveryPage() {
         }
     }
 
+    const handleAcceptOrder = async (order: Order) => {
+        // Check if user is authenticated
+        if (!currentUser) {
+            alert('Please log in to accept orders.');
+            return;
+        }
+
+        // Check if already have an active order
+        if (activeOrder) {
+            alert('You already have an active delivery. Complete your current delivery before accepting a new order.');
+            return;
+        }
+        
+        const delivery_user_id = currentUser.user_id;
+        
+        try {
+            setAcceptingOrder(order.order_id);
+            
+            // Call the API to assign the order to this delivery user
+            const response = await axios.patch(
+                `${backend_url}/api/orders/${order.order_id}/assign-delivery`,
+                null,
+                {
+                    params: {
+                        delivery_user_id: delivery_user_id
+                    }
+                }
+            );
+
+            if (response.status === 200) {
+                // Order accepted successfully
+                console.log("Order accepted:", response.data);
+                
+                // Set as active order
+                setActiveOrder(order);
+                
+                // Remove from ready orders list
+                setReadyOrders(prev => prev.filter(o => o.order_id !== order.order_id));
+                
+                // TODO: Navigate to active order view or update UI
+                alert(`Order accepted! Restaurant: ${order.restaurants.name}`);
+            }
+        } catch (error: any) {
+            console.error("Error accepting order:", error);
+            const errorMessage = error.response?.data?.detail || "Failed to accept order. Please try again.";
+            alert(errorMessage);
+        } finally {
+            setAcceptingOrder(null);
+        }
+    }
+
     const renderMap = (source: [number, number], destinations: [number, number][]) => {
-
-
         if (!mapContainer.current) return;
+
+        // Remove existing map if it exists to prevent multiple instances
+        if (map.current) {
+            map.current.remove();
+        }
 
         // Initialize the map
         map.current = new mapboxgl.Map({
@@ -188,17 +319,21 @@ export default function DeliveryPage() {
         bounds.extend(source);
         destinations.forEach((d) => bounds.extend(d));
         map.current.fitBounds(bounds, { padding: 50 });
-
-        return () => map.current?.remove();
     }
 
     React.useEffect(() => {
+        // Get authenticated user first
+        getCurrentUser();
+        
         // Fetch current location of user and once location is fetched, get the ready orders with distance info accordingly.
         if (sourceLocation == null || sourceLocation == undefined) fetchUserLocation();
 
-        // fetchUserLocation();
-        // Once ready orders are fetched, render the map
-        // renderMap(source, destinations);
+        // Cleanup function to remove map on component unmount
+        return () => {
+            if (map.current) {
+                map.current.remove();
+            }
+        };
     }, []);
 
     React.useEffect(() => {
@@ -240,112 +375,98 @@ export default function DeliveryPage() {
         "Delivered",
     ];
 
-    const ActiveOrderCard = () => (
-        <Card sx={{ borderRadius: 3, mb: 2, boxShadow: 4, width: '80%', justifySelf: 'center' }}>
-            <CardContent>
-                {/* Header */}
-                <Box display="flex" justifyContent="space-between">
-                    <Box>
-                        <Typography variant="subtitle1" fontWeight={600}>
-                            {/* {restaurantName} */}
-                            Restaurant XYZ
+    const ActiveOrderCard = () => {
+        if (!activeOrder) {
+            return (
+                <Card sx={{ borderRadius: 3, mb: 2, boxShadow: 2, width: '80%', justifySelf: 'center', bgcolor: '#f5f5f5' }}>
+                    <CardContent>
+                        <Typography variant="h6" textAlign="center" color="text.secondary">
+                            No active delivery
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            {/* Order #{orderId} */}
-                            Order #12345
+                        <Typography variant="body2" textAlign="center" color="text.secondary" mt={1}>
+                            Accept an order below to start delivering
                         </Typography>
-                        <Box display="flex" alignItems="center" gap={2} mt={1}>
-                            <Box display="flex" alignItems="center" gap={0.5}>
-                                <NavigationIcon fontSize="small" />
-                                <Typography variant="body2">3.15 Miles</Typography>
-                            </Box>
+                    </CardContent>
+                </Card>
+            );
+        }
 
-                            <Box display="flex" alignItems="center" gap={0.5}>
-                                <AccessTime fontSize="small" />
-                                <Typography variant="body2"> 15 mins </Typography>
-                            </Box>
+        // Calculate active step based on order status (if it exists)
+        const getActiveStep = () => {
+            return 0; // For now, default to first step (Ready/Assigned)
+        };
 
-                            <Box display="flex" alignItems="center" gap={0.5}>
-                                <AttachMoney fontSize="small" />
-                                <Typography variant="body2" fontWeight={600} color="success.main">
-                                4.00
-                                </Typography>
+        return (
+            <Card sx={{ borderRadius: 3, mb: 2, boxShadow: 4, width: '80%', justifySelf: 'center' }}>
+                <CardContent>
+                    {/* Header */}
+                    <Box display="flex" justifyContent="space-between">
+                        <Box>
+                            <Typography variant="subtitle1" fontWeight={600}>
+                                {activeOrder.restaurants.name}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Order #{activeOrder.order_id.substring(0, 8)}...
+                            </Typography>
+                            <Box display="flex" alignItems="center" gap={2} mt={1}>
+                                <Box display="flex" alignItems="center" gap={0.5}>
+                                    <NavigationIcon fontSize="small" />
+                                    <Typography variant="body2">
+                                        {activeOrder.distance_to_restaurant_miles} Miles
+                                    </Typography>
+                                </Box>
+
+                                <Box display="flex" alignItems="center" gap={0.5}>
+                                    <AccessTime fontSize="small" />
+                                    <Typography variant="body2">
+                                        {activeOrder.duration_to_restaurant_minutes} mins
+                                    </Typography>
+                                </Box>
+
+                                <Box display="flex" alignItems="center" gap={0.5}>
+                                    <AttachMoney fontSize="small" />
+                                    <Typography variant="body2" fontWeight={600} color="success.main">
+                                        {activeOrder.delivery_fee}
+                                    </Typography>
+                                </Box>
                             </Box>
                         </Box>
+                        <Chip
+                            label="Assigned"
+                            color="primary"
+                            size="small"
+                            sx={{ fontWeight: 600 }}
+                        />
                     </Box>
-                    <Chip
-                        label="Out For Delivery"
-                        color="warning"
-                        size="small"
-                        sx={{ fontWeight: 600 }}
+
+                    {/* Stepper */}
+                    <Stepper activeStep={getActiveStep()} alternativeLabel sx={{ mt: 2 }}>
+                        {steps.map((label) => (
+                            <Step key={label}>
+                                <StepLabel>{label}</StepLabel>
+                            </Step>
+                        ))}
+                    </Stepper>
+
+                    {/* Linear Progress */}
+                    <LinearProgress
+                        variant="determinate"
+                        value={20}
+                        sx={{ borderRadius: 5, mt: 2, height: 8 }}
                     />
-                </Box>
-
-                {/* Stepper */}
-                <Stepper activeStep={2} alternativeLabel sx={{ mt: 2 }}>
-                    {steps.map((label) => (
-                        <Step key={label}>
-                            <StepLabel>{label}</StepLabel>
-                        </Step>
-                    ))}
-                </Stepper>
-
-                {/* Linear Progress */}
-                <LinearProgress
-                    variant="determinate"
-                    value={30}
-                    sx={{ borderRadius: 5, mt: 2, height: 8 }}
-                />
-            </CardContent>
-
-            {/* Button Area */}
-            <CardActions style={{display:'flex', flexDirection:'column'}} sx={{ px: 2, pb: 1 }}>
-                
-                <Button variant="contained" fullWidth>
-                    {getPrimaryAction(2)}
-                </Button>
-                
-            </CardActions>
-            
-
-            <Divider />
-
-            {/* Expandable Details */}
-            {/* <Box
-                onClick={() => setExpanded(false)}
-                display="flex"
-                alignItems="center"
-                justifyContent="space-between"
-                px={2}
-                py={1}
-                sx={{ cursor: "pointer" }}
-            >
-                <Typography variant="body2" fontWeight={500}>
-                    Delivery Details
-                </Typography>
-                <ExpandMoreIcon
-                    sx={{
-                        transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-                        transition: "0.3s",
-                    }}
-                />
-            </Box> */}
-
-            {/* <Collapse in={expanded} timeout="auto" unmountOnExit>
-                <CardContent pt={0}>
-                    <Typography variant="body2">
-                        <strong>Customer:</strong> {customerName}
-                    </Typography>
-                    <Typography variant="body2" mt={1}>
-                        <strong>Address:</strong> {address}
-                    </Typography>
-                    <Typography variant="body2" mt={1}>
-                        <strong>Payment:</strong> {payment}
-                    </Typography>
                 </CardContent>
-            </Collapse> */}
-        </Card>
-    );
+
+                {/* Button Area */}
+                <CardActions style={{display:'flex', flexDirection:'column'}} sx={{ px: 2, pb: 1 }}>
+                    
+                    <Button variant="contained" fullWidth>
+                        {getPrimaryAction(0)}
+                    </Button>
+                    
+                </CardActions>
+            </Card>
+        );
+    };
 
     const OrderCard = ({ readyOrders }: { readyOrders: Order }) => (
         <Card
@@ -457,9 +578,10 @@ export default function DeliveryPage() {
                     variant="contained"
                     fullWidth
                     startIcon={<DeliveryDiningIcon />}
-                    onClick={() => { }}
+                    onClick={() => handleAcceptOrder(readyOrders)}
+                    disabled={acceptingOrder === readyOrders.order_id}
                 >
-                    Deliver
+                    {acceptingOrder === readyOrders.order_id ? 'Accepting...' : 'Accept & Deliver'}
                 </Button>
             </CardActions>
         </Card>
@@ -467,6 +589,32 @@ export default function DeliveryPage() {
 
 
 
+
+    // Show loading while checking authentication
+    if (authLoading) {
+        return (
+            <>
+                <Navbar />
+                <Container maxWidth="lg" sx={{ py: 4, textAlign: 'center' }}>
+                    <Typography variant="h6">Loading...</Typography>
+                </Container>
+            </>
+        );
+    }
+
+    // Show message if user is not authenticated
+    if (!currentUser) {
+        return (
+            <>
+                <Navbar />
+                <Container maxWidth="lg" sx={{ py: 4, textAlign: 'center' }}>
+                    <Typography variant="h6" color="error">
+                        Please log in to access the delivery dashboard
+                    </Typography>
+                </Container>
+            </>
+        );
+    }
 
     return (
         <>
