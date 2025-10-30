@@ -39,16 +39,20 @@ export async function login(formData: FormData) {
     // })
     const access_token = data.session.access_token;
 
-        const response = await axios.post('http://127.0.0.1:8000/api/login', {
-            user_id: data.user?.id ?? '',
-            Email: formdata.email,
-            Password: formdata.password
-        }, {
-            headers: {
-                Authorization: `Bearer ${access_token}`
-            }
-        })
-        console.log("The backend's response to signing in user is",response.data)
+    const response = await axios.post(
+      'http://localhost:8000/api/login',
+      {
+        user_id: data.user?.id ?? '',
+        email: formdata.email,
+        password: formdata.password,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      }
+    );
+    // console.log("The backend's response to signing in user is", response.data);
 
     // Now here we need to check the user's role and based on that redirect to the appropriate dashboard
     const userObject = response.data.user;
