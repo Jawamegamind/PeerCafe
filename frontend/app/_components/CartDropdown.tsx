@@ -10,7 +10,6 @@ import {
   Button,
   List,
   ListItem,
-  ListItemText,
   ListItemSecondaryAction,
   IconButton,
   Divider,
@@ -152,69 +151,54 @@ export const CartDropdown: React.FC<CartDropdownProps> = ({
               {items.map((item, index) => (
                 <React.Fragment key={item.id}>
                   <ListItem sx={{ px: 0, py: 1 }}>
-                    <ListItemText
-                      primary={
+                    <Box sx={{ flex: 1 }}>
+                      <Typography
+                        component="div"
+                        variant="subtitle2"
+                        sx={{ fontWeight: 'medium', mb: 0.5 }}
+                      >
+                        {item.ItemName}
+                      </Typography>
+                      <Typography
+                        component="div"
+                        variant="body2"
+                        color="primary.main"
+                        sx={{ fontWeight: 'medium', mb: 0.5 }}
+                      >
+                        ${item.Price.toFixed(2)} each
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                        }}
+                      >
+                        <IconButton
+                          size="small"
+                          onClick={() =>
+                            handleItemQuantityChange(item.id, item.quantity, -1)
+                          }
+                        >
+                          <RemoveIcon fontSize="small" />
+                        </IconButton>
                         <Typography
                           component="span"
-                          variant="subtitle2"
-                          sx={{ fontWeight: 'medium' }}
+                          variant="body2"
+                          sx={{ minWidth: 20, textAlign: 'center' }}
                         >
-                          {item.ItemName}
+                          {item.quantity}
                         </Typography>
-                      }
-                      secondary={
-                        <Box component="div">
-                          <Typography
-                            component="span"
-                            variant="body2"
-                            color="primary.main"
-                            sx={{ fontWeight: 'medium', display: 'block' }}
-                          >
-                            ${item.Price.toFixed(2)} each
-                          </Typography>
-                          <Box
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 1,
-                              mt: 0.5,
-                            }}
-                          >
-                            <IconButton
-                              size="small"
-                              onClick={() =>
-                                handleItemQuantityChange(
-                                  item.id,
-                                  item.quantity,
-                                  -1
-                                )
-                              }
-                            >
-                              <RemoveIcon fontSize="small" />
-                            </IconButton>
-                            <Typography
-                              component="span"
-                              variant="body2"
-                              sx={{ minWidth: 20, textAlign: 'center' }}
-                            >
-                              {item.quantity}
-                            </Typography>
-                            <IconButton
-                              size="small"
-                              onClick={() =>
-                                handleItemQuantityChange(
-                                  item.id,
-                                  item.quantity,
-                                  1
-                                )
-                              }
-                            >
-                              <AddIcon fontSize="small" />
-                            </IconButton>
-                          </Box>
-                        </Box>
-                      }
-                    />
+                        <IconButton
+                          size="small"
+                          onClick={() =>
+                            handleItemQuantityChange(item.id, item.quantity, 1)
+                          }
+                        >
+                          <AddIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    </Box>
                     <ListItemSecondaryAction>
                       <Box
                         sx={{
