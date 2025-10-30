@@ -26,7 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}
+          data-new-gr-c-s-check-loaded="8.934.0"
+          data-gr-ext-installed="">
         <AppRouterCacheProvider>
           <CartProvider>{children}</CartProvider>
         </AppRouterCacheProvider>
