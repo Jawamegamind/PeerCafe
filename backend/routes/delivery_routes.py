@@ -168,3 +168,118 @@ async def fetch_ready_orders(source: Location = Depends(location_from_query)):
     except Exception as e:
         print(f"Error fetching ready orders: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch ready orders")
+
+
+@delivery_router.get("/deliveries/active/{order_id}/navigation")
+async def get_navigation_route(
+    order_id: str,
+    driver_latitude: float = Query(...),
+    driver_longitude: float = Query(...)
+):
+    """Get turn-by-turn navigation route for active delivery.
+    Returns route from driver → restaurant (if not picked up yet)
+    or restaurant → customer (if already picked up)."""
+    try:
+        # Fetch order details
+        result = supabase.from_("orders").select(
+            "order_id, status, restaurant_id, restaurants(name, latitude, longitude, address), latitude, longitude, delivery_address"
+        ).eq("order_id", order_id).execute()
+        
+        if not result.data or len(result.data) == 0:
+            raise HTTPException(status_code=404, detail="Order not found")
+        
+        order = result.data[0]
+        order_status = order.get("status")
+        
+        # Get coordinates
+        restaurant_info = order.get("restaurants") or {}
+        restaurant_lat = float(restaurant_info.get("latitude", 0))
+        restaurant_lng = float(restaurant_info.get("longitude", 0))
+        restaurant_name = restaurant_info.get("name", "Restaurant")
+        restaurant_address = restaurant_info.get("address", "")
+        
+        customer_lat = float(order.get("latitude") or 0)
+        customer_lng = float(order.get("longitude") or 0)
+        customer_address = order.get("delivery_address", {})
+        
+        if not restaurant_lat or not restaurant_lng:
+            raise HTTPException(status_code=400, detail="Restaurant location not available")
+        
+        if not customer_lat or not customer_lng:
+            raise HTTPException(status_code=400, detail="Customer location not geocoded")
+        
+        # Determine which route to show based on order status
+        if order_status == "assigned":
+            # Show driver → restaurant route
+            start_lng, start_lat = driver_longitude, driver_latitude
+            end_lng, end_lat = restaurant_lng, restaurant_lat
+            route_type = "to_restaurant"
+            destination_name = restaurant_name
+            destination_address = restaurant_address
+        elif order_status in ["picked_up", "en_route"]:
+            # Show restaurant → customer route
+            start_lng, start_lat = restaurant_lng, restaurant_lat
+            end_lng, end_lat = customer_lng, customer_lat
+            route_type = "to_customer"
+            destination_name = "Customer"
+            destination_address = customer_address
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Order status '{order_status}' does not require navigation"
+            )
+        
+        # Fetch route from Mapbox Directions API
+        url = f"https://api.mapbox.com/directions/v5/mapbox/driving/{start_lng},{start_lat};{end_lng},{end_lat}"
+        params = {
+            "access_token": MAPBOX_TOKEN,
+            "geometries": "geojson",
+            "overview": "full",
+            "steps": "true",
+            "banner_instructions": "true",
+            "voice_instructions": "true"
+        }
+        
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+        
+        if not data.get("routes") or len(data["routes"]) == 0:
+            raise HTTPException(status_code=404, detail="No route found")
+        
+        route = data["routes"][0]
+        leg = route["legs"][0] if route.get("legs") else {}
+        
+        return {
+            "order_id": order_id,
+            "order_status": order_status,
+            "route_type": route_type,
+            "origin": {
+                "latitude": start_lat,
+                "longitude": start_lng
+            },
+            "destination": {
+                "name": destination_name,
+                "address": destination_address if isinstance(destination_address, str) else str(destination_address),
+                "latitude": end_lat,
+                "longitude": end_lng
+            },
+            "route": {
+                "distance_meters": route.get("distance"),
+                "distance_miles": round(route.get("distance", 0) / 1609.34, 2),
+                "duration_seconds": route.get("duration"),
+                "duration_minutes": round(route.get("duration", 0) / 60.0, 1),
+                "geometry": route.get("geometry"),
+                "steps": leg.get("steps", [])
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error fetching navigation route: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to fetch navigation: {str(e)}")
+

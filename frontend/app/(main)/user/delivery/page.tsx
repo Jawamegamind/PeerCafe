@@ -30,6 +30,7 @@ import {
     LinearProgress,
     IconButton
 } from '@mui/material';
+
 import {
     LocationOn as LocationIcon,
     Business as BusinessIcon,
@@ -43,6 +44,7 @@ import {
 import mapboxgl from "mapbox-gl";
 // Creating a supabase client to access user id and assign orders
 import { createClient } from "@/utils/supabase/client";
+import Link from 'next/link';
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY || "";
 const backend_url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
@@ -98,9 +100,10 @@ export default function DeliveryPage() {
     const map = React.useRef<mapboxgl.Map | null>(null);
 
     const [readyOrders, setReadyOrders] = React.useState<Order[]>([]);
+    // const [location, setLocation] = React.useState<{ latitude: number; longitude: number } | null>(null);
     const [loading, setLoading] = React.useState(false);
     const [acceptingOrder, setAcceptingOrder] = React.useState<string | null>(null);
-    const [activeOrder, setActiveOrder] = React.useState<Order | null>(null);
+    const [activeOrder, setActiveOrder] = React.useState<ActiveOrder | null>(null);
     const [currentUser, setCurrentUser] = React.useState<any>(null);
     const [authLoading, setAuthLoading] = React.useState<boolean>(true);
 
@@ -152,20 +155,19 @@ export default function DeliveryPage() {
                 const active = activeOrders[0];
                 setActiveOrder({
                     order_id: active.order_id,
-                    user_id: active.user_id,
-                    restaurant_id: active.restaurant_id,
-                    delivery_fee: active.delivery_fee,
-                    tip_amount: active.tip_amount,
-                    estimated_pickup_time: active.estimated_pickup_time,
-                    estimated_delivery_time: active.estimated_delivery_time,
-                    latitude: active.latitude,
-                    longitude: active.longitude,
-                    restaurants: active.restaurants,
-                    distance_to_restaurant: 0, // Will be calculated if needed
-                    duration_to_restaurant: 0,
+                    status: active.status,
+                    restaurants: {
+                        name: active.restaurants?.name || "",
+                        address: active.restaurants?.address || ""
+                    },
+                    customer: {
+                        name: "",
+                        address: ""
+                    },
                     distance_to_restaurant_miles: 0,
-                    restaurant_reachable_by_road: true,
-                    duration_to_restaurant_minutes: 0
+                    duration_to_restaurant_minutes: 0,
+                    delivery_fee: active.delivery_fee,
+                    estimated_delivery_time: active.estimated_delivery_time
                 });
                 console.log('Found active order:', active.order_id);
             }
@@ -263,8 +265,23 @@ export default function DeliveryPage() {
                 // Order accepted successfully
                 console.log("Order accepted:", response.data);
                 
-                // Set as active order
-                setActiveOrder(order);
+                // Set as active order (convert Order -> ActiveOrder shape)
+                setActiveOrder({
+                    order_id: order.order_id,
+                    status: 'assigned',
+                    restaurants: {
+                        name: order.restaurants.name,
+                        address: order.restaurants.address
+                    },
+                    customer: {
+                        name: '',
+                        address: ''
+                    },
+                    distance_to_restaurant_miles: order.distance_to_restaurant_miles,
+                    duration_to_restaurant_minutes: order.duration_to_restaurant_minutes,
+                    delivery_fee: order.delivery_fee,
+                    estimated_delivery_time: order.estimated_delivery_time
+                });
                 
                 // Remove from ready orders list
                 setReadyOrders(prev => prev.filter(o => o.order_id !== order.order_id));
@@ -281,44 +298,93 @@ export default function DeliveryPage() {
         }
     }
 
-    const renderMap = (source: [number, number], destinations: [number, number][]) => {
-        if (!mapContainer.current) return;
+    const handleMarkPickedUp = async () => {
+        if (!activeOrder) return;
+        
+        try {
+            await axios.patch(`${backend_url}/api/orders/${activeOrder.order_id}/status?new_status=picked_up`);
+            setActiveOrder(prev => prev ? { ...prev, status: "picked_up" } : null);
+            alert("Order marked as picked up!");
+        } catch (error: any) {
+            console.error("Error marking order as picked up:", error);
+            alert("Failed to update order status. Please try again.");
+        }
+    }
 
-        // Remove existing map if it exists to prevent multiple instances
-        if (map.current) {
-            map.current.remove();
+    const handleMarkDelivered = async () => {
+        if (!activeOrder) return;
+        
+        try {
+            await axios.patch(`${backend_url}/api/orders/${activeOrder.order_id}/status?new_status=delivered`);
+            alert("Order delivered successfully!");
+            setActiveOrder(null);
+            // Refresh the available orders
+            if (sourceLocation) {
+                await fetchReadyOrders(sourceLocation.latitude, sourceLocation.longitude);
+            }
+        } catch (error: any) {
+            console.error("Error marking order as delivered:", error);
+            alert("Failed to update order status. Please try again.");
+        }
+    }
+
+    const renderMap = (source: [number, number], destinations: [number, number][]) => {
+        if (!mapContainer.current) {
+            console.error("Map container not available");
+            return;
         }
 
-        // Initialize the map
-        map.current = new mapboxgl.Map({
-            container: mapContainer.current,
-            style: "mapbox://styles/mapbox/streets-v12",
-            center: source,
-            zoom: 12,
-        });
+        console.log("renderMap called with:", { source, destinations });
 
-        // Add zoom and rotation controls
-        map.current.addControl(new mapboxgl.NavigationControl());
+        try {
+            // Remove existing map if it exists to prevent multiple instances
+            if (map.current) {
+                map.current.remove();
+            }
 
-        // Add source marker
-        new mapboxgl.Marker({ color: "blue" })
-            .setLngLat(source)
-            .setPopup(new mapboxgl.Popup().setText("Source"))
-            .addTo(map.current);
+            // Initialize the map
+            map.current = new mapboxgl.Map({
+                container: mapContainer.current,
+                style: "mapbox://styles/mapbox/streets-v12",
+                center: source,
+                zoom: 12,
+            });
 
-        // Add destination markers
-        destinations.forEach((dest, i) => {
-            new mapboxgl.Marker({ color: "red" })
-                .setLngLat(dest)
-                .setPopup(new mapboxgl.Popup().setText(`Destination ${i + 1}`))
-                .addTo(map.current!);
-        });
+            map.current.on('load', () => {
+                console.log("Map loaded in renderMap");
+            });
 
-        // Fit map to show all markers
-        const bounds = new mapboxgl.LngLatBounds();
-        bounds.extend(source);
-        destinations.forEach((d) => bounds.extend(d));
-        map.current.fitBounds(bounds, { padding: 50 });
+            map.current.on('error', (e) => {
+                console.error("Map error in renderMap:", e);
+            });
+
+            // Add zoom and rotation controls
+            map.current.addControl(new mapboxgl.NavigationControl());
+
+            // Add source marker
+            new mapboxgl.Marker({ color: "blue" })
+                .setLngLat(source)
+                .setPopup(new mapboxgl.Popup().setText("Source"))
+                .addTo(map.current);
+
+            // Add destination markers
+            destinations.forEach((dest, i) => {
+                new mapboxgl.Marker({ color: "red" })
+                    .setLngLat(dest)
+                    .setPopup(new mapboxgl.Popup().setText(`Destination ${i + 1}`))
+                    .addTo(map.current!);
+            });
+
+            // Fit map to show all markers
+            const bounds = new mapboxgl.LngLatBounds();
+            bounds.extend(source);
+            destinations.forEach((d) => bounds.extend(d));
+            map.current.fitBounds(bounds, { padding: 50 });
+
+            console.log("Map rendered successfully");
+        } catch (error) {
+            console.error("Error in renderMap:", error);
+        }
     }
 
     React.useEffect(() => {
@@ -332,6 +398,7 @@ export default function DeliveryPage() {
         return () => {
             if (map.current) {
                 map.current.remove();
+                map.current = null;
             }
         };
     }, []);
@@ -344,13 +411,74 @@ export default function DeliveryPage() {
     }, [sourceLocation]);
 
     React.useEffect(() => {
-        // Once ready orders are fetched, update restaurant locations and render map
-        if (readyOrders.length > 0 && sourceLocation != null) {
-            const destinations: [number, number][] = readyOrders.map(order => [order.restaurants.longitude, order.restaurants.latitude]);
-            setRestaurantLocations(destinations.map(coord => ({ latitude: coord[1], longitude: coord[0] })));
-            renderMap([sourceLocation.longitude, sourceLocation.latitude], destinations);
-        }
-    }, [readyOrders]);
+        // Wait for both the container and location to be available
+        // Use a small delay to ensure the DOM is fully rendered
+        const initializeMap = () => {
+            if (!mapContainer.current || !sourceLocation) {
+                console.log("Map initialization skipped:", {
+                    hasContainer: !!mapContainer.current,
+                    hasLocation: !!sourceLocation
+                });
+                return;
+            }
+
+            // Check if Mapbox token is available
+            if (!mapboxgl.accessToken || mapboxgl.accessToken === "") {
+                console.error("Mapbox token is missing! Set NEXT_PUBLIC_MAPBOX_API_KEY in your .env.local file");
+                return;
+            }
+
+            console.log("Initializing map with location:", sourceLocation);
+            console.log("Ready orders count:", readyOrders.length);
+
+            try {
+                // Remove any existing map instance
+                if (map.current) {
+                    map.current.remove();
+                    map.current = null;
+                }
+
+                // If there are ready orders, show them as destinations
+                if (readyOrders.length > 0) {
+                    const destinations: [number, number][] = readyOrders.map(order => [order.restaurants.longitude, order.restaurants.latitude]);
+                    setRestaurantLocations(destinations.map(coord => ({ latitude: coord[1], longitude: coord[0] })));
+                    renderMap([sourceLocation.longitude, sourceLocation.latitude], destinations);
+                } else {
+                    // No orders: show only the user's location
+                    console.log("Creating map with user location only");
+                    map.current = new mapboxgl.Map({
+                        container: mapContainer.current,
+                        style: "mapbox://styles/mapbox/streets-v12",
+                        center: [sourceLocation.longitude, sourceLocation.latitude],
+                        zoom: 12,
+                    });
+                    
+                    map.current.on('load', () => {
+                        console.log("Map loaded successfully");
+                    });
+                    
+                    map.current.on('error', (e) => {
+                        console.error("Map error:", e);
+                    });
+                    
+                    map.current.addControl(new mapboxgl.NavigationControl());
+                    new mapboxgl.Marker({ color: "blue" })
+                        .setLngLat([sourceLocation.longitude, sourceLocation.latitude])
+                        .setPopup(new mapboxgl.Popup().setText("Your Location"))
+                        .addTo(map.current);
+                    
+                    console.log("Map initialized successfully");
+                }
+            } catch (error) {
+                console.error("Error initializing map:", error);
+            }
+        };
+
+        // Delay map initialization slightly to ensure DOM is ready
+        const timeoutId = setTimeout(initializeMap, 100);
+        
+        return () => clearTimeout(timeoutId);
+    }, [readyOrders, sourceLocation]);
 
     const getPrimaryAction = (stepIndex : number) => {
         switch (stepIndex) {
@@ -393,10 +521,14 @@ export default function DeliveryPage() {
 
         // Calculate active step based on order status (if it exists)
         const getActiveStep = () => {
-            return 0; // For now, default to first step (Ready/Assigned)
+                if (activeOrder.status === 'delivered') return 3;
+                if (activeOrder.status === 'en_route' || activeOrder.status === 'picked_up') return 2;
+                if (activeOrder.status === 'ready' || activeOrder.status === 'assigned') return 1;
+                return 0;
         };
 
         return (
+                <Box sx={{ width: '100%', mb: 4 }}>
             <Card sx={{ borderRadius: 3, mb: 2, boxShadow: 4, width: '80%', justifySelf: 'center' }}>
                 <CardContent>
                     {/* Header */}
@@ -432,7 +564,7 @@ export default function DeliveryPage() {
                             </Box>
                         </Box>
                         <Chip
-                            label="Assigned"
+                                label={activeOrder.status.toUpperCase()}
                             color="primary"
                             size="small"
                             sx={{ fontWeight: 600 }}
@@ -451,20 +583,19 @@ export default function DeliveryPage() {
                     {/* Linear Progress */}
                     <LinearProgress
                         variant="determinate"
-                        value={20}
+                            value={getActiveStep() * 33.33}
                         sx={{ borderRadius: 5, mt: 2, height: 8 }}
                     />
                 </CardContent>
 
                 {/* Button Area */}
                 <CardActions style={{display:'flex', flexDirection:'column'}} sx={{ px: 2, pb: 1 }}>
-                    
-                    <Button variant="contained" fullWidth>
-                        {getPrimaryAction(0)}
+                    <Button component={Link} href="/user/delivery/navigation" variant="contained" fullWidth>
+                        Open Navigation
                     </Button>
-                    
                 </CardActions>
             </Card>
+                </Box>
         );
     };
 
@@ -633,35 +764,40 @@ export default function DeliveryPage() {
 
                 <h3 style={{ justifySelf: "center", marginTop: "30px" }}>Browse nearby Orders</h3>
                 <div
-                className="map"
-                ref={mapContainer}
-                style={{
-                    margin: "20px",
-                    justifySelf: "center",
-                    width: "70%",
-                    height: "80vh",
-                    borderRadius: "12px",
-                    border: "1px solid #ccc",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-                }}
-            />
+                    className="map"
+                    ref={mapContainer}
+                    style={{
+                        margin: "20px",
+                        justifySelf: "center",
+                        width: "70%",
+                        height: "80vh",
+                        borderRadius: "12px",
+                        border: "1px solid #ccc",
+                        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                    }}
+                />
 
-                <Box sx={{
-                    display: 'grid',
-                    gridTemplateColumns: {
-                        xs: '1fr',
-                        sm: 'repeat(2, 1fr)',
-                        md: 'repeat(3, 1fr)'
-                    },
-                    gap: 3
-                }}>
-                    {
-                        readyOrders
-                            .map((order, index) => (
-                                <OrderCard key={index} readyOrders={order} />
-                            ))
-                    }
-                </Box>
+                {readyOrders.length === 0 ? (
+                    <Box sx={{ textAlign: 'center', mt: 2, mb: 4 }}>
+                        <Typography variant="body1" color="text.secondary">
+                            No orders are available nearby.
+                        </Typography>
+                    </Box>
+                ) : (
+                    <Box sx={{
+                        display: 'grid',
+                        gridTemplateColumns: {
+                            xs: '1fr',
+                            sm: 'repeat(2, 1fr)',
+                            md: 'repeat(3, 1fr)'
+                        },
+                        gap: 3
+                    }}>
+                        {readyOrders.map((order, index) => (
+                            <OrderCard key={index} readyOrders={order} />
+                        ))}
+                    </Box>
+                )}
             </Container>
         </>
     )

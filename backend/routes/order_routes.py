@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import uuid
 from database.supabase_db import create_supabase_client
 from models.order_model import OrderCreate, Order, OrderUpdate, OrderStatus
+from utils.geocode import geocode_address
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -24,6 +25,15 @@ async def place_order(order_data: OrderCreate, supabase=Depends(get_supabase)):
         # Generate order ID
         order_id = str(uuid.uuid4())
         
+        # Geocode customer delivery address to get lat/lng for navigation
+        delivery_addr = order_data.delivery_address
+        full_address = f"{delivery_addr.street}, {delivery_addr.city}, {delivery_addr.state} {delivery_addr.zip_code}"
+        customer_lat, customer_lng = await geocode_address(full_address)
+        
+        if not customer_lat or not customer_lng:
+            print(f"Warning: Failed to geocode address: {full_address}")
+            # Still allow order creation but navigation won't work until geocoded
+        
         # Calculate estimated times (this can be made more sophisticated later)
         estimated_pickup_time = datetime.now() + timedelta(minutes=30)
         estimated_delivery_time = datetime.now() + timedelta(minutes=60)
@@ -35,6 +45,8 @@ async def place_order(order_data: OrderCreate, supabase=Depends(get_supabase)):
             "restaurant_id": order_data.restaurant_id,
             "order_items": [item.model_dump() for item in order_data.order_items],
             "delivery_address": order_data.delivery_address.model_dump(),
+            "latitude": customer_lat,
+            "longitude": customer_lng,
             "notes": order_data.notes,
             "subtotal": order_data.subtotal,
             "tax_amount": order_data.tax_amount,
@@ -178,6 +190,19 @@ async def update_order_status(
                 detail="Order not found"
             )
         
+        # Validate simple state transitions
+        current_status = existing_order.data[0].get("status")
+        if new_status == OrderStatus.PICKED_UP and current_status not in [OrderStatus.ASSIGNED.value, OrderStatus.READY.value]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid transition: cannot mark as picked_up from '{current_status}'"
+            )
+        if new_status == OrderStatus.DELIVERED and current_status not in [OrderStatus.PICKED_UP.value, OrderStatus.EN_ROUTE.value]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid transition: cannot mark as delivered from '{current_status}'"
+            )
+
         # Update the order status
         update_data = {
             "status": new_status.value,
@@ -195,13 +220,32 @@ async def update_order_status(
             .eq("order_id", order_id)\
             .execute()
         
-        if not response.data:
+        # Re-fetch the updated order to return it
+        updated_order = supabase.table("orders")\
+            .select("*")\
+            .eq("order_id", order_id)\
+            .execute()
+        
+        if not updated_order.data:
+            # Try to surface Supabase error details when available
+            error_msg = None
+            try:
+                error_msg = getattr(response, 'error', None) or getattr(response, 'message', None)
+            except Exception:
+                error_msg = None
+
+            if error_msg and isinstance(error_msg, str) and 'row level security' in error_msg.lower():
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"RLS blocked update: {error_msg}"
+                )
+
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to update order status"
+                detail=f"Failed to update order status{f': {error_msg}' if error_msg else ''}"
             )
         
-        return Order(**response.data[0])
+        return Order(**updated_order.data[0])
         
     except HTTPException:
         raise
@@ -272,7 +316,13 @@ async def assign_delivery_user(
             .eq("order_id", order_id)\
             .execute()
         
-        if not response.data:
+        # Re-fetch the updated order to return it
+        updated_order = supabase.table("orders")\
+            .select("*")\
+            .eq("order_id", order_id)\
+            .execute()
+        
+        if not updated_order.data:
             print(f"Failed to update order {order_id}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -280,7 +330,7 @@ async def assign_delivery_user(
             )
         
         print(f"Successfully assigned order {order_id} to driver {delivery_user_id}")
-        return Order(**response.data[0])
+        return Order(**updated_order.data[0])
         
     except HTTPException:
         raise
