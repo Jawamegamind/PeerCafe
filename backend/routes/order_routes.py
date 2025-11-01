@@ -37,12 +37,12 @@ async def get_my_orders(
     try:
         user_id = None
 
-        # Try to extract token from Authorization header (expecting newer supabase client)
+        # Try to extract token from Authorization header 
         token = None
         if authorization and authorization.startswith("Bearer "):
             token = authorization.split(" ", 1)[1]
 
-        # Use the newer supabase client API: supabase.auth.get_user(token)
+        # Use the supabase client API
         if token and hasattr(supabase, "auth") and hasattr(supabase.auth, "get_user"):
             try:
                 maybe_user = supabase.auth.get_user(token)
@@ -61,16 +61,24 @@ async def get_my_orders(
                     # (new supabase client/user schema). Fall back to None so the
                     # X-User-Id header will be used for development if needed.
                     if isinstance(user_obj, dict):
-                        user_id = user_obj.get("user_id")
+                        user_id = (
+                            user_obj.get("user_id")
+                            or user_obj.get("id")  # typical Supabase user id field
+                            or user_obj.get("sub")  # JWT subject fallback
+                        )
                     else:
-                        user_id = getattr(user_obj, "user_id", None)
+                        user_id = (
+                            getattr(user_obj, "user_id", None)
+                            or getattr(user_obj, "id", None)
+                            or getattr(user_obj, "sub", None)
+                        )
             except Exception:
                 # If auth lookup fails, we'll fall back to X-User-Id header below
                 user_id = None
 
         # Developer convenience: allow X-User-Id header when token isn't present/usable
-        if not user_id and x_user_id:
-            user_id = x_user_id
+        # if not user_id and x_user_id:
+        #     user_id = x_user_id
 
         if not user_id:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unable to determine user from Authorization header")
