@@ -375,3 +375,34 @@ class TestOrderRoutes:
         assert len(data) == 1
         assert data[0]["restaurant_id"] == 1
 
+    @patch('routes.order_routes.create_supabase_client')
+    def test_get_my_orders(self, mock_supabase_client, mock_order_response):
+        """Test retrieving orders for the authenticated user via /api/orders/me"""
+        mock_client = Mock()
+        mock_table = Mock()
+        mock_select = Mock()
+        mock_eq = Mock()
+        mock_order = Mock()
+        mock_range = Mock()
+
+        # Mock auth.get_user to return user with user_id
+        mock_client.auth = Mock()
+        mock_client.auth.get_user.return_value = {"data": {"user": {"user_id": "user_123"}}}
+
+        mock_supabase_client.return_value = mock_client
+        mock_client.table.return_value = mock_table
+        mock_table.select.return_value = mock_select
+        mock_select.eq.return_value = mock_eq
+        mock_eq.order.return_value = mock_order
+        mock_order.range.return_value = mock_range
+        mock_range.execute.return_value = Mock(data=[mock_order_response])
+
+        headers = {"Authorization": "Bearer faketoken"}
+        response = client.get("/api/orders/me", headers=headers)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) == 1
+        assert data[0]["user_id"] == "user_123"
+
