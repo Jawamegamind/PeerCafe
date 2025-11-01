@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from database.supabase_db import create_supabase_client
 from models.delivery_model import Location
+from utils.geocode import geocode_address
 import os
 import httpx
 import asyncio
@@ -193,19 +194,64 @@ async def get_navigation_route(
         
         # Get coordinates
         restaurant_info = order.get("restaurants") or {}
-        restaurant_lat = float(restaurant_info.get("latitude", 0))
-        restaurant_lng = float(restaurant_info.get("longitude", 0))
         restaurant_name = restaurant_info.get("name", "Restaurant")
         restaurant_address = restaurant_info.get("address", "")
-        
-        customer_lat = float(order.get("latitude") or 0)
-        customer_lng = float(order.get("longitude") or 0)
+
+        # Safely parse restaurant coordinates, if present
+        restaurant_lat = None
+        restaurant_lng = None
+        try:
+            lat_raw = restaurant_info.get("latitude")
+            lng_raw = restaurant_info.get("longitude")
+            if lat_raw is not None and lng_raw is not None and lat_raw != "" and lng_raw != "":
+                restaurant_lat = float(lat_raw)
+                restaurant_lng = float(lng_raw)
+        except (TypeError, ValueError):
+            restaurant_lat = None
+            restaurant_lng = None
+
+        # Safely parse customer coordinates, if present
+        customer_lat = None
+        customer_lng = None
+        try:
+            cust_lat_raw = order.get("latitude")
+            cust_lng_raw = order.get("longitude")
+            if cust_lat_raw is not None and cust_lng_raw is not None and cust_lat_raw != "" and cust_lng_raw != "":
+                customer_lat = float(cust_lat_raw)
+                customer_lng = float(cust_lng_raw)
+        except (TypeError, ValueError):
+            customer_lat = None
+            customer_lng = None
+
         customer_address = order.get("delivery_address", {})
-        
-        if not restaurant_lat or not restaurant_lng:
+
+        # Fallback: attempt to geocode restaurant address if coords missing
+        if (restaurant_lat is None or restaurant_lng is None) and restaurant_address:
+            try:
+                lat, lng = await geocode_address(restaurant_address)
+                if lat is not None and lng is not None:
+                    restaurant_lat = lat
+                    restaurant_lng = lng
+            except Exception:
+                # ignore geocode errors; will be handled below
+                pass
+
+        # Fallback: attempt to geocode customer/delivery address if coords missing
+        if (customer_lat is None or customer_lng is None) and customer_address:
+            # customer_address may be a string or a dict; prefer string
+            addr_str = customer_address if isinstance(customer_address, str) else str(customer_address)
+            try:
+                lat, lng = await geocode_address(addr_str)
+                if lat is not None and lng is not None:
+                    customer_lat = lat
+                    customer_lng = lng
+            except Exception:
+                pass
+
+        if restaurant_lat is None or restaurant_lng is None:
             raise HTTPException(status_code=400, detail="Restaurant location not available")
-        
-        if not customer_lat or not customer_lng:
+
+        if customer_lat is None or customer_lng is None:
             raise HTTPException(status_code=400, detail="Customer location not geocoded")
         
         # Determine which route to show based on order status
