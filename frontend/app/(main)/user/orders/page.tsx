@@ -40,6 +40,8 @@ interface OrderListItem {
   total_amount: number;
   created_at: string;
   updated_at: string;
+  delivery_code?: string | null;
+  delivery_code_used?: boolean | null;
 }
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8000';
@@ -226,9 +228,16 @@ export default function MyOrdersPage() {
                         </Box>
                       }
                       secondary={
-                        <Typography variant="body2" color="text.secondary">
-                          Placed {new Date(o.created_at).toLocaleString()}
-                        </Typography>
+                        <Box>
+                          <Typography variant="body2" color="text.secondary">
+                            Placed {new Date(o.created_at).toLocaleString()}
+                          </Typography>
+                          {o.delivery_code && (
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                              Delivery code: <strong>{o.delivery_code}</strong>{o.delivery_code_used ? ' (used)' : ''}
+                            </Typography>
+                          )}
+                        </Box>
                       }
                     />
                     <ListItemSecondaryAction>
