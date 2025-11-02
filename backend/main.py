@@ -6,6 +6,7 @@ from routes.auth_routes import auth_router
 from routes.menu_routes import menu_router
 from routes.order_routes import router as order_router
 from routes.delivery_routes import delivery_router
+from routes.restaurant_routes import restaurant_router
 
 # Initializing the FastAPI app
 app = FastAPI()
