@@ -183,7 +183,7 @@ async def get_navigation_route(
     try:
         # Fetch order details
         result = supabase.from_("orders").select(
-            "order_id, status, restaurant_id, restaurants(name, latitude, longitude, address), latitude, longitude, delivery_address"
+            "order_id, user_id, status, restaurant_id, restaurants(name, latitude, longitude, address), latitude, longitude, delivery_address"
         ).eq("order_id", order_id).execute()
         
         if not result.data or len(result.data) == 0:
@@ -248,11 +248,65 @@ async def get_navigation_route(
             except Exception:
                 pass
 
+        # If customer coords are still missing and we don't have a delivery_address,
+        # try to fall back to the user's saved profile coordinates (users.latitude/users.longitude)
+        if (customer_lat is None or customer_lng is None) and not customer_address:
+            try:
+                user_id = order.get("user_id")
+                if user_id:
+                    user_res = supabase.from_("users").select("latitude, longitude").eq("user_id", user_id).execute()
+                    udata = getattr(user_res, 'data', None)
+                    user_row = None
+                    if udata:
+                        # user_res.data may be a list or a dict depending on client behavior
+                        if isinstance(udata, list) and len(udata) > 0:
+                            user_row = udata[0]
+                        elif isinstance(udata, dict):
+                            user_row = udata
+
+                    if user_row:
+                        try:
+                            u_lat = user_row.get("latitude")
+                            u_lng = user_row.get("longitude")
+                            if u_lat is not None and u_lng is not None and u_lat != "" and u_lng != "":
+                                customer_lat = float(u_lat)
+                                customer_lng = float(u_lng)
+                                print("Navigation debug: used user profile coords as fallback", {"user_id": user_id, "customer_lat": customer_lat, "customer_lng": customer_lng})
+                        except (TypeError, ValueError):
+                            pass
+            except Exception:
+                # ignore lookup errors; will surface below
+                pass
+
+        # Restaurant coords are required for any navigation
+        # If restaurant coords are missing, attempt to geocode the restaurant address
         if restaurant_lat is None or restaurant_lng is None:
+            # restaurant_address may be a string or structured data; prefer string
+            try:
+                addr_str = restaurant_address if isinstance(restaurant_address, str) else str(restaurant_address)
+                if addr_str:
+                    lat, lng = await geocode_address(addr_str)
+                    if lat is not None and lng is not None:
+                        restaurant_lat = lat
+                        restaurant_lng = lng
+            except Exception:
+                # ignore geocode errors here; we'll surface below if still missing
+                pass
+
+        # After attempting geocode, if still missing then fail with debug info
+        if restaurant_lat is None or restaurant_lng is None:
+            print("Navigation debug: restaurant coords missing after geocode attempt", {
+                "order": order,
+                "restaurant_info": restaurant_info,
+                "restaurant_address": restaurant_address,
+                "restaurant_lat": restaurant_lat,
+                "restaurant_lng": restaurant_lng
+            })
             raise HTTPException(status_code=400, detail="Restaurant location not available")
 
-        if customer_lat is None or customer_lng is None:
-            raise HTTPException(status_code=400, detail="Customer location not geocoded")
+        # NOTE: customer coordinates are only strictly required when routing to the customer
+        # (i.e. when the order is already picked up). For assigned orders (driver -> restaurant)
+        # we don't require customer coordinates and will not fail early.
         
         # Determine which route to show based on order status
         if order_status == "assigned":
@@ -274,6 +328,17 @@ async def get_navigation_route(
                 status_code=400,
                 detail=f"Order status '{order_status}' does not require navigation"
             )
+
+        # If we're routing to the customer, ensure customer coords are available
+        if route_type == "to_customer":
+            if customer_lat is None or customer_lng is None:
+                print("Navigation debug: customer coords missing for to_customer route", {
+                    "order": order,
+                    "customer_address": customer_address,
+                    "customer_lat": customer_lat,
+                    "customer_lng": customer_lng
+                }) 
+                raise HTTPException(status_code=400, detail="Customer location not geocoded")
         
         # Fetch route from Mapbox Directions API
         url = f"https://api.mapbox.com/directions/v5/mapbox/driving/{start_lng},{start_lat};{end_lng},{end_lat}"
