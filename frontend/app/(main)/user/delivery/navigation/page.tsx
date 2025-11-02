@@ -87,13 +87,13 @@ export default function DeliveryNavigationPage() {
 
   const handleMarkDelivered = async () => {
     if (!activeOrder) return;
+    // Delivery verification is handled by the NavigationMap child, which will
+    // call the verify endpoint and then invoke this callback on success.
     try {
-      await axios.patch(`${backend_url}/api/orders/${activeOrder.order_id}/status?new_status=delivered`);
-      // After delivery, clear active order and navigate back
       setActiveOrder(null);
       await loadActiveOrder();
     } catch (e) {
-      setError("Failed to mark delivered. Please try again.");
+      setError("Failed to refresh order state after delivery.");
     }
   };
 

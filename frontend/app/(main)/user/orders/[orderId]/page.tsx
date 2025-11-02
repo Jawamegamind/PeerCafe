@@ -74,6 +74,8 @@ interface Order {
   actual_delivery_time?: string;
   created_at: string;
   updated_at: string;
+  delivery_code?: string | null;
+  delivery_code_used?: boolean | null;
 }
 
 // Status configuration
@@ -475,6 +477,17 @@ export default function OrderDetailsPage() {
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Assigned
+                    </Typography>
+                  </Box>
+                )}
+
+                {order.delivery_code && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'medium' }}>
+                      Delivery Code
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {order.delivery_code} {order.delivery_code_used ? '(used)' : ''}
                     </Typography>
                   </Box>
                 )}
