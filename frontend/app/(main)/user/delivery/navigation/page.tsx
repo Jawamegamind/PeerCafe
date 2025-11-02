@@ -75,6 +75,22 @@ export default function DeliveryNavigationPage() {
     loadActiveOrder();
   }, [loadActiveOrder]);
 
+  // Called by child (NavigationMap) when realtime updates indicate order changed
+  const handleOrderUpdated = React.useCallback((updatedOrder: any) => {
+    console.log('DeliveryNavigationPage: handleOrderUpdated', updatedOrder);
+    setActiveOrder(prev => {
+      if (!prev) return prev;
+      if (prev.order_id !== updatedOrder.order_id) return prev;
+      return { ...prev, status: updatedOrder.order_status || updatedOrder.status || prev.status };
+    });
+
+    // If order went to a terminal state, refresh active order list
+    if (updatedOrder.order_status === 'delivered' || updatedOrder.status === 'delivered') {
+      // Refresh list to pick up next active order (if any)
+      loadActiveOrder();
+    }
+  }, [loadActiveOrder]);
+
   const handleMarkPickedUp = async () => {
     if (!activeOrder) return;
     try {
@@ -140,6 +156,7 @@ export default function DeliveryNavigationPage() {
             orderStatus={activeOrder.status}
             onMarkPickedUp={handleMarkPickedUp}
             onMarkDelivered={handleMarkDelivered}
+            onOrderUpdated={handleOrderUpdated}
           />
         </Box>
       )}

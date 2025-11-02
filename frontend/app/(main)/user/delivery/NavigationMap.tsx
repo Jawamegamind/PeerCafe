@@ -3,7 +3,8 @@
 import * as React from 'react';
 import mapboxgl from 'mapbox-gl';
 import axios from 'axios';
-import { Box, Card, CardContent, Typography, Button, LinearProgress, List, ListItem, ListItemText } from '@mui/material';
+import { createClient as createSupabaseClient } from '@/utils/supabase/client';
+import { Box, Card, CardContent, Typography, Button, LinearProgress, List, ListItem, ListItemText, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Alert } from '@mui/material';
 import { Navigation as NavigationIcon, Restaurant, Home } from '@mui/icons-material';
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY || "";
@@ -14,6 +15,7 @@ interface NavigationMapProps {
     orderStatus: string;
     onMarkPickedUp: () => void;
     onMarkDelivered: () => void;
+    onOrderUpdated?: (updatedOrder: any) => void;
 }
 
 interface RouteData {
@@ -37,7 +39,7 @@ interface RouteData {
     };
 }
 
-export default function NavigationMap({ orderId, orderStatus, onMarkPickedUp, onMarkDelivered }: NavigationMapProps) {
+export default function NavigationMap({ orderId, orderStatus, onMarkPickedUp, onMarkDelivered, onOrderUpdated }: NavigationMapProps) {
     const mapContainer = React.useRef<HTMLDivElement>(null);
     const map = React.useRef<mapboxgl.Map | null>(null);
     
@@ -45,6 +47,10 @@ export default function NavigationMap({ orderId, orderStatus, onMarkPickedUp, on
     const [loading, setLoading] = React.useState(true);
     const [driverLocation, setDriverLocation] = React.useState<{ latitude: number; longitude: number } | null>(null);
     const [locationWatchId, setLocationWatchId] = React.useState<number | null>(null);
+    const [verifyOpen, setVerifyOpen] = React.useState(false);
+    const [deliveryCode, setDeliveryCode] = React.useState("");
+    const [verifyError, setVerifyError] = React.useState<string | null>(null);
+    const [verifyLoading, setVerifyLoading] = React.useState(false);
 
     // Watch driver's location
     const startLocationTracking = () => {
@@ -177,10 +183,6 @@ export default function NavigationMap({ orderId, orderStatus, onMarkPickedUp, on
         console.log('NavigationMap useEffect:init');
         startLocationTracking();
 
-        // No realtime subscription here — keep diagnostics and cleanup only
-        console.log('NavigationMap useEffect:init (logs-only)');
-        startLocationTracking();
-
         return () => {
             console.log('NavigationMap cleanup: clearing watch and removing map');
             if (locationWatchId) {
@@ -191,6 +193,54 @@ export default function NavigationMap({ orderId, orderStatus, onMarkPickedUp, on
             }
         };
     }, []);
+
+    // Realtime subscription: notify parent on order updates (status changes)
+    React.useEffect(() => {
+        console.log('NavigationMap useEffect:setup realtime subscription');
+        let removed = false;
+        const supabase = createSupabaseClient();
+        let channel: any = null;
+
+        try {
+            channel = supabase
+                .channel(`orders_order_${orderId}`)
+                .on(
+                    'postgres_changes',
+                    { event: 'UPDATE', schema: 'public', table: 'orders', filter: `order_id=eq.${orderId}` },
+                    (payload: any) => {
+                        console.log('NavigationMap realtime payload', payload);
+                        const newOrder = payload?.new || payload?.record || null;
+                        if (!newOrder) return;
+
+                        // If the order status changed, notify parent so it can update canonical state
+                        if (newOrder.order_status && newOrder.order_status !== orderStatus) {
+                            console.log('NavigationMap realtime: detected status change', { from: orderStatus, to: newOrder.order_status });
+                            try {
+                                if (typeof (onOrderUpdated) === 'function') {
+                                    onOrderUpdated(newOrder);
+                                }
+                            } catch (e) {
+                                console.warn('onOrderUpdated handler threw', e);
+                            }
+                        }
+                    }
+                )
+                .subscribe();
+        } catch (err) {
+            console.warn('NavigationMap: failed to create realtime channel', err);
+        }
+
+        return () => {
+            try {
+                if (channel) {
+                    supabase.removeChannel(channel);
+                }
+            } catch (e) {
+                console.warn('NavigationMap: error removing realtime channel', e);
+            }
+            removed = true;
+        };
+    }, [orderId, orderStatus, onOrderUpdated]);
 
     // Fetch route when driver location is available
     React.useEffect(() => {
@@ -258,14 +308,52 @@ export default function NavigationMap({ orderId, orderStatus, onMarkPickedUp, on
                         </Button>
                     )}
                     {route_type === 'to_customer' && orderStatus === 'picked_up' && (
-                        <Button 
-                            variant="contained" 
-                            fullWidth 
-                            color="success"
-                            onClick={onMarkDelivered}
-                        >
-                            Mark Delivered
-                        </Button>
+                        <>
+                            <Button 
+                                variant="contained" 
+                                fullWidth 
+                                color="success"
+                                onClick={() => setVerifyOpen(true)}
+                            >
+                                Mark Delivered
+                            </Button>
+
+                            <Dialog open={verifyOpen} onClose={() => { if(!verifyLoading) { setVerifyOpen(false); setVerifyError(null); } }}>
+                                <DialogTitle>Enter Delivery Code</DialogTitle>
+                                <DialogContent>
+                                    <Typography variant="body2" sx={{ mb: 1 }}>Ask the customer for their delivery PIN and enter it below to confirm delivery.</Typography>
+                                    {verifyError && <Alert severity="error" sx={{ mb: 1 }}>{verifyError}</Alert>}
+                                    <TextField
+                                        label="Delivery Code"
+                                        value={deliveryCode}
+                                        onChange={(e) => setDeliveryCode(e.target.value)}
+                                        fullWidth
+                                        inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                                    />
+                                </DialogContent>
+                                <DialogActions>
+                                    <Button onClick={() => { setVerifyOpen(false); setVerifyError(null); }} disabled={verifyLoading}>Cancel</Button>
+                                    <Button variant="contained" onClick={async () => {
+                                        setVerifyError(null);
+                                        if (!deliveryCode || deliveryCode.trim().length === 0) { setVerifyError('Please enter the delivery code.'); return; }
+                                        setVerifyLoading(true);
+                                        try {
+                                            const resp = await axios.post(`${backend_url}/api/orders/${orderId}/verify-delivery`, { delivery_code: deliveryCode.trim() });
+                                            // success: call provided callback
+                                            try { onMarkDelivered(); } catch (e) { /* ignore */ }
+                                            setVerifyOpen(false);
+                                            setDeliveryCode('');
+                                        } catch (err: any) {
+                                            console.error('Verify failed', err);
+                                            const message = err?.response?.data?.detail || err?.response?.data || err?.message || 'Verification failed.';
+                                            setVerifyError(String(message));
+                                        } finally {
+                                            setVerifyLoading(false);
+                                        }
+                                    }} disabled={verifyLoading}>Verify & Deliver</Button>
+                                </DialogActions>
+                            </Dialog>
+                        </>
                     )}
                 </CardContent>
             </Card>
