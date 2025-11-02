@@ -436,13 +436,11 @@ export default function RestaurantsPage() {
                                     size="small"
                                     color="primary"
                                     title="Edit Restaurant"
-                                    onClick={() => {
-                                      // TODO: Navigate to edit page
-                                      // console.log(
-                                      //   'Edit restaurant:',
-                                      //   restaurant.restaurant_id
-                                      // );
-                                    }}
+                                    onClick={() =>
+                                      router.push(
+                                        `/admin/restaurants/${restaurant.restaurant_id}/edit`
+                                      )
+                                    }
                                   >
                                     <EditIcon />
                                   </IconButton>

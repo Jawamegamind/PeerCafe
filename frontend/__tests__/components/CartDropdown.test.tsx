@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '../../test-utils';
+import { render, screen, fireEvent } from '../../test-utils';
 import { useRouter } from 'next/navigation';
 import { CartDropdown } from '@/app/_components/CartDropdown';
 import { useCart } from '@/app/_contexts/CartContext';

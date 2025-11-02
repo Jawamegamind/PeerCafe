@@ -2,7 +2,7 @@
  * Tests for Admin Restaurants Management Page
  */
 
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { useRouter } from 'next/navigation';
@@ -246,6 +246,14 @@ describe('Admin Restaurants Management Page', () => {
       await user.click(menuButton);
 
       expect(mockRouter.push).toHaveBeenCalledWith('/admin/restaurants/1');
+    });
+
+    it('navigates to edit restaurant page', async () => {
+      const editButton = screen.getAllByTitle('Edit Restaurant')[0];
+
+      await user.click(editButton);
+
+      expect(mockRouter.push).toHaveBeenCalledWith('/admin/restaurants/1/edit');
     });
 
     it('navigates to breadcrumb links', async () => {
