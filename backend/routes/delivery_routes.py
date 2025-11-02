@@ -21,7 +21,7 @@ async def fetch_ready_orders(source: Location = Depends(location_from_query)):
         # In Python use None (not null) and the PostgREST client exposes `is_` (with underscore)
         # because `is` is a Python keyword. Use `is_` to test IS NULL.
         result = supabase.from_("orders").select(
-            "order_id, user_id, restaurant_id, restaurants(name, latitude, longitude, address), delivery_fee, tip_amount, estimated_pickup_time, estimated_delivery_time, latitude, longitude"
+            "order_id, user_id, restaurant_id, restaurants(name, latitude, longitude, address), customer:user_id(first_name, last_name), delivery_address, delivery_fee, tip_amount, estimated_pickup_time, estimated_delivery_time, latitude, longitude, distance_restaurant_delivery, duration_restaurant_delivery"
             ).eq(
                 "status", "ready"
             ).is_(
@@ -77,19 +77,38 @@ async def fetch_ready_orders(source: Location = Depends(location_from_query)):
             coordinates_str = ";".join(f"{lng},{lat}" for lng, lat in coordinates)
             destinations_idx = ";".join(str(i) for i in range(1, len(coordinates)))
 
-            params = {
-                "access_token": MAPBOX_TOKEN,
-                "sources": "0",
-                "destinations": destinations_idx,
-                "annotations": "distance,duration"  # asking for distance and duration (meters)
-            }
+            params = {}
+
+            # Different params if only one destination (no need to specify sources/destinations)
+            # Need to do this because Mapbox API gives 422 error for single destination
+            if len(chunk) == 1:
+                params = {
+                    # "sources": "0",
+                    "annotations": "distance,duration",  # asking for distance and duration (meters),
+                    "access_token": MAPBOX_TOKEN,
+                }
+
+            else:
+
+                params = {
+                    "sources": "0",
+                    "annotations": "distance,duration",  # asking for distance and duration (meters),
+                    "destinations": destinations_idx,
+                    "access_token": MAPBOX_TOKEN,
+                }
 
             url = f"https://api.mapbox.com/directions-matrix/v1/mapbox/driving/{coordinates_str}"
             try:
                 async with httpx.AsyncClient(timeout=20.0) as client:
                     resp = await client.get(url, params=params)
                     resp.raise_for_status()
-                    return resp.json()
+                    results = resp.json()
+                    if len(chunk) == 1:
+                        # results = resp.json()
+                        # flatten distances/durations to single value lists
+                        results["distances"] = [[results["distances"][0][1]]]
+                        results["durations"] = [[results["durations"][0][1]]]
+                    return results
             except httpx.HTTPError as http_err:
                 print(f"HTTP error occurred while fetching matrix: {http_err}")
                 return {}
@@ -97,6 +116,7 @@ async def fetch_ready_orders(source: Location = Depends(location_from_query)):
         if chunks:
             tasks = [_fetch_matrix_for_chunk(chunk) for chunk in chunks]
             results = await asyncio.gather(*tasks)
+            
 
             # Map returned distances/durations back to restaurant ids
             distance_by_restaurant = {}
