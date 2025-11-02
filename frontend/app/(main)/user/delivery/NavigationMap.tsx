@@ -48,9 +48,11 @@ export default function NavigationMap({ orderId, orderStatus, onMarkPickedUp, on
 
     // Watch driver's location
     const startLocationTracking = () => {
+        console.log('startLocationTracking called');
         if ("geolocation" in navigator) {
             const watchId = navigator.geolocation.watchPosition(
                 (position) => {
+                    console.log('geolocation callback position', { lat: position.coords.latitude, lon: position.coords.longitude });
                     setDriverLocation({
                         latitude: position.coords.latitude,
                         longitude: position.coords.longitude
@@ -84,6 +86,7 @@ export default function NavigationMap({ orderId, orderStatus, onMarkPickedUp, on
                     }
                 }
             );
+            console.log('fetchRoute: response received', { status: response.status, keys: Object.keys(response.data || {}) });
             setRouteData(response.data);
         } catch (error) {
             console.error("Error fetching route:", error);
@@ -94,7 +97,11 @@ export default function NavigationMap({ orderId, orderStatus, onMarkPickedUp, on
 
     // Render map with route
     const renderNavigationMap = () => {
-        if (!mapContainer.current || !routeData) return;
+        console.log('renderNavigationMap called', { hasContainer: !!mapContainer.current, hasRouteData: !!routeData });
+        if (!mapContainer.current || !routeData) {
+            console.log('renderNavigationMap skipped: missing container or routeData');
+            return;
+        }
 
         // Remove existing map
         if (map.current) {
@@ -125,6 +132,8 @@ export default function NavigationMap({ orderId, orderStatus, onMarkPickedUp, on
                     geometry: route.geometry
                 }
             });
+
+            console.log('renderNavigationMap: added route source');
 
             map.current.addLayer({
                 id: 'route',
@@ -159,14 +168,21 @@ export default function NavigationMap({ orderId, orderStatus, onMarkPickedUp, on
             bounds.extend([origin.longitude, origin.latitude]);
             bounds.extend([destination.longitude, destination.latitude]);
             map.current.fitBounds(bounds, { padding: 80 });
+            console.log('renderNavigationMap: fitBounds called');
         });
     };
 
     // Initialize
     React.useEffect(() => {
+        console.log('NavigationMap useEffect:init');
+        startLocationTracking();
+
+        // No realtime subscription here — keep diagnostics and cleanup only
+        console.log('NavigationMap useEffect:init (logs-only)');
         startLocationTracking();
 
         return () => {
+            console.log('NavigationMap cleanup: clearing watch and removing map');
             if (locationWatchId) {
                 navigator.geolocation.clearWatch(locationWatchId);
             }
