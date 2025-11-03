@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
@@ -21,18 +21,18 @@ import {
   MenuItem,
   Paper,
   Avatar,
-  Divider
+  Divider,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   LocationOn as LocationIcon,
   Phone as PhoneIcon,
-  Email as EmailIcon,
+  // Email as EmailIcon,
   DeliveryDining as DeliveryIcon,
   Restaurant as RestaurantIcon,
-  Star as StarIcon
+  // Star as StarIcon,
 } from '@mui/icons-material';
-import Navbar from "../../../_components/navbar";
+import Navbar from '../../../_components/navbar';
 import { getRestaurants } from './actions';
 
 interface Restaurant {
@@ -44,8 +44,10 @@ interface Restaurant {
   email: string;
   cuisine_type: string;
   is_active: boolean;
-  rating: number;
-  delivery_fee: number;
+  // rating may sometimes be a string/null from the API; tolerate it
+  rating?: number | string | null;
+  // delivery_fee can sometimes come back as a string, null, or number depending on source
+  delivery_fee?: number | string | null;
 }
 
 const cuisineColors: Record<string, string> = {
@@ -61,13 +63,15 @@ const cuisineColors: Record<string, string> = {
   Korean: '#f9fbe7',
   Greek: '#e8eaf6',
   Vietnamese: '#fff3e0',
-  Other: '#f5f5f5'
+  Other: '#f5f5f5',
 };
 
 export default function RestaurantsPage() {
   const router = useRouter();
   const [restaurants, setRestaurants] = React.useState<Restaurant[]>([]);
-  const [filteredRestaurants, setFilteredRestaurants] = React.useState<Restaurant[]>([]);
+  const [filteredRestaurants, setFilteredRestaurants] = React.useState<
+    Restaurant[]
+  >([]);
   const [loading, setLoading] = React.useState(true);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [cuisineFilter, setCuisineFilter] = React.useState('All');
@@ -88,11 +92,9 @@ export default function RestaurantsPage() {
           (restaurant: Restaurant) => restaurant.is_active
         );
         setRestaurants(activeRestaurants);
-      } else {
-        console.error('Failed to fetch restaurants');
       }
-    } catch (error) {
-      console.error('Error fetching restaurants:', error);
+    } catch {
+      // console.error('Error fetching restaurants:', error);
     } finally {
       setLoading(false);
     }
@@ -103,16 +105,23 @@ export default function RestaurantsPage() {
 
     // Filter by search term
     if (searchTerm) {
-      filtered = filtered.filter(restaurant =>
-        restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        restaurant.cuisine_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        restaurant.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        restaurant =>
+          restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          restaurant.cuisine_type
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          restaurant.description
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase())
       );
     }
 
     // Filter by cuisine type
     if (cuisineFilter && cuisineFilter !== 'All') {
-      filtered = filtered.filter(restaurant => restaurant.cuisine_type === cuisineFilter);
+      filtered = filtered.filter(
+        restaurant => restaurant.cuisine_type === cuisineFilter
+      );
     }
 
     setFilteredRestaurants(filtered);
@@ -124,30 +133,31 @@ export default function RestaurantsPage() {
   };
 
   const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => (
-    <Card 
-      sx={{ 
+    <Card
+      sx={{
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
         transition: 'transform 0.2s, box-shadow 0.2s',
         '&:hover': {
           transform: 'translateY(-4px)',
-          boxShadow: 4
+          boxShadow: 4,
         },
-        border: '1px solid #e0e0e0'
+        border: '1px solid #e0e0e0',
       }}
     >
       {/* Header with Avatar and Basic Info */}
       <CardContent sx={{ pb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-          <Avatar 
-            sx={{ 
-              width: 56, 
-              height: 56, 
+          <Avatar
+            sx={{
+              width: 56,
+              height: 56,
               mr: 2,
-              backgroundColor: cuisineColors[restaurant.cuisine_type] || cuisineColors.Other,
+              backgroundColor:
+                cuisineColors[restaurant.cuisine_type] || cuisineColors.Other,
               color: 'primary.main',
-              fontSize: '1.5rem'
+              fontSize: '1.5rem',
             }}
           >
             {restaurant.name.charAt(0).toUpperCase()}
@@ -157,44 +167,57 @@ export default function RestaurantsPage() {
               {restaurant.name}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-              <Rating 
-                value={restaurant.rating} 
-                readOnly 
-                size="small" 
+              <Rating
+                value={(() => {
+                  const raw = restaurant.rating;
+                  const n = typeof raw === 'number' ? raw : Number(raw);
+                  return Number.isFinite(n) ? n : null;
+                })()}
+                readOnly
+                size="small"
                 precision={0.1}
                 sx={{ mr: 1 }}
               />
               <Typography variant="body2" color="text.secondary">
-                ({restaurant.rating.toFixed(1)})
+                (
+                {(() => {
+                  const raw = restaurant.rating;
+                  if (raw === null || raw === undefined || raw === '')
+                    return 'N/A';
+                  const r = typeof raw === 'number' ? raw : Number(raw);
+                  return Number.isFinite(r) ? r.toFixed(1) : 'N/A';
+                })()}
+                )
               </Typography>
             </Box>
           </Box>
         </Box>
 
         {/* Cuisine Type Chip */}
-        <Chip 
+        <Chip
           label={restaurant.cuisine_type}
           size="small"
           sx={{
-            backgroundColor: cuisineColors[restaurant.cuisine_type] || cuisineColors.Other,
+            backgroundColor:
+              cuisineColors[restaurant.cuisine_type] || cuisineColors.Other,
             color: 'primary.main',
             fontWeight: 'medium',
-            mb: 2
+            mb: 2,
           }}
         />
 
         {/* Description */}
         {restaurant.description && (
-          <Typography 
-            variant="body2" 
-            color="text.secondary" 
-            sx={{ 
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
               mb: 2,
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
-              lineHeight: 1.4
+              lineHeight: 1.4,
             }}
           >
             {restaurant.description}
@@ -206,12 +229,14 @@ export default function RestaurantsPage() {
         {/* Restaurant Details */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <LocationIcon sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
+            <LocationIcon
+              sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }}
+            />
             <Typography variant="body2" color="text.secondary" noWrap>
               {restaurant.address}
             </Typography>
           </Box>
-          
+
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <PhoneIcon sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
             <Typography variant="body2" color="text.secondary">
@@ -220,9 +245,20 @@ export default function RestaurantsPage() {
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <DeliveryIcon sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
+            <DeliveryIcon
+              sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }}
+            />
             <Typography variant="body2" color="text.secondary">
-              Delivery Fee: <strong>${restaurant.delivery_fee.toFixed(2)}</strong>
+              Delivery Fee:{' '}
+              <strong>
+                {(() => {
+                  const raw = restaurant.delivery_fee;
+                  if (raw === null || raw === undefined || raw === '')
+                    return 'N/A';
+                  const fee = typeof raw === 'number' ? raw : Number(raw);
+                  return Number.isFinite(fee) ? `$${fee.toFixed(2)}` : 'N/A';
+                })()}
+              </strong>
             </Typography>
           </Box>
         </Box>
@@ -230,8 +266,8 @@ export default function RestaurantsPage() {
 
       {/* Actions */}
       <CardActions sx={{ mt: 'auto', px: 2, pb: 2 }}>
-        <Button 
-          variant="contained" 
+        <Button
+          variant="contained"
           fullWidth
           startIcon={<RestaurantIcon />}
           onClick={() => {
@@ -269,121 +305,139 @@ export default function RestaurantsPage() {
 
   return (
     <>
-        <Navbar />
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Navbar />
+      <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Header */}
         <Paper elevation={2} sx={{ p: 4, mb: 4, backgroundColor: '#fafafa' }}>
-            <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <Typography variant="h3" component="h1" fontWeight="bold" color="primary.main" gutterBottom>
-                🍽️ Discover Restaurants
+          <Box sx={{ textAlign: 'center', mb: 3 }}>
+            <Typography
+              variant="h3"
+              component="h1"
+              fontWeight="bold"
+              color="primary.main"
+              gutterBottom
+            >
+              🍽️ Discover Restaurants
             </Typography>
             <Typography variant="h6" color="text.secondary">
-                Explore amazing local restaurants and order your favorite meals
+              Explore amazing local restaurants and order your favorite meals
             </Typography>
-            </Box>
+          </Box>
 
-            {/* Filters */}
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {/* Filters */}
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 2,
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+            }}
+          >
             <TextField
-                placeholder="Search restaurants, cuisines..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
+              placeholder="Search restaurants, cuisines..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              InputProps={{
                 startAdornment: (
-                    <InputAdornment position="start">
+                  <InputAdornment position="start">
                     <SearchIcon color="action" />
-                    </InputAdornment>
+                  </InputAdornment>
                 ),
-                }}
-                sx={{ minWidth: 300 }}
+              }}
+              sx={{ minWidth: 300 }}
             />
 
             <FormControl sx={{ minWidth: 150 }}>
-                <InputLabel>Cuisine Type</InputLabel>
-                <Select
+              <InputLabel>Cuisine Type</InputLabel>
+              <Select
                 value={cuisineFilter}
                 label="Cuisine Type"
-                onChange={(e) => setCuisineFilter(e.target.value)}
-                >
-                {getCuisineTypes().map((type) => (
-                    <MenuItem key={type} value={type}>
+                onChange={e => setCuisineFilter(e.target.value)}
+              >
+                {getCuisineTypes().map(type => (
+                  <MenuItem key={type} value={type}>
                     {type}
-                    </MenuItem>
+                  </MenuItem>
                 ))}
-                </Select>
+              </Select>
             </FormControl>
-            </Box>
+          </Box>
         </Paper>
 
         {/* Results Summary */}
         {!loading && (
-            <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 3 }}>
             <Typography variant="h6" color="text.secondary">
-                {filteredRestaurants.length === 0 ? 
-                'No restaurants found' : 
-                `${filteredRestaurants.length} restaurant${filteredRestaurants.length !== 1 ? 's' : ''} found`
-                }
+              {filteredRestaurants.length === 0
+                ? 'No restaurants found'
+                : `${filteredRestaurants.length} restaurant${filteredRestaurants.length !== 1 ? 's' : ''} found`}
             </Typography>
-            </Box>
+          </Box>
         )}
 
         {/* Restaurant Grid */}
-        <Box sx={{
+        <Box
+          sx={{
             display: 'grid',
             gridTemplateColumns: {
-            xs: '1fr',
-            sm: 'repeat(2, 1fr)',
-            md: 'repeat(3, 1fr)'
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              md: 'repeat(3, 1fr)',
             },
-            gap: 3
-        }}>
-            {loading ? (
+            gap: 3,
+          }}
+        >
+          {loading ? (
             // Loading skeletons
             Array.from({ length: 6 }).map((_, index) => (
-                <RestaurantSkeleton key={index} />
+              <RestaurantSkeleton key={index} />
             ))
-            ) : filteredRestaurants.length === 0 ? (
+          ) : filteredRestaurants.length === 0 ? (
             // Empty state - spans full width
             <Box sx={{ gridColumn: '1 / -1' }}>
-                <Paper sx={{ p: 6, textAlign: 'center' }}>
-                <RestaurantIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+              <Paper sx={{ p: 6, textAlign: 'center' }}>
+                <RestaurantIcon
+                  sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }}
+                />
                 <Typography variant="h6" color="text.secondary" gutterBottom>
-                    {searchTerm || cuisineFilter !== 'All' ? 
-                    'No restaurants match your search criteria' :
-                    'No restaurants available at the moment'
-                    }
+                  {searchTerm || cuisineFilter !== 'All'
+                    ? 'No restaurants match your search criteria'
+                    : 'No restaurants available at the moment'}
                 </Typography>
                 {(searchTerm || cuisineFilter !== 'All') && (
-                    <Button 
-                    variant="outlined" 
+                  <Button
+                    variant="outlined"
                     onClick={() => {
-                        setSearchTerm('');
-                        setCuisineFilter('All');
+                      setSearchTerm('');
+                      setCuisineFilter('All');
                     }}
                     sx={{ mt: 2 }}
-                    >
+                  >
                     Clear Filters
-                    </Button>
+                  </Button>
                 )}
-                </Paper>
+              </Paper>
             </Box>
-            ) : (
+          ) : (
             // Restaurant cards
-            filteredRestaurants.map((restaurant) => (
-                <RestaurantCard key={restaurant.restaurant_id} restaurant={restaurant} />
+            filteredRestaurants.map(restaurant => (
+              <RestaurantCard
+                key={restaurant.restaurant_id}
+                restaurant={restaurant}
+              />
             ))
-            )}
+          )}
         </Box>
 
         {/* Footer Info */}
         {!loading && filteredRestaurants.length > 0 && (
-            <Box sx={{ mt: 6, textAlign: 'center' }}>
+          <Box sx={{ mt: 6, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">
-                💡 Delivery fees and times may vary by location
+              💡 Delivery fees and times may vary by location
             </Typography>
-            </Box>
+          </Box>
         )}
-        </Container>
+      </Container>
     </>
   );
 }

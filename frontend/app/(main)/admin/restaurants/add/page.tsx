@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import * as React from 'react';
 import {
@@ -8,7 +8,6 @@ import {
   Paper,
   TextField,
   Typography,
-  Grid,
   Alert,
   Snackbar,
   MenuItem,
@@ -18,10 +17,10 @@ import {
   CircularProgress,
   Breadcrumbs,
   Link,
-  Divider
+  Divider,
 } from '@mui/material';
 import { Restaurant, Add as AddIcon, ArrowBack } from '@mui/icons-material';
-import Navbar from "../../../../_components/navbar";
+import Navbar from '../../../../_components/navbar';
 import { useRouter } from 'next/navigation';
 
 interface RestaurantForm {
@@ -47,7 +46,7 @@ const cuisineTypes = [
   'Korean',
   'Greek',
   'Vietnamese',
-  'Other'
+  'Other',
 ];
 
 export default function AddRestaurantPage() {
@@ -56,7 +55,7 @@ export default function AddRestaurantPage() {
   const [snackbar, setSnackbar] = React.useState({
     open: false,
     message: '',
-    severity: 'success' as 'success' | 'error' | 'info' | 'warning'
+    severity: 'success' as 'success' | 'error' | 'info' | 'warning',
   });
 
   const [formData, setFormData] = React.useState<RestaurantForm>({
@@ -66,27 +65,27 @@ export default function AddRestaurantPage() {
     phone: '',
     email: '',
     cuisine_type: '',
-    delivery_fee: '0.00'
+    delivery_fee: '0.00',
   });
 
   const [errors, setErrors] = React.useState<Partial<RestaurantForm>>({});
 
-  const handleInputChange = (field: keyof RestaurantForm) => (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: event.target.value
-    }));
-    
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({
+  const handleInputChange =
+    (field: keyof RestaurantForm) =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setFormData(prev => ({
         ...prev,
-        [field]: ''
+        [field]: event.target.value,
       }));
-    }
-  };
+
+      // Clear error when user starts typing
+      if (errors[field]) {
+        setErrors(prev => ({
+          ...prev,
+          [field]: '',
+        }));
+      }
+    };
 
   const validateForm = (): boolean => {
     const newErrors: Partial<RestaurantForm> = {};
@@ -129,7 +128,7 @@ export default function AddRestaurantPage() {
       setSnackbar({
         open: true,
         message: 'Please fix the errors in the form',
-        severity: 'error'
+        severity: 'error',
       });
       return;
     }
@@ -144,18 +143,17 @@ export default function AddRestaurantPage() {
         },
         body: JSON.stringify({
           ...formData,
-          delivery_fee: parseFloat(formData.delivery_fee)
+          delivery_fee: parseFloat(formData.delivery_fee),
         }),
       });
 
       if (response.ok) {
-        const result = await response.json();
         setSnackbar({
           open: true,
           message: 'Restaurant added successfully!',
-          severity: 'success'
+          severity: 'success',
         });
-        
+
         // Reset form
         setFormData({
           name: '',
@@ -164,7 +162,7 @@ export default function AddRestaurantPage() {
           phone: '',
           email: '',
           cuisine_type: '',
-          delivery_fee: '0.00'
+          delivery_fee: '0.00',
         });
 
         // Optionally redirect to restaurant list
@@ -176,15 +174,14 @@ export default function AddRestaurantPage() {
         setSnackbar({
           open: true,
           message: errorData.detail || 'Failed to add restaurant',
-          severity: 'error'
+          severity: 'error',
         });
       }
-    } catch (error) {
-      console.error('Error adding restaurant:', error);
+    } catch {
       setSnackbar({
         open: true,
         message: 'Network error. Please try again.',
-        severity: 'error'
+        severity: 'error',
       });
     } finally {
       setLoading(false);
@@ -197,53 +194,62 @@ export default function AddRestaurantPage() {
 
   return (
     <>
-        <Navbar />
-        <Container maxWidth="md" sx={{ py: 4 }}>
+      <Navbar />
+      <Container maxWidth="md" sx={{ py: 4 }}>
         {/* Breadcrumbs */}
         <Breadcrumbs sx={{ mb: 3 }}>
-            <Link 
-            color="inherit" 
+          <Link
+            color="inherit"
             href="/admin/dashboard"
-            sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
-            >
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              textDecoration: 'none',
+            }}
+          >
             Admin Dashboard
-            </Link>
-            <Link 
-            color="inherit" 
+          </Link>
+          <Link
+            color="inherit"
             href="/admin/restaurants"
             sx={{ textDecoration: 'none' }}
-            >
+          >
             Restaurants
-            </Link>
-            <Typography color="text.primary">Add Restaurant</Typography>
+          </Link>
+          <Typography color="text.primary">Add Restaurant</Typography>
         </Breadcrumbs>
 
         <Paper elevation={3} sx={{ p: 4 }}>
-            {/* Header */}
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          {/* Header */}
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
             <Button
-                startIcon={<ArrowBack />}
-                onClick={() => router.back()}
-                sx={{ mr: 2 }}
-                variant="outlined"
+              startIcon={<ArrowBack />}
+              onClick={() => router.back()}
+              sx={{ mr: 2 }}
+              variant="outlined"
             >
-                Back
+              Back
             </Button>
             <Restaurant sx={{ mr: 2, color: 'primary.main', fontSize: 32 }} />
-            <Typography variant="h4" component="h1" color="primary.main" fontWeight="bold">
-                Add New Restaurant
+            <Typography
+              variant="h4"
+              component="h1"
+              color="primary.main"
+              fontWeight="bold"
+            >
+              Add New Restaurant
             </Typography>
-            </Box>
+          </Box>
 
-            <Divider sx={{ mb: 4 }} />
+          <Divider sx={{ mb: 4 }} />
 
-            {/* Form */}
-            <Box component="form" onSubmit={handleSubmit}>
+          {/* Form */}
+          <Box component="form" onSubmit={handleSubmit}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {/* Row 1: Restaurant Name and Cuisine Type */}
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              {/* Row 1: Restaurant Name and Cuisine Type */}
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <Box sx={{ flex: 1, minWidth: 280 }}>
-                    <TextField
+                  <TextField
                     fullWidth
                     label="Restaurant Name"
                     value={formData.name}
@@ -252,38 +258,45 @@ export default function AddRestaurantPage() {
                     helperText={errors.name}
                     required
                     variant="outlined"
-                    />
+                  />
                 </Box>
                 <Box sx={{ flex: 1, minWidth: 280 }}>
-                    <FormControl fullWidth error={!!errors.cuisine_type} required>
+                  <FormControl fullWidth error={!!errors.cuisine_type} required>
                     <InputLabel>Cuisine Type</InputLabel>
                     <Select
-                        value={formData.cuisine_type}
-                        label="Cuisine Type"
-                        onChange={(e) => {
-                        setFormData(prev => ({ ...prev, cuisine_type: e.target.value }));
+                      value={formData.cuisine_type}
+                      label="Cuisine Type"
+                      onChange={e => {
+                        setFormData(prev => ({
+                          ...prev,
+                          cuisine_type: e.target.value,
+                        }));
                         if (errors.cuisine_type) {
-                            setErrors(prev => ({ ...prev, cuisine_type: '' }));
+                          setErrors(prev => ({ ...prev, cuisine_type: '' }));
                         }
-                        }}
+                      }}
                     >
-                        {cuisineTypes.map((type) => (
+                      {cuisineTypes.map(type => (
                         <MenuItem key={type} value={type}>
-                            {type}
+                          {type}
                         </MenuItem>
-                        ))}
+                      ))}
                     </Select>
                     {errors.cuisine_type && (
-                        <Typography variant="caption" color="error" sx={{ mt: 1, ml: 2 }}>
+                      <Typography
+                        variant="caption"
+                        color="error"
+                        sx={{ mt: 1, ml: 2 }}
+                      >
                         {errors.cuisine_type}
-                        </Typography>
+                      </Typography>
                     )}
-                    </FormControl>
+                  </FormControl>
                 </Box>
-                </Box>
+              </Box>
 
-                {/* Description */}
-                <TextField
+              {/* Description */}
+              <TextField
                 fullWidth
                 label="Description"
                 value={formData.description}
@@ -292,10 +305,10 @@ export default function AddRestaurantPage() {
                 rows={3}
                 variant="outlined"
                 helperText="Optional: Brief description of the restaurant"
-                />
+              />
 
-                {/* Address */}
-                <TextField
+              {/* Address */}
+              <TextField
                 fullWidth
                 label="Address"
                 value={formData.address}
@@ -304,12 +317,12 @@ export default function AddRestaurantPage() {
                 helperText={errors.address}
                 required
                 variant="outlined"
-                />
+              />
 
-                {/* Row 2: Phone and Email */}
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              {/* Row 2: Phone and Email */}
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <Box sx={{ flex: 1, minWidth: 280 }}>
-                    <TextField
+                  <TextField
                     fullWidth
                     label="Phone Number"
                     value={formData.phone}
@@ -319,10 +332,10 @@ export default function AddRestaurantPage() {
                     required
                     variant="outlined"
                     placeholder="(555) 123-4567"
-                    />
+                  />
                 </Box>
                 <Box sx={{ flex: 1, minWidth: 280 }}>
-                    <TextField
+                  <TextField
                     fullWidth
                     label="Email Address"
                     type="email"
@@ -332,74 +345,83 @@ export default function AddRestaurantPage() {
                     helperText={errors.email}
                     required
                     variant="outlined"
-                    />
+                  />
                 </Box>
-                </Box>
+              </Box>
 
-                {/* Delivery Fee */}
-                <Box sx={{ maxWidth: 300 }}>
+              {/* Delivery Fee */}
+              <Box sx={{ maxWidth: 300 }}>
                 <TextField
-                    fullWidth
-                    label="Delivery Fee"
-                    type="number"
-                    value={formData.delivery_fee}
-                    onChange={handleInputChange('delivery_fee')}
-                    error={!!errors.delivery_fee}
-                    helperText={errors.delivery_fee}
-                    required
-                    variant="outlined"
-                    inputProps={{
+                  fullWidth
+                  label="Delivery Fee"
+                  type="number"
+                  value={formData.delivery_fee}
+                  onChange={handleInputChange('delivery_fee')}
+                  error={!!errors.delivery_fee}
+                  helperText={errors.delivery_fee}
+                  required
+                  variant="outlined"
+                  inputProps={{
                     min: 0,
-                    step: 0.01
-                    }}
-                    InputProps={{
-                    startAdornment: <Typography sx={{ mr: 1 }}>$</Typography>
-                    }}
+                    step: 0.01,
+                  }}
+                  InputProps={{
+                    startAdornment: <Typography sx={{ mr: 1 }}>$</Typography>,
+                  }}
                 />
-                </Box>
+              </Box>
             </Box>
 
             {/* Submit Button */}
-            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                <Button
+            <Box
+              sx={{
+                mt: 4,
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: 2,
+              }}
+            >
+              <Button
                 type="button"
                 variant="outlined"
                 size="large"
                 onClick={() => router.back()}
                 disabled={loading}
-                >
+              >
                 Cancel
-                </Button>
-                <Button
+              </Button>
+              <Button
                 type="submit"
                 variant="contained"
                 size="large"
-                startIcon={loading ? <CircularProgress size={20} /> : <AddIcon />}
+                startIcon={
+                  loading ? <CircularProgress size={20} /> : <AddIcon />
+                }
                 disabled={loading}
                 sx={{ minWidth: 150 }}
-                >
+              >
                 {loading ? 'Adding...' : 'Add Restaurant'}
-                </Button>
+              </Button>
             </Box>
-            </Box>
+          </Box>
         </Paper>
 
         {/* Snackbar for notifications */}
         <Snackbar
-            open={snackbar.open}
-            autoHideDuration={6000}
-            onClose={handleSnackbarClose}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={handleSnackbarClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
-            <Alert 
-            onClose={handleSnackbarClose} 
+          <Alert
+            onClose={handleSnackbarClose}
             severity={snackbar.severity}
             variant="filled"
-            >
+          >
             {snackbar.message}
-            </Alert>
+          </Alert>
         </Snackbar>
-        </Container>
+      </Container>
     </>
   );
 }

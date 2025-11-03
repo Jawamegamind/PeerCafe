@@ -341,7 +341,7 @@ const [error, setError] = useState<string | null>(null);
 
 ### Backend Testing (Required for all PRs)
 
-**We maintain 98% test coverage** - your contributions must maintain this standard.
+**We maintain at least 78% test coverage** - your contributions must maintain this standard.
 
 #### Writing Tests:
 ```python

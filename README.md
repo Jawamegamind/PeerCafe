@@ -1,10 +1,26 @@
 [![Frontend CI](https://github.com/Jawamegamind/PeerCafe/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/Jawamegamind/PeerCafe/actions/workflows/frontend-ci.yml)
 [![Backend CI](https://github.com/Jawamegamind/PeerCafe/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/Jawamegamind/PeerCafe/actions/workflows/backend-ci.yml)
+[![Code Quality](https://github.com/Jawamegamind/PeerCafe/actions/workflows/code-quality.yml/badge.svg)](https://github.com/Jawamegamind/PeerCafe/actions/workflows/code-quality.yml)
 [![codecov](https://codecov.io/github/Jawamegamind/PeerCafe/graph/badge.svg?token=C532V373J8)](https://codecov.io/github/Jawamegamind/PeerCafe)
 [![Frontend Coverage](https://codecov.io/github/Jawamegamind/PeerCafe/branch/main/graph/badge.svg?flag=frontend&token=C532V373J8)](https://codecov.io/github/Jawamegamind/PeerCafe/tree/main?flags%5B0%5D=frontend)
 [![Backend Coverage](https://codecov.io/github/Jawamegamind/PeerCafe/branch/main/graph/badge.svg?flag=backend&token=C532V373J8)](https://codecov.io/github/Jawamegamind/PeerCafe/tree/main?flags%5B0%5D=backend)
 [![Issues](https://img.shields.io/github/issues/Jawamegamind/PeerCafe)](https://github.com/Jawamegamind/PeerCafe/issues)
 [![DOI](https://zenodo.org/badge/1069984936.svg)](https://doi.org/10.5281/zenodo.17420477)
+
+<!-- Frontend Code Quality Tool Badges -->
+[![Code Style: Prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
+[![Type Checker: TypeScript](https://img.shields.io/badge/type_checker-typescript-blue)](https://www.typescriptlang.org/)
+[![Linting: ESLint](https://img.shields.io/badge/linting-eslint-4b32c3)](https://eslint.org/)
+[![Testing: Jest](https://img.shields.io/badge/testing-jest-red)](https://jestjs.io/)
+
+<!-- Backend Code Quality Tool Badges -->
+[![Code Style: Black](https://img.shields.io/badge/code_style-black-000000.svg)](https://github.com/psf/black)
+[![Import Sorting: isort](https://img.shields.io/badge/import_sorting-isort-ef8336.svg)](https://pycqa.github.io/isort/)
+[![Linting: Flake8](https://img.shields.io/badge/linting-flake8-yellowgreen)](https://flake8.pycqa.org/)
+[![Security: Bandit](https://img.shields.io/badge/security-bandit-yellow)](https://github.com/PyCQA/bandit)
+[![Testing: Pytest](https://img.shields.io/badge/testing-pytest-blue)](https://pytest.org/)
+[![Python Version](https://img.shields.io/badge/python-3.10+-blue)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/framework-fastapi-009688)](https://fastapi.tiangolo.com/)
 
 # PeerCafe 🚀
 

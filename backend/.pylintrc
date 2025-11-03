@@ -1,0 +1,62 @@
+[MASTER]
+# Use multiple processes to speed up Pylint
+jobs=0
+
+# Pickle collected data for later comparisons
+persistent=yes
+
+# List of plugins (as comma separated values of python modules names) to load
+load-plugins=
+
+[MESSAGES CONTROL]
+# Disable specific warnings
+disable=
+    # Import related
+    import-error,
+    # Documentation related  
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    # Style related (handled by black/flake8)
+    line-too-long,
+    # Too restrictive
+    too-few-public-methods,
+    too-many-arguments,
+    too-many-locals,
+    too-many-branches,
+    too-many-statements,
+    # FastAPI specific
+    unused-argument,
+    # Pydantic model related
+    no-name-in-module,
+    no-self-argument
+
+[REPORTS]
+# Set the output format
+output-format=text
+
+# Tells whether to display a full report or only the messages
+reports=no
+
+[FORMAT]
+# Maximum number of characters on a single line
+max-line-length=88
+
+# String used as indentation unit
+indent-string='    '
+
+[BASIC]
+# Good variable names which should always be accepted
+good-names=i,j,k,ex,Run,_,id,db,app
+
+# Regular expression matching correct function names
+function-rgx=[a-z_][a-z0-9_]{2,30}$
+
+# Regular expression matching correct variable names
+variable-rgx=[a-z_][a-z0-9_]{2,30}$
+
+# Regular expression matching correct constant names
+const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
+
+# Regular expression matching correct class names
+class-rgx=[A-Z_][a-zA-Z0-9]+$

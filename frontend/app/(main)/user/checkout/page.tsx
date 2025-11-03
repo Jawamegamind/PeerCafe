@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
@@ -24,7 +24,7 @@ import {
   Select,
   MenuItem,
   CircularProgress,
-  Snackbar
+  Snackbar,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -32,9 +32,9 @@ import {
   Restaurant as RestaurantIcon,
   Receipt as ReceiptIcon,
   LocationOn as LocationOnIcon,
-  Payment as PaymentIcon
+  Payment as PaymentIcon,
 } from '@mui/icons-material';
-import Navbar from "../../../_components/navbar";
+import Navbar from '../../../_components/navbar';
 import { useCart } from '../../../_contexts/CartContext';
 import { createClient } from '@/utils/supabase/client';
 // import { API_ENDPOINTS } from '@/utils/config';
@@ -73,43 +73,50 @@ const DELIVERY_FEE = 3.99; // Fixed delivery fee
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, restaurant, totalItems, totalPrice, isCartEmpty, clearCart } = useCart();
+  const { items, restaurant, totalItems, totalPrice, isCartEmpty, clearCart } =
+    useCart();
   const supabase = createClient();
-  
+
   // Form state
-  const [deliveryAddress, setDeliveryAddress] = React.useState<DeliveryAddress>({
-    street: '',
-    city: '',
-    state: 'CA', // Default to CA
-    zip_code: '',
-    instructions: ''
-  });
-  
-  const [tipAmount, setTipAmount] = React.useState<number>(5.00);
+  const [deliveryAddress, setDeliveryAddress] = React.useState<DeliveryAddress>(
+    {
+      street: '',
+      city: '',
+      state: 'CA', // Default to CA
+      zip_code: '',
+      instructions: '',
+    }
+  );
+
+  const [tipAmount, setTipAmount] = React.useState<number>(5.0);
   const [notes, setNotes] = React.useState<string>('');
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
   const [error, setError] = React.useState<string | null>(null);
   const [showSuccess, setShowSuccess] = React.useState<boolean>(false);
   const [currentUser, setCurrentUser] = React.useState<any>(null);
   const [authLoading, setAuthLoading] = React.useState<boolean>(true);
-  
+
   // Calculate pricing
   const subtotal = totalPrice;
   const taxAmount = subtotal * TAX_RATE;
   const discountAmount = 0; // No discounts for MVP
-  const finalTotal = subtotal + taxAmount + DELIVERY_FEE + tipAmount - discountAmount;
+  const finalTotal =
+    subtotal + taxAmount + DELIVERY_FEE + tipAmount - discountAmount;
 
   // Fetch current user on component mount
   React.useEffect(() => {
     const getCurrentUser = async () => {
       try {
         setAuthLoading(true);
-        
+
         // Get current authenticated user
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+
         if (authError || !user) {
-          console.error('No authenticated user found:', authError);
+          // console.error('No authenticated user found:', authError);
           setError('You must be logged in to place an order');
           router.push('/login');
           return;
@@ -121,16 +128,16 @@ export default function CheckoutPage() {
           .select('*')
           .eq('user_id', user.id)
           .single();
-        
+
         if (userError) {
-          console.error('Error fetching user data:', userError);
+          // console.error('Error fetching user data:', userError);
           setError('Failed to load user information');
           return;
         }
 
         setCurrentUser(userData);
-      } catch (err) {
-        console.error('Error getting current user:', err);
+      } catch {
+        // console.error('Error getting current user:', err);
         setError('Authentication error. Please try logging in again.');
         router.push('/login');
       } finally {
@@ -143,10 +150,12 @@ export default function CheckoutPage() {
 
   // Form validation
   const isFormValid = () => {
-    return deliveryAddress.street.trim() !== '' &&
-           deliveryAddress.city.trim() !== '' &&
-           deliveryAddress.state.trim() !== '' &&
-           deliveryAddress.zip_code.trim() !== '';
+    return (
+      deliveryAddress.street.trim() !== '' &&
+      deliveryAddress.city.trim() !== '' &&
+      deliveryAddress.state.trim() !== '' &&
+      deliveryAddress.zip_code.trim() !== ''
+    );
   };
 
   // Handle order placement
@@ -175,7 +184,7 @@ export default function CheckoutPage() {
           item_name: item.ItemName,
           price: item.Price,
           quantity: item.quantity,
-          subtotal: item.Price * item.quantity
+          subtotal: item.Price * item.quantity,
         })),
         delivery_address: deliveryAddress,
         subtotal: subtotal,
@@ -184,10 +193,10 @@ export default function CheckoutPage() {
         tip_amount: tipAmount,
         discount_amount: discountAmount,
         total_amount: finalTotal,
-        notes: notes || undefined
+        notes: notes || undefined,
       };
 
-      console.log('Submitting order data:', orderData);
+      // console.log('Submitting order data:', orderData);
 
       // Submit order to backend
       const response = await fetch(`http://localhost:8000/api/orders/`, {
@@ -195,54 +204,57 @@ export default function CheckoutPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(orderData)
+        body: JSON.stringify(orderData),
       });
 
       if (!response.ok) {
         // Check if response is JSON or text
         const contentType = response.headers.get('content-type');
         let errorMessage = 'Failed to place order';
-        
+
         if (contentType && contentType.includes('application/json')) {
           try {
             const errorData = await response.json();
             errorMessage = errorData.detail || errorMessage;
-          } catch (parseError) {
-            console.error('Error parsing JSON response:', parseError);
+          } catch {
+            // console.error('Error parsing JSON response:', parseError);
             errorMessage = `Server error (${response.status}): Unable to parse error response`;
           }
         } else {
           // Response is not JSON, likely HTML error page
-          const textResponse = await response.text();
-          console.error('Non-JSON response:', textResponse);
+          // const textResponse = await response.text();
+          // console.error('Non-JSON response:', textResponse);
           errorMessage = `Server error (${response.status}): ${response.statusText}`;
         }
-        
+
         throw new Error(errorMessage);
       }
 
       // Parse successful response
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
-        const textResponse = await response.text();
-        console.error('Expected JSON but got:', textResponse);
+        // const textResponse = await response.text();
+        // console.error('Expected JSON but got:', textResponse);
         throw new Error('Server returned invalid response format');
       }
 
       const order = await response.json();
-      
+
       // Clear cart and show success
       clearCart();
       setShowSuccess(true);
-      
+
       // Redirect to order confirmation page after brief delay
       setTimeout(() => {
         router.push(`/user/orders/${order.order_id}`);
       }, 2000);
-
     } catch (err) {
-      console.error('Order placement error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to place order. Please try again.');
+      // console.error('Order placement error:', err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to place order. Please try again.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -272,7 +284,9 @@ export default function CheckoutPage() {
         <Navbar />
         <Container maxWidth="md" sx={{ py: 4 }}>
           <Paper sx={{ p: 4, textAlign: 'center' }}>
-            <ShoppingBagIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+            <ShoppingBagIcon
+              sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }}
+            />
             <Typography variant="h5" gutterBottom color="text.secondary">
               Your cart is empty
             </Typography>
@@ -306,7 +320,11 @@ export default function CheckoutPage() {
           >
             Back
           </Button>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+          <Typography
+            variant="h4"
+            component="h1"
+            sx={{ fontWeight: 'bold', color: 'primary.main' }}
+          >
             Checkout
           </Typography>
         </Box>
@@ -315,17 +333,21 @@ export default function CheckoutPage() {
           {/* Order Summary */}
           <Grid size={{ xs: 12, md: 8 }}>
             <Paper sx={{ p: 3, mb: 3 }}>
-              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+              >
                 <ReceiptIcon />
                 Order Summary
               </Typography>
-              
+
               {/* Restaurant Info */}
               {restaurant && (
                 <Box sx={{ mb: 2 }}>
-                  <Chip 
-                    label={`From: ${restaurant.name}`} 
-                    color="primary" 
+                  <Chip
+                    label={`From: ${restaurant.name}`}
+                    color="primary"
                     variant="outlined"
                     icon={<RestaurantIcon />}
                   />
@@ -341,18 +363,30 @@ export default function CheckoutPage() {
                     <ListItem sx={{ px: 0, py: 2 }}>
                       <ListItemText
                         primary={
-                          <Typography component="span" variant="subtitle1" sx={{ fontWeight: 'medium' }}>
+                          <Typography
+                            component="span"
+                            variant="subtitle1"
+                            sx={{ fontWeight: 'medium' }}
+                          >
                             {item.ItemName}
                           </Typography>
                         }
                         secondary={
-                          <Typography component="span" variant="body2" color="text.secondary">
+                          <Typography
+                            component="span"
+                            variant="body2"
+                            color="text.secondary"
+                          >
                             ${item.Price.toFixed(2)} × {item.quantity}
                           </Typography>
                         }
                       />
                       <ListItemSecondaryAction>
-                        <Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                        <Typography
+                          component="span"
+                          variant="subtitle1"
+                          sx={{ fontWeight: 'bold' }}
+                        >
                           ${(item.Price * item.quantity).toFixed(2)}
                         </Typography>
                       </ListItemSecondaryAction>
@@ -366,28 +400,62 @@ export default function CheckoutPage() {
 
               {/* Pricing Breakdown */}
               <Box sx={{ space: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    mb: 1,
+                  }}
+                >
                   <Typography>Subtotal</Typography>
                   <Typography>${subtotal.toFixed(2)}</Typography>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    mb: 1,
+                  }}
+                >
                   <Typography>Tax</Typography>
                   <Typography>${taxAmount.toFixed(2)}</Typography>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    mb: 1,
+                  }}
+                >
                   <Typography>Delivery Fee</Typography>
                   <Typography>${DELIVERY_FEE.toFixed(2)}</Typography>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    mb: 1,
+                  }}
+                >
                   <Typography>Tip</Typography>
                   <Typography>${tipAmount.toFixed(2)}</Typography>
                 </Box>
                 <Divider sx={{ my: 1 }} />
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
                   <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
                     Total ({totalItems} {totalItems === 1 ? 'item' : 'items'})
                   </Typography>
-                  <Typography variant="h5" color="primary.main" sx={{ fontWeight: 'bold' }}>
+                  <Typography
+                    variant="h5"
+                    color="primary.main"
+                    sx={{ fontWeight: 'bold' }}
+                  >
                     ${finalTotal.toFixed(2)}
                   </Typography>
                 </Box>
@@ -396,11 +464,15 @@ export default function CheckoutPage() {
 
             {/* Delivery Address Form */}
             <Paper sx={{ p: 3, mb: 3 }}>
-              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+              >
                 <LocationOnIcon />
                 Delivery Address
               </Typography>
-              
+
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12 }}>
                   <TextField
@@ -408,7 +480,12 @@ export default function CheckoutPage() {
                     label="Street Address"
                     required
                     value={deliveryAddress.street}
-                    onChange={(e) => setDeliveryAddress({...deliveryAddress, street: e.target.value})}
+                    onChange={e =>
+                      setDeliveryAddress({
+                        ...deliveryAddress,
+                        street: e.target.value,
+                      })
+                    }
                     placeholder="123 Main St, Apt 4B"
                   />
                 </Grid>
@@ -418,7 +495,12 @@ export default function CheckoutPage() {
                     label="City"
                     required
                     value={deliveryAddress.city}
-                    onChange={(e) => setDeliveryAddress({...deliveryAddress, city: e.target.value})}
+                    onChange={e =>
+                      setDeliveryAddress({
+                        ...deliveryAddress,
+                        city: e.target.value,
+                      })
+                    }
                     placeholder="San Francisco"
                   />
                 </Grid>
@@ -428,7 +510,12 @@ export default function CheckoutPage() {
                     <Select
                       value={deliveryAddress.state}
                       label="State"
-                      onChange={(e) => setDeliveryAddress({...deliveryAddress, state: e.target.value})}
+                      onChange={e =>
+                        setDeliveryAddress({
+                          ...deliveryAddress,
+                          state: e.target.value,
+                        })
+                      }
                     >
                       <MenuItem value="CA">California</MenuItem>
                       <MenuItem value="NY">New York</MenuItem>
@@ -444,7 +531,12 @@ export default function CheckoutPage() {
                     label="ZIP Code"
                     required
                     value={deliveryAddress.zip_code}
-                    onChange={(e) => setDeliveryAddress({...deliveryAddress, zip_code: e.target.value})}
+                    onChange={e =>
+                      setDeliveryAddress({
+                        ...deliveryAddress,
+                        zip_code: e.target.value,
+                      })
+                    }
                     placeholder="94105"
                   />
                 </Grid>
@@ -455,7 +547,12 @@ export default function CheckoutPage() {
                     multiline
                     rows={2}
                     value={deliveryAddress.instructions}
-                    onChange={(e) => setDeliveryAddress({...deliveryAddress, instructions: e.target.value})}
+                    onChange={e =>
+                      setDeliveryAddress({
+                        ...deliveryAddress,
+                        instructions: e.target.value,
+                      })
+                    }
                     placeholder="Ring doorbell twice, leave at door if no answer"
                   />
                 </Grid>
@@ -464,32 +561,36 @@ export default function CheckoutPage() {
 
             {/* Payment & Notes */}
             <Paper sx={{ p: 3, mb: 3 }}>
-              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+              >
                 <PaymentIcon />
                 Payment & Notes
               </Typography>
-              
+
               <Alert severity="info" sx={{ mb: 2 }}>
                 Payment Method: Cash on Delivery
               </Alert>
-              
+
               <TextField
                 fullWidth
                 label="Special Instructions (Optional)"
                 multiline
                 rows={3}
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                onChange={e => setNotes(e.target.value)}
                 placeholder="Any special requests for the restaurant..."
                 sx={{ mb: 2 }}
               />
-              
+
               <FormControl sx={{ minWidth: 200 }}>
                 <InputLabel>Tip Amount</InputLabel>
                 <Select
                   value={tipAmount}
                   label="Tip Amount"
-                  onChange={(e) => setTipAmount(Number(e.target.value))}
+                  onChange={e => setTipAmount(Number(e.target.value))}
                 >
                   <MenuItem value={0}>No Tip</MenuItem>
                   <MenuItem value={2}>$2.00</MenuItem>
@@ -516,19 +617,24 @@ export default function CheckoutPage() {
                 <Typography variant="h6" gutterBottom>
                   Order Summary
                 </Typography>
-                
-                <Typography variant="h4" color="primary.main" sx={{ fontWeight: 'bold', mb: 2 }}>
+
+                <Typography
+                  variant="h4"
+                  color="primary.main"
+                  sx={{ fontWeight: 'bold', mb: 2 }}
+                >
                   ${finalTotal.toFixed(2)}
                 </Typography>
-                
+
                 <Typography variant="body2" color="text.secondary" paragraph>
                   Cash on delivery • Estimated delivery time: 30-45 minutes
                 </Typography>
-                
+
                 <Divider sx={{ my: 2 }} />
-                
+
                 <Typography variant="body2" color="text.secondary" paragraph>
-                  Your order will be confirmed by the restaurant and assigned to a delivery driver.
+                  Your order will be confirmed by the restaurant and assigned to
+                  a delivery driver.
                 </Typography>
 
                 <Box sx={{ mt: 3 }}>
@@ -546,17 +652,25 @@ export default function CheckoutPage() {
                     variant="contained"
                     onClick={handlePlaceOrder}
                     disabled={!isFormValid() || isSubmitting}
-                    startIcon={isSubmitting ? <CircularProgress size={20} /> : <ShoppingBagIcon />}
+                    startIcon={
+                      isSubmitting ? (
+                        <CircularProgress size={20} />
+                      ) : (
+                        <ShoppingBagIcon />
+                      )
+                    }
                     sx={{ position: 'relative' }}
                   >
-                    {isSubmitting ? 'Placing Order...' : `Place Order - $${finalTotal.toFixed(2)}`}
+                    {isSubmitting
+                      ? 'Placing Order...'
+                      : `Place Order - $${finalTotal.toFixed(2)}`}
                   </Button>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
         </Grid>
-        
+
         {/* Success Snackbar */}
         <Snackbar
           open={showSuccess}
@@ -564,7 +678,11 @@ export default function CheckoutPage() {
           onClose={() => setShowSuccess(false)}
           anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         >
-          <Alert onClose={() => setShowSuccess(false)} severity="success" sx={{ width: '100%' }}>
+          <Alert
+            onClose={() => setShowSuccess(false)}
+            severity="success"
+            sx={{ width: '100%' }}
+          >
             Order placed successfully! Redirecting to order details...
           </Alert>
         </Snackbar>

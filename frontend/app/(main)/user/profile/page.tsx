@@ -1,13 +1,8 @@
-"use client"
+'use client';
 
 import * as React from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  Paper
-} from '@mui/material';
-import Navbar from "../../../_components/navbar";
+import { Box, Container, Typography, Paper } from '@mui/material';
+import Navbar from '../../../_components/navbar';
 
 export default function UserProfilePage() {
   return (
@@ -19,8 +14,8 @@ export default function UserProfilePage() {
             User Profile
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            This is a placeholder for the user profile page. 
-            Profile management features will be implemented here.
+            This is a placeholder for the user profile page. Profile management
+            features will be implemented here.
           </Typography>
         </Paper>
       </Container>

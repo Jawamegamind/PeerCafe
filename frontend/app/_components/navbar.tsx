@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import * as React from 'react';
 import AppBar from '@mui/material/AppBar';
@@ -15,7 +15,7 @@ import Badge from '@mui/material/Badge';
 import { useRouter } from 'next/navigation';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import {logout} from '@/app/(authentication)/login/actions';
+import { logout } from '@/app/(authentication)/login/actions';
 import { useCart } from '../_contexts/CartContext';
 import CartDropdown from './CartDropdown';
 import { createClient } from '@/utils/supabase/client';
@@ -24,18 +24,44 @@ const pages = ['Home', 'Logout', 'Profile'];
 
 interface UserData {
   user_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
   is_admin: boolean;
-  // Add other user fields as needed
-  [key: string]: any;
+  is_active: boolean;
+  password?: string;
 }
 
 function ResponsiveAppBar() {
   const router = useRouter();
   const { totalItems } = useCart();
 
-  const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
-  const [cartAnchorEl, setCartAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
+    null
+  );
+  const [cartAnchorEl, setCartAnchorEl] = React.useState<null | HTMLElement>(
+    null
+  );
   const [user, setUser] = React.useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  // Fetch user data on component mount
+  React.useEffect(() => {
+    const initializeUser = async () => {
+      try {
+        const userData = await fetchCurrentUser();
+        setUser(userData);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Error initializing user:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeUser();
+  }, []);
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
@@ -49,29 +75,17 @@ function ResponsiveAppBar() {
     setCartAnchorEl(null);
   };
 
-//   async function handleSignOut() {
-//     try {
-//         await signOut(authentication);
-//         // Setting user to null and removing from local storage
-//         if (setUser) {
-//           setUser(null);
-//           console.log("User signed out");
-//           router.push('/login');
-//           localStorage.removeItem("user");
-//         }
-//     } catch (error) {
-//         console.log(error);
-//     } 
-// }
-
   // Client-side function to fetch current user
   const fetchCurrentUser = async () => {
     try {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
-        console.log("No authenticated user found.");
+        // eslint-disable-next-line no-console
+        console.log('No authenticated user found.');
         return null;
       }
 
@@ -82,48 +96,40 @@ function ResponsiveAppBar() {
         .single();
 
       if (error) {
-        console.error("Error fetching user from Users table:", error);
+        // eslint-disable-next-line no-console
+        console.error('Error fetching user from Users table:', error);
         return null;
       }
 
       return data;
     } catch (error) {
-      console.error("Error fetching user:", error);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching user:', error);
       return null;
     }
   };
 
-  const handleCloseNavMenu = async (page?: string) => {
+  const handleCloseNavMenu = (page?: string) => {
     setAnchorElNav(null);
-    
+
     if (page === 'Logout') {
-        logout();
-        router.push('/login');
-    }
-    else if (page === 'Profile') {
-        try {
-          const userData = await fetchCurrentUser();
-          if (userData) {
-            setUser(userData);
-            // Redirect based on is_admin field
-            if (userData.is_admin === true) {
-              router.push('/admin/profile'); // Admin dashboard route
-            } else {
-              router.push('/user/profile'); // Regular user profile route
-            }
-          } else {
-            console.error('No user data found');
-            // Optionally redirect to login or show error
-            router.push('/login');
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-          // Handle error - maybe redirect to login
-          router.push('/login');
+      logout();
+      router.push('/login');
+    } else if (page === 'Profile') {
+      if (user) {
+        // Redirect based on is_admin field
+        if (user.is_admin === true) {
+          router.push('/admin/profile'); // Admin dashboard route
+        } else {
+          router.push('/user/profile'); // Regular user profile route
         }
-    }
-    else if (page === 'Home') {
-        router.push('/homepage');
+      } else {
+        // eslint-disable-next-line no-console
+        console.error('No user data found');
+        router.push('/login');
+      }
+    } else if (page === 'Home') {
+      router.push('/homepage');
     }
   };
 
@@ -178,24 +184,30 @@ function ResponsiveAppBar() {
                 display: { xs: 'block', md: 'none' },
               }}
             >
-              {/* Cart MenuItem for mobile */}
-              <MenuItem onClick={handleCartClick}>
-                <IconButton color="inherit">
-                  <Badge badgeContent={totalItems} color="primary">
-                    <ShoppingCartIcon />
-                  </Badge>
-                </IconButton>
-                <Typography textAlign="center" sx={{ color: 'black', ml: 1 }}>Cart</Typography>
-              </MenuItem>
-              
-              {pages.map((page) => (
+              {/* Cart MenuItem for mobile - only show for non-admin users */}
+              {!isLoading && user && !user.is_admin && (
+                <MenuItem onClick={handleCartClick}>
+                  <IconButton color="inherit">
+                    <Badge badgeContent={totalItems} color="primary">
+                      <ShoppingCartIcon />
+                    </Badge>
+                  </IconButton>
+                  <Typography textAlign="center" sx={{ color: 'black', ml: 1 }}>
+                    Cart
+                  </Typography>
+                </MenuItem>
+              )}
+
+              {pages.map(page => (
                 <MenuItem key={page} onClick={() => handleCloseNavMenu(page)}>
                   {page === 'Profile' ? (
                     <IconButton color="inherit">
                       <AccountCircleIcon />
                     </IconButton>
                   ) : (
-                    <Typography textAlign="center" sx={{ color: 'black' }}>{page}</Typography>
+                    <Typography textAlign="center" sx={{ color: 'black' }}>
+                      {page}
+                    </Typography>
                   )}
                 </MenuItem>
               ))}
@@ -220,19 +232,28 @@ function ResponsiveAppBar() {
             AI LMS
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }} />
-          <Box sx={{ display: { xs: 'none', md: 'flex' }, ml: 'auto', alignItems: 'center', gap: 1 }}>
-            {/* Cart Icon */}
-            <IconButton
-              onClick={handleCartClick}
-              sx={{ color: 'black' }}
-              aria-label="Shopping Cart"
-            >
-              <Badge badgeContent={totalItems} color="primary">
-                <ShoppingCartIcon />
-              </Badge>
-            </IconButton>
-            
-            {pages.map((page) => (
+          <Box
+            sx={{
+              display: { xs: 'none', md: 'flex' },
+              ml: 'auto',
+              alignItems: 'center',
+              gap: 1,
+            }}
+          >
+            {/* Cart Icon - only show for non-admin users */}
+            {!isLoading && user && !user.is_admin && (
+              <IconButton
+                onClick={handleCartClick}
+                sx={{ color: 'black' }}
+                aria-label="Shopping Cart"
+              >
+                <Badge badgeContent={totalItems} color="primary">
+                  <ShoppingCartIcon />
+                </Badge>
+              </IconButton>
+            )}
+
+            {pages.map(page =>
               page === 'Profile' ? (
                 <IconButton
                   key={page}
@@ -251,17 +272,19 @@ function ResponsiveAppBar() {
                   {page}
                 </Button>
               )
-            ))}
+            )}
           </Box>
         </Toolbar>
       </Container>
-      
-      {/* Cart Dropdown */}
-      <CartDropdown 
-        anchorEl={cartAnchorEl}
-        open={Boolean(cartAnchorEl)}
-        onClose={handleCartClose}
-      />
+
+      {/* Cart Dropdown - only render for non-admin users */}
+      {!isLoading && user && !user.is_admin && (
+        <CartDropdown
+          anchorEl={cartAnchorEl}
+          open={Boolean(cartAnchorEl)}
+          onClose={handleCartClose}
+        />
+      )}
     </AppBar>
   );
 }

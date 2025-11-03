@@ -5,8 +5,12 @@
 /**
  * Format currency for display
  */
-export function formatCurrency(amount: number): string {
-  return `$${amount.toFixed(2)}`;
+export function formatCurrency(
+  amount: number | string | undefined | null
+): string {
+  if (amount === undefined || amount === null || amount === '') return '$0.00';
+  const n = typeof amount === 'number' ? amount : Number(amount);
+  return Number.isFinite(n) ? `$${n.toFixed(2)}` : '$0.00';
 }
 
 /**
@@ -43,25 +47,28 @@ export function truncateText(text: string, maxLength: number): string {
 export function isRestaurantOpen(openTime: string, closeTime: string): boolean {
   const now = new Date();
   const currentTime = now.getHours() * 60 + now.getMinutes();
-  
+
   const [openHour, openMinute] = openTime.split(':').map(Number);
   const [closeHour, closeMinute] = closeTime.split(':').map(Number);
-  
+
   const openMinutes = openHour * 60 + openMinute;
   const closeMinutes = closeHour * 60 + closeMinute;
-  
+
   // Handle overnight hours (e.g., 22:00 - 02:00)
   if (closeMinutes < openMinutes) {
     return currentTime >= openMinutes || currentTime <= closeMinutes;
   }
-  
+
   return currentTime >= openMinutes && currentTime <= closeMinutes;
 }
 
 /**
  * Calculate delivery time estimate
  */
-export function calculateDeliveryTime(distance: number, trafficFactor: number = 1): number {
+export function calculateDeliveryTime(
+  distance: number,
+  trafficFactor: number = 1
+): number {
   const baseTime = 20; // Base 20 minutes
   const additionalTime = Math.ceil(distance * 2 * trafficFactor);
   return baseTime + additionalTime;
@@ -70,8 +77,12 @@ export function calculateDeliveryTime(distance: number, trafficFactor: number = 
 /**
  * Format rating for display
  */
-export function formatRating(rating: number): string {
-  return rating.toFixed(1);
+export function formatRating(
+  rating: number | string | undefined | null
+): string {
+  if (rating === undefined || rating === null || rating === '') return '0.0';
+  const r = typeof rating === 'number' ? rating : Number(rating);
+  return Number.isFinite(r) ? r.toFixed(1) : '0.0';
 }
 
 /**

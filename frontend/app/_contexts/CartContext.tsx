@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
@@ -44,7 +44,9 @@ export const useCart = () => {
 };
 
 // Cart Provider Component
-export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
 
@@ -52,19 +54,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const savedCart = localStorage.getItem('peerCafeCart');
     const savedRestaurant = localStorage.getItem('peerCafeCartRestaurant');
-    
+
     if (savedCart) {
       try {
         setItems(JSON.parse(savedCart));
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error loading cart from localStorage:', error);
       }
     }
-    
+
     if (savedRestaurant) {
       try {
         setRestaurant(JSON.parse(savedRestaurant));
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error loading restaurant from localStorage:', error);
       }
     }
@@ -74,7 +78,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     localStorage.setItem('peerCafeCart', JSON.stringify(items));
     if (restaurant) {
-      localStorage.setItem('peerCafeCartRestaurant', JSON.stringify(restaurant));
+      localStorage.setItem(
+        'peerCafeCartRestaurant',
+        JSON.stringify(restaurant)
+      );
     } else {
       localStorage.removeItem('peerCafeCartRestaurant');
     }
@@ -88,7 +95,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setItems([{ ...newItem, quantity: 1 }]);
       setRestaurant({
         id: newItem.restaurantId,
-        name: newItem.restaurantName
+        name: newItem.restaurantName,
       });
       return true;
     }
@@ -101,8 +108,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Same restaurant - check if item already exists in cart
     setItems(prevItems => {
-      const existingItemIndex = prevItems.findIndex(item => item.id === newItem.id);
-      
+      const existingItemIndex = prevItems.findIndex(
+        item => item.id === newItem.id
+      );
+
       if (existingItemIndex > -1) {
         // If item exists, increase quantity
         const updatedItems = [...prevItems];
@@ -121,12 +130,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const removeFromCart = (itemId: number) => {
     setItems(prevItems => {
       const updatedItems = prevItems.filter(item => item.id !== itemId);
-      
+
       // If cart becomes empty, clear restaurant
       if (updatedItems.length === 0) {
         setRestaurant(null);
       }
-      
+
       return updatedItems;
     });
   };
@@ -139,9 +148,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     setItems(prevItems =>
-      prevItems.map(item =>
-        item.id === itemId ? { ...item, quantity } : item
-      )
+      prevItems.map(item => (item.id === itemId ? { ...item, quantity } : item))
     );
   };
 
@@ -157,13 +164,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setItems([{ ...newItem, quantity: 1 }]);
     setRestaurant({
       id: newItem.restaurantId,
-      name: newItem.restaurantName
+      name: newItem.restaurantName,
     });
   };
 
   // Calculate totals
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + (item.Price * item.quantity), 0);
+  const totalPrice = items.reduce(
+    (sum, item) => sum + item.Price * item.quantity,
+    0
+  );
   const isCartEmpty = items.length === 0;
 
   const value: CartContextType = {
@@ -176,12 +186,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateQuantity,
     clearCart,
     clearCartAndAddItem,
-    isCartEmpty
+    isCartEmpty,
   };
 
-  return (
-    <CartContext.Provider value={value}>
-      {children}
-    </CartContext.Provider>
-  );
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
