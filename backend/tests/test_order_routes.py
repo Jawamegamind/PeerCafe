@@ -96,7 +96,11 @@ class TestOrderRoutes:
     @patch("routes.order_routes.geocode_address")
     @patch("routes.order_routes.create_supabase_client")
     def test_place_order_success(
-        self, mock_supabase_client, mock_geocode, sample_order_create_data, mock_order_response
+        self,
+        mock_supabase_client,
+        mock_geocode,
+        sample_order_create_data,
+        mock_order_response,
     ):
         """Test successful order placement"""
         # Mock geocoding
@@ -115,7 +119,9 @@ class TestOrderRoutes:
         mock_from.select.return_value = mock_select
         mock_select.eq.return_value = mock_eq
         mock_eq.single.return_value = mock_single
-        mock_single.execute.return_value = Mock(data={"latitude": 37.7849, "longitude": -122.4094})
+        mock_single.execute.return_value = Mock(
+            data={"latitude": 37.7849, "longitude": -122.4094}
+        )
 
         # Mock table insert
         mock_table = Mock()
@@ -394,7 +400,7 @@ class TestOrderRoutes:
         assert len(data) == 1
         assert data[0]["restaurant_id"] == 1
 
-    @patch('routes.order_routes.create_supabase_client')
+    @patch("routes.order_routes.create_supabase_client")
     def test_get_my_orders(self, mock_supabase_client, mock_order_response):
         """Test retrieving orders for the authenticated user via /api/orders/me"""
         mock_client = Mock()
@@ -406,7 +412,9 @@ class TestOrderRoutes:
 
         # Mock auth.get_user to return user with user_id
         mock_client.auth = Mock()
-        mock_client.auth.get_user.return_value = {"data": {"user": {"user_id": "user_123"}}}
+        mock_client.auth.get_user.return_value = {
+            "data": {"user": {"user_id": "user_123"}}
+        }
 
         mock_supabase_client.return_value = mock_client
         mock_client.table.return_value = mock_table

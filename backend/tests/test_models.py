@@ -5,6 +5,7 @@ Tests for Pydantic models
 import pytest
 from pydantic import ValidationError
 
+from models.delivery_model import Location
 from models.login_model import LoginRequestModel
 from models.order_model import (
     DeliveryAddress,
@@ -14,7 +15,6 @@ from models.order_model import (
     OrderStatus,
     OrderUpdate,
 )
-from models.delivery_model import Location
 from models.restaurant_model import Restaurant, RestaurantCreate
 from models.user_model import User
 
