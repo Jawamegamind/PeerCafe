@@ -1,5 +1,11 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from '@testing-library/react';
 import { useRouter, useParams } from 'next/navigation';
 import EditRestaurantPage from '../../app/(main)/admin/restaurants/[restaurantId]/edit/page';
 import '@testing-library/jest-dom';
@@ -240,8 +246,10 @@ describe('EditRestaurantPage', () => {
       ).toBeInTheDocument();
     });
 
-    // Fast forward timer to trigger redirect
-    jest.advanceTimersByTime(2000);
+    // Fast forward timer to trigger redirect (wrap in act so state updates are flushed)
+    await act(async () => {
+      jest.advanceTimersByTime(2000);
+    });
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/admin/restaurants');

@@ -1,0 +1,134 @@
+### Software Sustainability Evaluation Self-Assessment Table:
+
+
+| Category                         | Question                                                                                                                                                                                                                                                                                                                      | Yes | No | Evidence |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | -- | -------- |
+| **Q1 - Software Overview**       |  |  |   |   |
+|Question 1.1| Does your website and documentation provide a clear, high-level overview of your software?| ✅   | ❌  | README.md contains comprehensive project overview with clear description: "A peer-to-peer delivery platform that connects users who need items delivered with nearby peers willing to make deliveries." docs/Flow.md provides high-level workflow visualization |
+|Question 1.2| Does your website and documentation clearly describe the type of user who should use your software?| ✅   | ❌  | README.md section "About the Project" clearly identifies two user types: (1) Users who need items delivered (requesters) and (2) Nearby peers willing to make deliveries (deliverers). docs/Flow.md distinguishes between regular users, delivery users, and admin users |
+|Question 1.3| Do you publish case studies to show how your software has been used by yourself and others?| ❌   | ✅  | No case studies published yet - project is in active development phase for CSC 510 course. Could add user journey examples or demo scenarios |
+| **Q2 - Identity**                | |  |   |   |
+|Question 2.1| Is the name of your project/software unique?| ✅   | ❌  | "PeerCafe" is a distinctive name combining "peer-to-peer" delivery with "cafe" dining concept - appears unique in the food delivery space |
+|Question 2.2| Is your project/software name free from trademark violations?| ✅   | ❌  | LICENSE.md includes trademark notice stating "PeerCafe" is a trademark of original authors. No conflicts found with existing registered trademarks |
+| **Q3 - Availability**            | |  |   |   |
+|Question 3.1| Is your software available as a package that can be deployed without building it?| ❌   | ✅  | Currently requires building from source. Could consider Docker containers or pre-built releases in the future |
+|Question 3.2| Is your software available for free?| ✅   | ❌  | MIT License allows free use, modification, and distribution. Source code is publicly available at no cost |
+|Question 3.3| Is your source code publicly available to download, either as a downloadable bundle or via access to a source code repository?| ✅   | ❌  | Full source code available on GitHub at https://github.com/Jawamegamind/PeerCafe. Can be cloned or downloaded as ZIP |
+| Question 3.4 | Is your software hosted in an established, third-party repository like [GitHub](https://github.com), [BitBucket](https://bitbucket.org), [LaunchPad](https://launchpad.net), or [SourceForge](https://sourceforge.net)? | ✅ | ❌ | Hosted on GitHub at https://github.com/Jawamegamind/PeerCafe with full version control, issue tracking, and CI/CD |
+| **Q4 - Documentation**           | |  |   |   |
+|Question 4.1| Is your documentation clearly available on your website or within your software?| ✅   | ❌  | README.md prominently linked from repository homepage. API docs auto-generated at http://localhost:8000/docs (Swagger UI) and /redoc endpoints |
+|Question 4.2| Does your documentation include a "quick start" guide, that provides a short overview of how to use your software with some basic examples of use?| ✅   | ❌  | README.md contains "Quick Start: Installation & Setup" link pointing to INSTALL.md with step-by-step setup instructions. API Documentation section shows key endpoint examples |
+|Question 4.3| If you provide more extensive documentation, does this provide clear, step-by-step instructions on how to deploy and use your software?| ✅   | ❌  | INSTALL.md provides comprehensive setup: Prerequisites, Backend setup (conda environment), Frontend setup (npm), Database config (Supabase), Environment variables, Running instructions for both services |
+|Question 4.4| Do you provide a comprehensive guide to all your software's commands, functions and options?| ✅   | ❌  | CONTRIBUTING.md documents all patterns, standards, and best practices with code examples. FastAPI auto-generates comprehensive API documentation at /docs endpoint listing all routes, parameters, request/response schemas |
+|Question 4.5| Do you provide troubleshooting information that describes the symptoms and step-by-step solutions for problems and error messages?| ✅   | ❌  | CONTRIBUTING.md includes "Getting Help" section with resources, "Common Patterns and Best Practices" section showing proper error handling, and security guidelines. README.md provides support contact information |
+|Question 4.6| If your software can be used as a library, package or service by other software, do you provide comprehensive API documentation?| ✅   | ❌  | FastAPI automatically generates interactive Swagger UI documentation at /docs with all endpoints, request/response schemas, authentication requirements, and try-it-out functionality. README.md lists key API endpoints with examples |
+|Question 4.7| Do you store your documentation under revision control with your source code?| ✅   | ❌  | All documentation (README.md, INSTALL.md, CONTRIBUTING.md, CODE-OF-CONDUCT.md, LICENSE.md, docs/ folder) stored in Git repository with full version history |
+|Question 4.8| Do you publish your release history e.g. release data, version numbers, key features of each release etc. on your web site or in your documentation?| ❌   | ✅  | No formal release history yet - currently active development. GitHub commit history available but no tagged releases or changelog yet |
+| **Q5 - Support**                 | |  |   |   |
+|Question 5.1| Does your software describe how a user can get help with using your software?| ✅   | ❌  | README.md includes "Support" section with instructions to contact development team via email. CONTRIBUTING.md has "Getting Help" section listing resources, GitHub Issues, and contact methods |
+|Question 5.2| Does your website and documentation describe what support, if any, you provide to users and developers?| ✅   | ❌  | README.md support section lists team email addresses. CONTRIBUTING.md describes GitHub Issues for bug reports, GitHub Discussions for questions, PR comments for code discussions. Contact maintainers section provided |
+|Question 5.3| Does your project have an e-mail address or forum that is solely for supporting users?| ✅   | ❌  | Team member emails listed in README.md (jsaeed@ncsu.edu, ojjoshi@ncsu.edu, mcorman@ncsu.edu, mspate22@ncsu.edu, hagarwa4@ncsu.edu). GitHub Issues serve as public forum |
+|Question 5.4| Are e-mails to your support e-mail address received by more than one person?| ✅   | ❌  | Multiple team member emails provided (5 team members), GitHub repository notifications go to all maintainers |
+|Question 5.5| Does your project have a ticketing system to manage bug reports and feature requests?| ✅   | ❌  | GitHub Issues system enabled at https://github.com/Jawamegamind/PeerCafe/issues. README.md displays Issues badge showing active issue tracking |
+|Question 5.6| Is your project's ticketing system publicly visible to your users, so they can view bug reports and feature requests?| ✅   | ❌  | GitHub Issues are public at https://github.com/Jawamegamind/PeerCafe/issues - anyone can view, search, and comment on issues |
+| **Q6 - Maintainability**         | |  |   |   |
+|Question 6.1| Is your software's architecture and design modular?| ✅   | ❌  | Backend: Separated into routes/, models/, database/ modules. Frontend: Next.js 14+ App Router with component-based architecture. Clear separation of concerns documented in CONTRIBUTING.md "Architecture Guidelines" section |
+|Question 6.2| Does your software use an accepted coding standard or convention?| ✅   | ❌  | Backend: PEP 8 (88-char limit), Black formatter, isort, Flake8 linting. Frontend: TypeScript strict mode, ESLint, Prettier. All documented in CONTRIBUTING.md with badges in README.md showing active code quality tools |
+| **Q7 - Open Standards**          | |  |   |   |
+|Question 7.1| Does your software allow data to be imported and exported using open data formats?| ✅   | ❌  | Uses JSON for API requests/responses (open standard), PostgreSQL database (open source), REST API following OpenAPI standards. FastAPI generates OpenAPI/Swagger documentation |
+|Question 7.2| Does your software allow communications using open communications protocols?| ✅   | ❌  | HTTP/HTTPS for API communication, WebSocket support via Supabase Realtime for real-time updates, PostgreSQL connection protocol, standard REST API architecture |
+| **Q8 - Portability**             | |  |   |   |
+|Question 8.1| Is your software cross-platform compatible?| ✅   | ❌  | Backend: Python 3.10+ runs on Windows, macOS, Linux. Frontend: Node.js/Next.js cross-platform. CI/CD runs on both Ubuntu and Windows (see .github/workflows/frontend-ci.yml matrix strategy) |
+| **Q9 - Accessibility**           | |  |   |   |
+|Question 9.1| Does your software adhere to appropriate accessibility conventions or standards?| ✅   | ❌  | Uses Material-UI components which follow ARIA standards and accessibility best practices. TypeScript ensures type safety. CONTRIBUTING.md mentions proper ARIA labels in code examples |
+|Question 9.2| Does your documentation adhere to appropriate accessibility conventions or standards?| ✅   | ❌  | Documentation in Markdown format (readable by screen readers), clear headings structure, code examples with syntax highlighting, semantic HTML in auto-generated API docs |
+| **Q10 - Source Code Management** | |  |   |   |
+|Question 10.1| Is your source code stored in a repository under revision control?| ✅   | ❌  | Full Git repository at https://github.com/Jawamegamind/PeerCafe. Git log shows comprehensive commit history with feature branches and merges |
+|Question 10.2| Is each source code release a snapshot of the repository?| ✅ | ❌  | First release already up named as V 0.1.0 . With each major release the number is incremented. Planning another release before Project 2 deadline. |
+|Question 10.3| Are releases tagged in the repository?| ✅ | ❌ | Yes releases are visible with the associated tag in the releases tab in the repositroy. |
+|Question 10.4| Is there a branch of the repository that is always stable? (i.e. tests always pass, code always builds successfully)| ✅   | ❌  | Main branch is protected and stable - CI/CD workflows (.github/workflows/) ensure tests pass before merging. Branch protection likely enabled requiring PR reviews |
+|Question 10.5| Do you back-up your repository?| ✅   | ❌  | GitHub provides automatic backups. Repository hosted on GitHub's infrastructure with redundancy. Team members have local clones serving as distributed backups |
+| **Q11 - Building & Installing**  | |  |   |   |
+|Question 11.1| Do you provide publicly-available instructions for building your software from the source code?| ✅   | ❌  | INSTALL.md provides complete build instructions: Prerequisites section, Backend setup with conda environment creation, Frontend npm install, step-by-step commands for both services |
+|Question 11.2| Can you build, or package, your software using an automated tool?| ✅   | ❌  | Backend: conda/pip for Python dependencies. Frontend: npm for Node.js packages and next build for production builds. Both use standard package managers with automated dependency resolution |
+|Question 11.3| Do you provide publicly-available instructions for deploying your software?| ✅   | ❌  | INSTALL.md includes "Running the Application" section with commands to start both backend (uvicorn) and frontend (npm run dev). Environment setup documented for Supabase configuration |
+|Question 11.4| Does your documentation list all third-party dependencies?| ✅   | ❌  | Backend: requirements.yaml lists all Python dependencies. Frontend: package.json lists all npm packages. README.md "Tech Stack" section lists major frameworks (Next.js, FastAPI, Material-UI, Supabase) |
+|Question 11.5| Does your documentation list the version number for all third-party dependencies?| ✅   | ❌  | Backend requirements.yaml and frontend package.json specify exact or minimum versions. README badges show Python 3.10+, specific framework versions mentioned in Tech Stack section |
+|Question 11.6| Does your software list the web address, and licences for all third-party dependencies and say whether the dependencies are mandatory or optional?| ✅   | ❌  | LICENSE.md includes "Third-Party Dependencies" section listing FastAPI (MIT), Next.js (MIT), Material-UI (MIT), Supabase (Apache 2.0). Notes to see package.json and requirements files for full details. All listed are mandatory |
+|Question 11.7| Can you download dependencies using a dependency management tool or package manager?| ✅   | ❌  | Backend: conda/pip automatically downloads dependencies from requirements.yaml. Frontend: npm automatically downloads from package.json. INSTALL.md documents both: "conda env create -f requirements.yaml" and "npm install" |
+|Question 11.8| Do you have tests that can be run after your software has been built or deployed to show whether the build or deployment has been successful?| ✅   | ❌  | Backend: pytest test suite. Frontend: Jest test suite. Both can be run post-build to verify deployment. CI/CD workflows validate on every push/PR |
+| **Q12 - Testing**                | |  |   |   |
+|Question 12.1| Do you have an automated test suite for your software?| ✅   | ❌  | Backend: pytest suite with 98% coverage (tests/ directory). Frontend: Jest suite with 355 tests across 27 test suites. CONTRIBUTING.md documents testing requirements and examples with comprehensive test patterns |
+|Question 12.2| Do you have a framework to periodically (e.g. nightly) run your tests on the latest version of the source code?| ✅   | ❌  | GitHub Actions CI/CD runs on every push and PR. Workflows: frontend-ci.yml, backend-ci.yml, code-quality.yml. Tests run automatically on schedule and code changes |
+|Question 12.3| Do you use continuous integration, automatically running tests whenever changes are made to your source code?| ✅   | ❌  | GitHub Actions workflows configured in .github/workflows/. README.md displays CI badges: Frontend CI, Backend CI, Code Quality. Tests must pass before PR merge |
+|Question 12.4| Are your test results publicly visible?| ✅   | ❌  | CI/CD results visible on GitHub Actions tab. README.md shows codecov badges with links to detailed coverage reports. Badge links: Frontend Coverage, Backend Coverage, overall codecov badge |
+|Question 12.5| Are all manually-run tests documented?| ✅   | ❌  | CONTRIBUTING.md "Testing Requirements" section documents how to run tests manually with pytest and Jest commands. Shows examples of running specific test files, patterns, and coverage reports |
+| **Q13 - Community Engagement**   |  |  |   |   |                                                                                                                                                                                           
+|Question 13.1| Does your project have resources (e.g. blog, Twitter, RSS feed, Facebook page, wiki, mailing list) that are regularly updated with information about your software?| ❌   | ✅  | Currently uses GitHub repository as primary communication channel. Could add blog, social media, or project wiki for wider community engagement |
+|Question 13.2| Does your website state how many projects and users are associated with your project?| ❌   | ✅  | No usage statistics published yet - project in development phase. Could add metrics once deployed to production with user adoption |
+|Question 13.3| Do you provide success stories on your website?| ❌   | ✅  | No success stories yet - academic project in active development. Could document case studies once user base established |
+|Question 13.4| Do you list your important partners and collaborators on your website?| ✅   | ❌  | README.md lists all 5 team members with names and email addresses. Project affiliated with CSC 510 at NC State University (clearly documented) |
+|~Question 13.5~| ~Do you list your project's publications on your website or link to a resource where these are available?~ | ✅   | ❌  | N/A - Academic course project, not research publication |
+|Question 13.6| Do you list third-party publications that refer to your software on your website or link to a resource where these are available?| ❌   | ✅  | No third-party publications yet - new project. DOI badge present (Zenodo) for citation: 10.5281/zenodo.17420477 |
+|Question 13.7| Can users subscribe to notifications to changes to your source code repository?| ✅   | ❌  | GitHub "Watch" feature allows users to subscribe to repository notifications. GitHub Issues can be followed. Commit notifications available via GitHub |
+|Question 13.8| If your software is developed as an open source project (and, not just a project developing open source software), do you have a governance model?| ✅   | ❌  | CODE-OF-CONDUCT.md establishes community guidelines and enforcement policies. CONTRIBUTING.md documents PR process, review requirements (at least one maintainer approval), merge policies |
+| **Q14 - Contributions**          ||  |   |   |
+|Question 14.1| Do you accept contributions (e.g. bug fixes, enhancements, documentation updates, tutorials) from people who are not part of your project?| ✅   | ❌  | CONTRIBUTING.md welcomes contributions with clear guidelines. README.md has "Contributing" section with PR process. GitHub repository accepts external contributions |
+|Question 14.2| Do you have a contributions policy?| ✅   | ❌  | Comprehensive CONTRIBUTING.md (extensive document ~2000+ lines) covering: Development setup, coding standards, architecture guidelines, testing requirements, PR process, security guidelines, performance considerations |
+|Question 14.3| Is your contributions' policy publicly available?| ✅   | ❌  | CONTRIBUTING.md publicly accessible in root directory. README.md links to contribution guidelines. GitHub's contribution tab displays this automatically |
+|Question 14.4| Do contributors keep the copyright/IP of their contributions?| ✅   | ❌  | LICENSE.md states "By contributing to this project, you agree that your contributions will be licensed under the same MIT License." Contributors retain copyright while granting project use under MIT terms |
+| **Q15 - Licensing**              |  |  |   |   |                                                                                                                                                                                                                                 
+|Question 15.1| Does your website and documentation clearly state the copyright owners of your software and documentation?| ✅   | ❌  | LICENSE.md clearly states: "Copyright (c) 2025 PeerCafe - Jawad Saeed (@Jawamegamind)". Additional Terms section provides detailed copyright and attribution requirements |
+|Question 15.2| Does each of your source code files include a copyright statement?| ❌   | ✅  | Source files don't have individual copyright headers. LICENSE.md is comprehensive but could add copyright headers to source files following best practices |
+|Question 15.3| Does your website and documentation clearly state the licence of your software?| ✅   | ❌  | LICENSE.md in root directory clearly displays MIT License. README.md mentions license. GitHub displays license badge. Full MIT License text included with additional PeerCafe-specific terms |
+|Question 15.4| Is your software released under an open source licence?| ✅   | ❌  | MIT License - one of the most permissive open source licenses. Allows commercial use, modification, distribution, private use with attribution requirement |
+|Question 15.5| Is your software released under an OSI-approved open-source licence?| ✅   | ❌  | MIT License is OSI-approved (Open Source Initiative). One of the most popular and widely recognized open source licenses |
+|Question 15.6| Does each of your source code files include a licence header?| ❌   | ✅  | No individual license headers in source files. Could improve by adding standard MIT License header comment blocks to all source files |
+|Question 15.7| Do you have a recommended citation for your software?| ✅   | ❌  | DOI badge in README.md links to Zenodo: 10.5281/zenodo.17420477. Provides permanent citable reference. LICENSE.md includes attribution requirements |
+| **Q16 - Future Plans**           |  |  |   |   |                                                                                                                                                                                                                                 
+|Question 16.1| Does your website or documentation include a project roadmap (a list of project and development milestones for the next 3, 6 and 12 months)?| ❌   | ✅  | No dedicated roadmap document. Could improve by creating ROADMAP.md with versioned milestones and feature plans |
+|Question 16.2| Does your website or documentation describe how your project is funded, and the period over which funding is guaranteed?| ❌   | ✅  | No funding information present. This is appropriate for a student project but could add statement about project sustainability model |
+|Question 16.3| Do you make timely announcements of the deprecation of components, APIs, etc.?| ❌   | ✅  | No deprecation process documented. For production use, should establish deprecation policy in CONTRIBUTING.md with versioning strategy and migration guides |
+
+
+### Repository Rubric
+
+
+|Notes|Evidence|Score|
+|-----|---------|--|
+|Workload is spread over the whole team (one team member is often Xtimes more productive than the others... --| |
+but nevertheless, here is a track record that everyone is contributing a lot)|evidence in GH| |
+|Number of commits|in GH| |
+|Number of commits: by different people|in GH| |
+|Issues reports: there are **many**| |
+|Issues are being closed|evidence in GH| |
+|Docs: doco generated, format not ugly |in GH| |
+|Docs: what: point descriptions of each class/function (in isolation)| | |
+|Docs: how: for common use cases X,Y,Z mini-tutorials showing worked examples on how to do X,Y,Z|doc page entries| | |
+|Docs: why: docs tell a story, motivate the whole thing, deliver a punchline that makes you want to rush out and use the thing| |
+|Docs: short video, animated, hosted on your repo. That convinces people why they want to work on your code.| |
+|Use of version control tools| |
+|Test cases exist|dozens of tests and those test cases are more than 30% of the code base| |
+|Test cases are routinely executed|E.g. travis-com.com or github actions or something| |
+|Issues are discussed before they are closed|even if you discuss in slack, need a sumamry statement here| |
+|Chat channel: exists|Link or screenshots| |
+|Test cases: a large proportion of the issues related to handling failing cases.|If a test case fails, open an issue and fix it| |
+|Evidence that the whole team is using the same tools: everyone can get to all tools and files| |
+|Evidence that the whole team is using the same tools (e.g. config files in the repo, updated by lots of different people)| |
+|Evidence that the whole team is using the same tools (e.g. tutor can ask anyone to share screen, they demonstrate the system running on their computer)| |
+|Evidence that the members of the team are working across multiple places in the code base| |
+|Short release cycles | (hard to see in short projects) project members are committing often enough so that everyone can get your work| |
+|The file .gitignore lists what files should not be saved to the repo. See [examples](https://github.com/github/gitignore)|in GH| |
+|The file INSTALL.md lists how to install the code|in GH| |
+|The file LICENSE.md lists rules of usage for this repo|in GH| |
+|The file CODE-OF-CONDUCT.md lists rules of behavior for this repo; e.g. see [example](https://github.com/probot/template/blob/master/CODE_OF_CONDUCT.md)|in GH| |
+|The file CONTRIBUTING.md lists coding standards and lots of tips on how to extend the system without screwing things up; e.g. see [example](https://github.com/probot/template/blob/master/CONTRIBUTING.md)|in GH| |
+|The file README.md contains all the following|in GH| |
+|Video|2min video of new functionality, showing a significant delta from prior.| |
+|DOI badge: exists. To get a Digitial Object Indentifier, regiser the project at [Zenodo](https://docs.github.com/en/repositories/archiving-a-github-repository/referencing-and-citing-content). DOI badges look like this: ![Zenodo doi badge](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.1234567-blue.svg) |in GH|  |
+|Badges showing your style checkers |config files in GH showing your config, badges in README| |
+|Badges showing your code formatters. |config files in GH showing your this formatter's  config, badges in README||
+|Badges showing your syntax checkers. |config files iin  GH showing this checker's config, badges in README  ||
+|Badges showing your code coverage tools|config files in GH, badges in README| |
+|Badges showing any other Other automated analysis tools|config files in GH, badges in README||
+| ||
