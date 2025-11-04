@@ -628,11 +628,15 @@ export default function OrderDetailsPage() {
 
                 {order.delivery_code && (
                   <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 'medium' }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ fontWeight: 'medium' }}
+                    >
                       Delivery Code
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {order.delivery_code} {order.delivery_code_used ? '(used)' : ''}
+                      {order.delivery_code}{' '}
+                      {order.delivery_code_used ? '(used)' : ''}
                     </Typography>
                   </Box>
                 )}

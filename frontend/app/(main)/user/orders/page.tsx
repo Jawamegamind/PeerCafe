@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
 import * as React from 'react';
-import Navbar from "../../../_components/navbar";
+import Navbar from '../../../_components/navbar';
 import {
   Box,
   Container,
@@ -16,7 +16,7 @@ import {
   CircularProgress,
   Button,
   Avatar,
-  Stack
+  Stack,
 } from '@mui/material';
 import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
@@ -44,21 +44,27 @@ interface OrderListItem {
   delivery_code_used?: boolean | null;
 }
 
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8000';
+const backendUrl =
+  process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8000';
 
 function statusChip(status: OrderStatus) {
-  const map: Record<OrderStatus, { label: string; color: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info' }>
-    = {
-      pending: { label: 'Pending', color: 'warning' },
-      confirmed: { label: 'Confirmed', color: 'info' },
-      preparing: { label: 'Preparing', color: 'primary' },
-      ready: { label: 'Ready', color: 'primary' },
-      assigned: { label: 'Driver Assigned', color: 'primary' },
-      picked_up: { label: 'Picked Up', color: 'primary' },
-      en_route: { label: 'En Route', color: 'primary' },
-      delivered: { label: 'Delivered', color: 'success' },
-      cancelled: { label: 'Cancelled', color: 'error' }
-    };
+  const map: Record<
+    OrderStatus,
+    {
+      label: string;
+      color: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+    }
+  > = {
+    pending: { label: 'Pending', color: 'warning' },
+    confirmed: { label: 'Confirmed', color: 'info' },
+    preparing: { label: 'Preparing', color: 'primary' },
+    ready: { label: 'Ready', color: 'primary' },
+    assigned: { label: 'Driver Assigned', color: 'primary' },
+    picked_up: { label: 'Picked Up', color: 'primary' },
+    en_route: { label: 'En Route', color: 'primary' },
+    delivered: { label: 'Delivered', color: 'success' },
+    cancelled: { label: 'Cancelled', color: 'error' },
+  };
   const cfg = map[status] || { label: status, color: 'default' as const };
   return <Chip size="small" color={cfg.color} label={cfg.label} />;
 }
@@ -69,19 +75,20 @@ export default function MyOrdersPage() {
   const [authLoading, setAuthLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [orders, setOrders] = React.useState<OrderListItem[]>([]);
-  const [currentUser, setCurrentUser] = React.useState<any>(null);
   const [filter, setFilter] = React.useState<'active' | 'final'>('active');
 
   React.useEffect(() => {
     const init = async () => {
       try {
         setAuthLoading(true);
-        const { data: { user }, error: authErr } = await supabase.auth.getUser();
+        const {
+          data: { user },
+          error: authErr,
+        } = await supabase.auth.getUser();
         if (authErr || !user) {
           setError('Please log in to view your orders.');
           return;
         }
-        setCurrentUser(user);
 
         // Get access token for backend Authorization header
         const { data: sessionData } = await supabase.auth.getSession();
@@ -93,7 +100,7 @@ export default function MyOrdersPage() {
 
         setLoading(true);
         const res = await fetch(`${backendUrl}/api/orders/me?limit=50`, {
-          headers: { Authorization: `Bearer ${accessToken}` }
+          headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (!res.ok) {
           const msg = await res.text();
@@ -117,19 +124,20 @@ export default function MyOrdersPage() {
           cancelled: 3,
         };
 
-        const sorted = (Array.isArray(data) ? data : []).slice().sort((a, b) => {
-          const pa = priority[a.status] ?? 99;
-          const pb = priority[b.status] ?? 99;
-          if (pa !== pb) return pa - pb;
-          // Newer first within same priority bucket
-          const ta = new Date(a.created_at).getTime();
-          const tb = new Date(b.created_at).getTime();
-          return tb - ta;
-        });
+        const sorted = (Array.isArray(data) ? data : [])
+          .slice()
+          .sort((a, b) => {
+            const pa = priority[a.status] ?? 99;
+            const pb = priority[b.status] ?? 99;
+            if (pa !== pb) return pa - pb;
+            // Newer first within same priority bucket
+            const ta = new Date(a.created_at).getTime();
+            const tb = new Date(b.created_at).getTime();
+            return tb - ta;
+          });
 
         setOrders(sorted);
       } catch (e: any) {
-        console.error('Failed to fetch orders:', e);
         setError(e?.message || 'Failed to load orders');
       } finally {
         setAuthLoading(false);
@@ -139,18 +147,31 @@ export default function MyOrdersPage() {
     void init();
   }, [supabase]);
 
-  const isTerminal = (status: OrderStatus) => status === 'delivered' || status === 'cancelled';
+  const isTerminal = (status: OrderStatus) =>
+    status === 'delivered' || status === 'cancelled';
   const visibleOrders = React.useMemo(() => {
     if (!orders || orders.length === 0) return [] as OrderListItem[];
-    return orders.filter(o => filter === 'active' ? !isTerminal(o.status) : isTerminal(o.status));
+    return orders.filter(o =>
+      filter === 'active' ? !isTerminal(o.status) : isTerminal(o.status)
+    );
   }, [orders, filter]);
 
   return (
     <Box>
       <Navbar />
       <Container maxWidth="md" sx={{ py: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 2,
+          }}
+        >
+          <Typography
+            variant="h4"
+            sx={{ fontWeight: 'bold', color: 'primary.main' }}
+          >
             My Orders
           </Typography>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
@@ -166,7 +187,13 @@ export default function MyOrdersPage() {
             >
               Completed
             </Button>
-            <Button component={Link} href="/user/restaurants" variant="outlined">Order food</Button>
+            <Button
+              component={Link}
+              href="/user/restaurants"
+              variant="outlined"
+            >
+              Order food
+            </Button>
           </Box>
         </Box>
 
@@ -185,9 +212,18 @@ export default function MyOrdersPage() {
             <Typography variant="body2" color="text.secondary" gutterBottom>
               Make sure you are logged in.
             </Typography>
-            <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 1 }}>
-              <Button component={Link} href="/login" variant="contained">Login</Button>
-              <Button component={Link} href="/register" variant="text">Create account</Button>
+            <Stack
+              direction="row"
+              spacing={1}
+              justifyContent="center"
+              sx={{ mt: 1 }}
+            >
+              <Button component={Link} href="/login" variant="contained">
+                Login
+              </Button>
+              <Button component={Link} href="/register" variant="text">
+                Create account
+              </Button>
             </Stack>
           </Paper>
         )}
@@ -198,7 +234,12 @@ export default function MyOrdersPage() {
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               When you place an order, it will appear here.
             </Typography>
-            <Button component={Link} href="/user/restaurants" variant="contained" sx={{ mt: 2 }}>
+            <Button
+              component={Link}
+              href="/user/restaurants"
+              variant="contained"
+              sx={{ mt: 2 }}
+            >
               Browse restaurants
             </Button>
           </Paper>
@@ -220,8 +261,13 @@ export default function MyOrdersPage() {
                     <Avatar sx={{ mr: 2 }}>{o.restaurant_id}</Avatar>
                     <ListItemText
                       primary={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                        <Box
+                          sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                        >
+                          <Typography
+                            variant="subtitle1"
+                            sx={{ fontWeight: 600 }}
+                          >
                             Order #{o.order_id.slice(-8)}
                           </Typography>
                           {statusChip(o.status)}
@@ -233,8 +279,13 @@ export default function MyOrdersPage() {
                             Placed {new Date(o.created_at).toLocaleString()}
                           </Typography>
                           {o.delivery_code && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                              Delivery code: <strong>{o.delivery_code}</strong>{o.delivery_code_used ? ' (used)' : ''}
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{ mt: 0.5 }}
+                            >
+                              Delivery code: <strong>{o.delivery_code}</strong>
+                              {o.delivery_code_used ? ' (used)' : ''}
                             </Typography>
                           )}
                         </Box>
@@ -252,7 +303,9 @@ export default function MyOrdersPage() {
               {visibleOrders.length === 0 && (
                 <Box sx={{ p: 3, textAlign: 'center' }}>
                   <Typography variant="body2" color="text.secondary">
-                    {filter === 'active' ? 'No active orders right now.' : 'No completed orders yet.'}
+                    {filter === 'active'
+                      ? 'No active orders right now.'
+                      : 'No completed orders yet.'}
                   </Typography>
                 </Box>
               )}

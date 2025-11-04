@@ -37,7 +37,6 @@ describe('Admin Restaurants Management Page', () => {
     HTMLAnchorElement.prototype.click = function () {};
     // Also stub window.location.assign/replace to avoid jsdom navigation errors
     try {
-      const _origLocation = window.location;
       Object.defineProperty(window, 'location', {
         configurable: true,
         value: Object.assign({}, _origLocation, {
@@ -45,8 +44,9 @@ describe('Admin Restaurants Management Page', () => {
           replace: jest.fn(),
         }),
       });
-    } catch (e) {
+    } catch (error) {
       // ignore if not configurable
+      void error;
     }
   });
   afterAll(() => {

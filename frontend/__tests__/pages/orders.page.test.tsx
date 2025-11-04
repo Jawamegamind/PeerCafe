@@ -16,8 +16,12 @@ jest.mock('../../app/_components/navbar', () => ({
 // Mock Supabase client used by the page
 const mockSupabase = {
   auth: {
-    getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null }),
-    getSession: jest.fn().mockResolvedValue({ data: { session: { access_token: 'token-abc' } } }),
+    getUser: jest
+      .fn()
+      .mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null }),
+    getSession: jest
+      .fn()
+      .mockResolvedValue({ data: { session: { access_token: 'token-abc' } } }),
   },
 };
 
@@ -41,7 +45,7 @@ const mockOrders = [
     restaurant_id: 7,
     user_id: 'user-1',
     status: 'delivered',
-    total_amount: 16.00,
+    total_amount: 16.0,
     created_at: '2025-10-30T12:00:00Z',
     updated_at: '2025-10-30T12:45:00Z',
   },
@@ -50,7 +54,7 @@ const mockOrders = [
 beforeEach(() => {
   jest.clearAllMocks();
   // @ts-ignore
-  global.fetch = jest.fn(async (url: string, init?: any) => {
+  global.fetch = jest.fn(async (url: string) => {
     if (url.includes('/api/orders/me')) {
       return {
         ok: true,
@@ -81,25 +85,25 @@ describe('My Orders Page', () => {
       expect(screen.getByText(/My Orders/i)).toBeInTheDocument();
     });
 
-  // Verify items
-  expect((await screen.findAllByText(/Order #/i)).length).toBeGreaterThan(0);
-    
+    // Verify items
+    expect((await screen.findAllByText(/Order #/i)).length).toBeGreaterThan(0);
+
     // By default, filter is set to 'active', so we should see the preparing order
     expect(screen.getByText('$28.45')).toBeInTheDocument();
     expect(screen.getByText(/Preparing/i)).toBeInTheDocument();
-    
+
     // The delivered order should NOT be visible initially
     expect(screen.queryByText('$16.00')).not.toBeInTheDocument();
     expect(screen.queryByText(/Delivered/i)).not.toBeInTheDocument();
-    
+
     // Switch to "Completed" filter
     const completedButton = screen.getByRole('button', { name: /Completed/i });
     fireEvent.click(completedButton);
-    
+
     // Now the delivered order should be visible
     expect(screen.getByText('$16.00')).toBeInTheDocument();
     expect(screen.getByText(/Delivered/i)).toBeInTheDocument();
-    
+
     // And the preparing order should NOT be visible
     expect(screen.queryByText('$28.45')).not.toBeInTheDocument();
   });
