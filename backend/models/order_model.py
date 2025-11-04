@@ -197,6 +197,13 @@ class Order(OrderCreate):
     updated_at: Optional[datetime] = Field(
         None, description="When the order was last updated"
     )
+    # Delivery verification fields
+    delivery_code: Optional[str] = Field(
+        None, description="Numeric delivery verification code shown to customer"
+    )
+    delivery_code_used: Optional[bool] = Field(
+        False, description="Whether the delivery code has been used"
+    )
 
     class Config:
         json_schema_extra = {

@@ -74,6 +74,8 @@ interface Order {
   actual_delivery_time?: string;
   created_at: string;
   updated_at: string;
+  delivery_code?: string | null;
+  delivery_code_used?: boolean | null;
 }
 
 // Status configuration
@@ -137,6 +139,38 @@ export default function OrderDetailsPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [currentUser, setCurrentUser] = React.useState<any>(null);
   const [authLoading, setAuthLoading] = React.useState<boolean>(true);
+  const [cancelLoading, setCancelLoading] = React.useState<boolean>(false);
+  const [cancelError, setCancelError] = React.useState<string | null>(null);
+  // Cancel order handler
+  const handleCancelOrder = async () => {
+    if (!order) return;
+    setCancelLoading(true);
+    setCancelError(null);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/orders/${order.order_id}`,
+        {
+          method: 'DELETE',
+        }
+      );
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || 'Failed to cancel order');
+      }
+      // Update order status locally
+      setOrder({
+        ...order,
+        status: 'cancelled',
+        updated_at: new Date().toISOString(),
+      });
+    } catch (err) {
+      setCancelError(
+        err instanceof Error ? err.message : 'Failed to cancel order'
+      );
+    } finally {
+      setCancelLoading(false);
+    }
+  };
 
   // Check authentication first
   React.useEffect(() => {
@@ -408,7 +442,7 @@ export default function OrderDetailsPage() {
                           </Typography>
                         }
                         secondary={
-                          <Box>
+                          <>
                             <Typography
                               component="span"
                               variant="body2"
@@ -417,15 +451,25 @@ export default function OrderDetailsPage() {
                               ${item.price.toFixed(2)} × {item.quantity}
                             </Typography>
                             {item.special_instructions && (
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ fontStyle: 'italic', mt: 0.5 }}
+                              <Box
+                                component="span"
+                                sx={{
+                                  display: 'inline',
+                                  fontStyle: 'italic',
+                                  ml: 1,
+                                }}
                               >
-                                Note: {item.special_instructions}
-                              </Typography>
+                                <Typography
+                                  component="span"
+                                  variant="body2"
+                                  color="text.secondary"
+                                  sx={{ fontStyle: 'italic' }}
+                                >
+                                  Note: {item.special_instructions}
+                                </Typography>
+                              </Box>
                             )}
-                          </Box>
+                          </>
                         }
                       />
                       <ListItemSecondaryAction>
@@ -624,6 +668,21 @@ export default function OrderDetailsPage() {
                   </Box>
                 )}
 
+                {order.delivery_code && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ fontWeight: 'medium' }}
+                    >
+                      Delivery Code
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {order.delivery_code}{' '}
+                      {order.delivery_code_used ? '(used)' : ''}
+                    </Typography>
+                  </Box>
+                )}
+
                 <Box sx={{ mt: 3 }}>
                   <Button
                     fullWidth
@@ -640,13 +699,24 @@ export default function OrderDetailsPage() {
                         variant="contained"
                         color="error"
                         disabled={
-                          order.status !== 'pending' &&
-                          order.status !== 'confirmed'
+                          (order.status !== 'pending' &&
+                            order.status !== 'confirmed') ||
+                          cancelLoading
                         }
+                        onClick={handleCancelOrder}
                       >
-                        Cancel Order
+                        {cancelLoading ? (
+                          <CircularProgress size={24} />
+                        ) : (
+                          'Cancel Order'
+                        )}
                       </Button>
                     )}
+                  {cancelError && (
+                    <Alert severity="error" sx={{ mt: 2 }}>
+                      {cancelError}
+                    </Alert>
+                  )}
                 </Box>
               </CardContent>
             </Card>

@@ -2,51 +2,18 @@
 
 import * as React from 'react';
 import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
 import Navbar from '../../../_components/navbar';
+import { useSearchParams } from 'next/navigation';
 
-// Component that uses useSearchParams - needs to be wrapped in Suspense
-function UserErrorNotification() {
+function DashboardContent() {
   const searchParams = useSearchParams();
-  const error = searchParams.get('error');
+  const errorParam = searchParams?.get('error');
 
-  if (error !== 'insufficient_permissions') {
-    return null;
-  }
+  const showAccessDenied = errorParam === 'insufficient_permissions';
 
-  return (
-    <div
-      style={{
-        backgroundColor: '#fee2e2',
-        border: '1px solid #fecaca',
-        borderRadius: '8px',
-        padding: '12px 16px',
-        margin: '20px auto',
-        maxWidth: '600px',
-        textAlign: 'center',
-      }}
-    >
-      <div style={{ color: '#dc2626', fontSize: '1.1rem', fontWeight: 'bold' }}>
-        🚫 Access Denied
-      </div>
-      <div style={{ color: '#7f1d1d', marginTop: '4px' }}>
-        You don't have permission to access admin areas. Contact an
-        administrator if you believe this is an error.
-      </div>
-    </div>
-  );
-}
-
-export default function UserDashboard() {
   return (
     <>
       <Navbar />
-
-      {/* Show error message if user was redirected due to insufficient permissions */}
-      <Suspense fallback={null}>
-        <UserErrorNotification />
-      </Suspense>
-
       <div
         style={{
           display: 'flex',
@@ -77,6 +44,35 @@ export default function UserDashboard() {
         >
           Your gateway to delicious local restaurants
         </p>
+
+        {/* Access control message (e.g., redirected from admin area) */}
+        {showAccessDenied && (
+          <div
+            style={{
+              maxWidth: '720px',
+              marginBottom: '20px',
+              padding: '16px',
+              borderRadius: '8px',
+              border: '2px solid #e2e8f0',
+              backgroundColor: '#fff7f7',
+              color: '#b91c1c',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '1.25rem',
+                fontWeight: 600,
+                marginBottom: '6px',
+              }}
+            >
+              🚫 Access Denied
+            </div>
+            <div>
+              You don't have permission to access admin areas. Contact an
+              administrator if you believe this is an error.
+            </div>
+          </div>
+        )}
 
         {/* Quick Actions */}
         <div
@@ -126,13 +122,23 @@ export default function UserDashboard() {
               border: '2px solid #e2e8f0',
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
               textAlign: 'center',
-              opacity: 0.6,
+              cursor: 'pointer',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+            }}
+            onClick={() => (window.location.href = '/user/orders')}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
             }}
           >
             <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📋</div>
-            <h3 style={{ margin: '0 0 8px 0', color: '#757575' }}>My Orders</h3>
+            <h3 style={{ margin: '0 0 8px 0', color: '#1976d2' }}>My Orders</h3>
             <p style={{ margin: '0', color: '#64748b', fontSize: '0.9rem' }}>
-              Coming Soon...
+              View your recent and active orders
             </p>
           </div>
 
@@ -144,15 +150,26 @@ export default function UserDashboard() {
               border: '2px solid #e2e8f0',
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
               textAlign: 'center',
-              opacity: 0.6,
+              // opacity: 0.6
+              cursor: 'pointer',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+            }}
+            onClick={() => (window.location.href = '/user/delivery')}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
             }}
           >
             <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🚚</div>
-            <h3 style={{ margin: '0 0 8px 0', color: '#757575' }}>
+            <h3 style={{ margin: '0 0 8px 0', color: '#1976d2' }}>
               Delivery Tracking
             </h3>
             <p style={{ margin: '0', color: '#64748b', fontSize: '0.9rem' }}>
-              Coming Soon...
+              Discover nearby orders and deliver them to earn awesome rewards!
             </p>
           </div>
         </div>
@@ -164,11 +181,20 @@ export default function UserDashboard() {
             backgroundColor: '#f1f5f9',
             borderRadius: '8px',
             border: '2px solid #e2e8f0',
+            color: '#757575',
           }}
         >
           <strong>Current Route:</strong> /user/dashboard
         </div>
       </div>
     </>
+  );
+}
+
+export default function UserDashboard() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }
