@@ -158,9 +158,15 @@ export default function OrderDetailsPage() {
         throw new Error(data.detail || 'Failed to cancel order');
       }
       // Update order status locally
-      setOrder({ ...order, status: 'cancelled', updated_at: new Date().toISOString() });
+      setOrder({
+        ...order,
+        status: 'cancelled',
+        updated_at: new Date().toISOString(),
+      });
     } catch (err) {
-      setCancelError(err instanceof Error ? err.message : 'Failed to cancel order');
+      setCancelError(
+        err instanceof Error ? err.message : 'Failed to cancel order'
+      );
     } finally {
       setCancelLoading(false);
     }
@@ -435,29 +441,36 @@ export default function OrderDetailsPage() {
                             {item.item_name}
                           </Typography>
                         }
-                          secondary={
-                            <>
-                              <Typography
+                        secondary={
+                          <>
+                            <Typography
+                              component="span"
+                              variant="body2"
+                              color="text.secondary"
+                            >
+                              ${item.price.toFixed(2)} × {item.quantity}
+                            </Typography>
+                            {item.special_instructions && (
+                              <Box
                                 component="span"
-                                variant="body2"
-                                color="text.secondary"
+                                sx={{
+                                  display: 'inline',
+                                  fontStyle: 'italic',
+                                  ml: 1,
+                                }}
                               >
-                                ${item.price.toFixed(2)} × {item.quantity}
-                              </Typography>
-                              {item.special_instructions && (
-                                <Box component="span" sx={{ display: 'inline', fontStyle: 'italic', ml: 1 }}>
-                                  <Typography
-                                    component="span"
-                                    variant="body2"
-                                    color="text.secondary"
-                                    sx={{ fontStyle: 'italic' }}
-                                  >
-                                    Note: {item.special_instructions}
-                                  </Typography>
-                                </Box>
-                              )}
-                            </>
-                          }
+                                <Typography
+                                  component="span"
+                                  variant="body2"
+                                  color="text.secondary"
+                                  sx={{ fontStyle: 'italic' }}
+                                >
+                                  Note: {item.special_instructions}
+                                </Typography>
+                              </Box>
+                            )}
+                          </>
+                        }
                       />
                       <ListItemSecondaryAction>
                         <Typography
@@ -686,12 +699,17 @@ export default function OrderDetailsPage() {
                         variant="contained"
                         color="error"
                         disabled={
-                          order.status !== 'pending' &&
-                          order.status !== 'confirmed' || cancelLoading
+                          (order.status !== 'pending' &&
+                            order.status !== 'confirmed') ||
+                          cancelLoading
                         }
                         onClick={handleCancelOrder}
                       >
-                        {cancelLoading ? <CircularProgress size={24} /> : 'Cancel Order'}
+                        {cancelLoading ? (
+                          <CircularProgress size={24} />
+                        ) : (
+                          'Cancel Order'
+                        )}
                       </Button>
                     )}
                   {cancelError && (

@@ -32,7 +32,8 @@ import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY || '';
-const backend_url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const backend_url =
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 const supabase = createClient();
 
@@ -98,10 +99,10 @@ export default function DeliveryPage() {
     longitude: number;
   } | null>(null); // e.g. Rider or Hub
 
-  // Locations of restaurants derived from readyOrders (for map rendering)
-  const [restaurantLocations, setRestaurantLocations] = React.useState<
-    { latitude: number; longitude: number }[]
-  >([]);
+  // // Locations of restaurants derived from readyOrders (for map rendering)
+  // const [restaurantLocations, setRestaurantLocations] = React.useState<
+  //   { latitude: number; longitude: number }[]
+  // >([]);
 
   const getCurrentUser = async () => {
     try {
@@ -417,12 +418,12 @@ export default function DeliveryPage() {
             order.restaurants.longitude,
             order.restaurants.latitude,
           ]);
-          setRestaurantLocations(
-            destinations.map(coord => ({
-              latitude: coord[1],
-              longitude: coord[0],
-            }))
-          );
+          // setRestaurantLocations(
+          //   destinations.map(coord => ({
+          //     latitude: coord[1],
+          //     longitude: coord[0],
+          //   }))
+          // );
           renderMap(
             [sourceLocation.longitude, sourceLocation.latitude],
             destinations

@@ -140,15 +140,6 @@ function DashboardContent() {
             <p style={{ margin: '0', color: '#64748b', fontSize: '0.9rem' }}>
               View your recent and active orders
             </p>
-            <p
-              style={{
-                margin: '6px 0 0',
-                color: '#9aa4b2',
-                fontSize: '0.85rem',
-              }}
-            >
-
-            </p>
           </div>
 
           <div
@@ -179,15 +170,6 @@ function DashboardContent() {
             </h3>
             <p style={{ margin: '0', color: '#64748b', fontSize: '0.9rem' }}>
               Discover nearby orders and deliver them to earn awesome rewards!
-            </p>
-            <p
-              style={{
-                margin: '6px 0 0',
-                color: '#9aa4b2',
-                fontSize: '0.85rem',
-              }}
-            >
-              Coming Soon...
             </p>
           </div>
         </div>

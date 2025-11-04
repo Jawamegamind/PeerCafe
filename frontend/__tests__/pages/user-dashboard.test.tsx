@@ -65,13 +65,13 @@ describe('UserDashboard', () => {
         screen.getByText(/Discover amazing local restaurants/)
       ).toBeInTheDocument();
 
-      // My Orders card (coming soon)
+      // My Orders card
       expect(screen.getByText('My Orders')).toBeInTheDocument();
-      expect(screen.getAllByText('Coming Soon...')[0]).toBeInTheDocument();
+      expect(screen.queryByText('Coming Soon...')).not.toBeInTheDocument();
 
-      // Delivery Tracking card (coming soon)
+      // Delivery Tracking card
       expect(screen.getByText('Delivery Tracking')).toBeInTheDocument();
-      expect(screen.getAllByText('Coming Soon...')[1]).toBeInTheDocument();
+      expect(screen.queryByText('Coming Soon...')).not.toBeInTheDocument();
     });
   });
 

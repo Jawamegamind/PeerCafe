@@ -275,7 +275,12 @@ export default function MyOrdersPage() {
                       }
                       secondary={
                         <Box component="span" sx={{ display: 'block' }}>
-                          <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'block' }}>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            component="span"
+                            sx={{ display: 'block' }}
+                          >
                             Placed {new Date(o.created_at).toLocaleString()}
                           </Typography>
                           {o.delivery_code && (
