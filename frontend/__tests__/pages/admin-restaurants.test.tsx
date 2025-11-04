@@ -31,6 +31,27 @@ const mockRouter = {
 };
 
 describe('Admin Restaurants Management Page', () => {
+  // Prevent jsdom triggering navigation from anchor clicks in this test file
+  const _origAnchorClick = HTMLAnchorElement.prototype.click;
+  beforeAll(() => {
+    HTMLAnchorElement.prototype.click = function () {};
+    // Also stub window.location.assign/replace to avoid jsdom navigation errors
+    try {
+      const _origLocation = window.location;
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: Object.assign({}, _origLocation, {
+          assign: jest.fn(),
+          replace: jest.fn(),
+        }),
+      });
+    } catch (e) {
+      // ignore if not configurable
+    }
+  });
+  afterAll(() => {
+    HTMLAnchorElement.prototype.click = _origAnchorClick;
+  });
   const user = userEvent.setup();
 
   beforeEach(() => {

@@ -28,6 +28,16 @@ const {
 } = require('../../app/(authentication)/register/actions');
 
 describe('Register Page', () => {
+  // Prevent jsdom triggering navigation when anchor elements are clicked in this file
+  const _origAnchorClick = HTMLAnchorElement.prototype.click;
+  beforeAll(() => {
+    HTMLAnchorElement.prototype.click = function () {
+      /* no-op to prevent jsdom navigation */
+    };
+  });
+  afterAll(() => {
+    HTMLAnchorElement.prototype.click = _origAnchorClick;
+  });
   beforeEach(() => {
     jest.clearAllMocks();
   });

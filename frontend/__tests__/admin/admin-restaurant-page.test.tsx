@@ -60,7 +60,10 @@ describe('AdminRestaurantMenuPage', () => {
         return Promise.resolve({ ok: true, json: async () => [] });
       }
       if (typeof url === 'string' && url.includes('/api/restaurants/1')) {
-        return Promise.resolve({ ok: true, json: async () => ({ Name: 'Test Admin' }) });
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ Name: 'Test Admin' }),
+        });
       }
       return Promise.resolve({ ok: true, json: async () => ({}) });
     });
@@ -68,7 +71,9 @@ describe('AdminRestaurantMenuPage', () => {
     render(<AdminRestaurantMenuPage />);
 
     expect(await screen.findByText('No menu items yet')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Add First Menu Item/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Add First Menu Item/i })
+    ).toBeInTheDocument();
   });
 
   it('renders a menu item row when API returns items', async () => {
@@ -77,7 +82,10 @@ describe('AdminRestaurantMenuPage', () => {
         return Promise.resolve({ ok: true, json: async () => [sampleItem] });
       }
       if (typeof url === 'string' && url.includes('/api/restaurants/1')) {
-        return Promise.resolve({ ok: true, json: async () => ({ Name: 'Test Admin' }) });
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ Name: 'Test Admin' }),
+        });
       }
       return Promise.resolve({ ok: true, json: async () => ({}) });
     });
@@ -92,30 +100,46 @@ describe('AdminRestaurantMenuPage', () => {
     // initial GETs return restaurant info and empty menu
     (fetch as jest.Mock).mockImplementation((url: string, opts?: any) => {
       if (opts?.method === 'POST') {
-        return Promise.resolve({ ok: true, json: async () => ({ success: true }) });
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true }),
+        });
       }
       if (typeof url === 'string' && url.includes('/menu')) {
         return Promise.resolve({ ok: true, json: async () => [] });
       }
-      return Promise.resolve({ ok: true, json: async () => ({ Name: 'Test Admin' }) });
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ Name: 'Test Admin' }),
+      });
     });
 
     render(<AdminRestaurantMenuPage />);
 
     // Wait for empty state and open dialog
     expect(await screen.findByText('No menu items yet')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Add First Menu Item/i }));
+    fireEvent.click(
+      screen.getByRole('button', { name: /Add First Menu Item/i })
+    );
 
     // Fill form and submit
-    fireEvent.change(screen.getByLabelText(/Item Name/i), { target: { value: 'Admin Pizza' } });
-    fireEvent.change(screen.getByLabelText(/Price/i), { target: { value: '12.00' } });
-    fireEvent.change(screen.getByLabelText(/Quantity/i), { target: { value: '5' } });
+    fireEvent.change(screen.getByLabelText(/Item Name/i), {
+      target: { value: 'Admin Pizza' },
+    });
+    fireEvent.change(screen.getByLabelText(/Price/i), {
+      target: { value: '12.00' },
+    });
+    fireEvent.change(screen.getByLabelText(/Quantity/i), {
+      target: { value: '5' },
+    });
 
     fireEvent.click(screen.getByRole('button', { name: /Create/i }));
 
     await waitFor(() => {
       // Ensure a POST was attempted
-      const postCalled = (fetch as jest.Mock).mock.calls.some(call => call[1]?.method === 'POST');
+      const postCalled = (fetch as jest.Mock).mock.calls.some(
+        call => call[1]?.method === 'POST'
+      );
       expect(postCalled).toBe(true);
     });
   });
@@ -123,15 +147,24 @@ describe('AdminRestaurantMenuPage', () => {
   it('sends PATCH when toggling availability and DELETE when deleting', async () => {
     (fetch as jest.Mock).mockImplementation((url: string, opts?: any) => {
       if (opts?.method === 'PATCH') {
-        return Promise.resolve({ ok: true, json: async () => ({ success: true, message: 'ok' }) });
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, message: 'ok' }),
+        });
       }
       if (opts?.method === 'DELETE') {
-        return Promise.resolve({ ok: true, json: async () => ({ success: true }) });
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true }),
+        });
       }
       if (typeof url === 'string' && url.includes('/menu')) {
         return Promise.resolve({ ok: true, json: async () => [sampleItem] });
       }
-      return Promise.resolve({ ok: true, json: async () => ({ Name: 'Test Admin' }) });
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ Name: 'Test Admin' }),
+      });
     });
 
     render(<AdminRestaurantMenuPage />);
@@ -139,10 +172,14 @@ describe('AdminRestaurantMenuPage', () => {
     expect(await screen.findByText('Admin Pizza')).toBeInTheDocument();
 
     // Toggle availability (PATCH)
-    const visibilityButton = screen.getByTitle(/Mark as unavailable|Mark as available/);
+    const visibilityButton = screen.getByTitle(
+      /Mark as unavailable|Mark as available/
+    );
     fireEvent.click(visibilityButton);
     await waitFor(() => {
-      const patchCalled = (fetch as jest.Mock).mock.calls.some(call => call[1]?.method === 'PATCH');
+      const patchCalled = (fetch as jest.Mock).mock.calls.some(
+        call => call[1]?.method === 'PATCH'
+      );
       expect(patchCalled).toBe(true);
     });
 
@@ -151,10 +188,11 @@ describe('AdminRestaurantMenuPage', () => {
     const deleteButton = screen.getByTitle('Delete item');
     fireEvent.click(deleteButton);
     await waitFor(() => {
-      const deleteCalled = (fetch as jest.Mock).mock.calls.some(call => call[1]?.method === 'DELETE');
+      const deleteCalled = (fetch as jest.Mock).mock.calls.some(
+        call => call[1]?.method === 'DELETE'
+      );
       expect(deleteCalled).toBe(true);
     });
     (window.confirm as jest.Mock).mockRestore?.();
   });
 });
-

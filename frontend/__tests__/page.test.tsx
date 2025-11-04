@@ -17,6 +17,14 @@ jest.mock('next/link', () => ({
 }));
 
 describe('Home Page', () => {
+  // Prevent jsdom triggering navigation from anchor clicks in this file's tests
+  const _origAnchorClick = HTMLAnchorElement.prototype.click;
+  beforeAll(() => {
+    HTMLAnchorElement.prototype.click = function () {};
+  });
+  afterAll(() => {
+    HTMLAnchorElement.prototype.click = _origAnchorClick;
+  });
   it('renders without crashing', () => {
     render(<Home />);
     expect(document.body).toBeTruthy();
