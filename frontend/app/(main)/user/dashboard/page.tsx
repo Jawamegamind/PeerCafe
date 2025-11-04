@@ -1,10 +1,11 @@
 'use client';
 
 import * as React from 'react';
+import { Suspense } from 'react';
 import Navbar from '../../../_components/navbar';
 import { useSearchParams } from 'next/navigation';
 
-export default function UserDashboard() {
+function DashboardContent() {
   const searchParams = useSearchParams();
   const errorParam = searchParams?.get('error');
 
@@ -205,5 +206,13 @@ export default function UserDashboard() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function UserDashboard() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }

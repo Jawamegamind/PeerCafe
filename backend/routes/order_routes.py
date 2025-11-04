@@ -313,7 +313,11 @@ def _get_user_profile_coordinates_from_supabase(supabase, user_id):
             return None, None
         lat_raw, lng_raw = row.get("latitude"), row.get("longitude")
         try:
-            return (float(lat_raw), float(lng_raw)) if lat_raw is not None and lng_raw is not None else (None, None)
+            return (
+                (float(lat_raw), float(lng_raw))
+                if lat_raw is not None and lng_raw is not None
+                else (None, None)
+            )
         except (TypeError, ValueError):
             return None, None
     except Exception:
@@ -471,14 +475,18 @@ async def place_order(order_data: OrderCreate, supabase=Depends(get_supabase)):
 
         # If geocoding the entered address fails, fall back to the user's current saved location
         if customer_lat is None or customer_lng is None:
-            print(f"Warning: Failed to geocode entered address; attempting user profile fallback: {full_address}")
+            print(
+                f"Warning: Failed to geocode entered address; attempting user profile fallback: {full_address}"
+            )
             alt_lat, alt_lng = _get_user_profile_coordinates_from_supabase(
                 supabase, order_data.user_id
             )
             if alt_lat is not None and alt_lng is not None:
                 customer_lat, customer_lng = alt_lat, alt_lng
             else:
-                print("Warning: No user profile coordinates available; proceeding without coordinates")
+                print(
+                    "Warning: No user profile coordinates available; proceeding without coordinates"
+                )
                 # Still allow order creation but navigation won't work until geocoded
 
         # Calculate estimated times (this can be made more sophisticated later)

@@ -39,7 +39,7 @@ describe('Admin Restaurants Management Page', () => {
     try {
       Object.defineProperty(window, 'location', {
         configurable: true,
-        value: Object.assign({}, _origLocation, {
+        value: Object.assign({}, window.location, {
           assign: jest.fn(),
           replace: jest.fn(),
         }),

@@ -274,9 +274,9 @@ describe('Delivery Page', () => {
     // Wait for at least one restaurant name to appear so the map render effect has run
     await screen.findByText(/Bella Italia/i);
 
-  // Map constructor should be called once. The page initializes the
-  // map after a short timeout, so wait for the mock to be invoked.
-  await waitFor(() => expect(mapboxgl.Map).toHaveBeenCalled());
+    // Map constructor should be called once. The page initializes the
+    // map after a short timeout, so wait for the mock to be invoked.
+    await waitFor(() => expect(mapboxgl.Map).toHaveBeenCalled());
 
     // The Map constructor received a container DOM element
     const firstCallArgs = mapboxgl.Map.mock.calls[0][0];
@@ -301,7 +301,9 @@ describe('Delivery Page', () => {
     // If destination popups exist, verify at least the first destination was labeled
     if (popupInstances.length > 1) {
       const destCalls = popupInstances[1].setText.mock.calls.flat();
-      expect(destCalls.some((c: any) => /Destination/.test(String(c)))).toBe(true);
+      expect(destCalls.some((c: any) => /Destination/.test(String(c)))).toBe(
+        true
+      );
     }
   });
 
