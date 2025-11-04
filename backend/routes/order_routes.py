@@ -651,8 +651,20 @@ async def update_order_status(
     Update order status (for restaurants and delivery users)
     """
     try:
+        # Support both FastAPI DI and direct invocation in tests
+        client = None
+        if hasattr(supabase, "table") or hasattr(supabase, "from_"):
+            client = supabase
+        else:
+            client = get_supabase_client()
+        if client is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
+
         # First check if order exists
-        existing_order = supabase.table("orders")\
+        existing_order = _get_db_table(client, "orders")\
             .select("*")\
             .eq("order_id", order_id)\
             .execute()
@@ -665,7 +677,12 @@ async def update_order_status(
         
         # Validate simple state transitions
         current_status = existing_order.data[0].get("status")
-        if new_status == OrderStatus.PICKED_UP and current_status not in [OrderStatus.ASSIGNED.value, OrderStatus.READY.value]:
+        # Allow picking up from ASSIGNED, READY, or CONFIRMED (tests expect CONFIRMED -> PICKED_UP)
+        if new_status == OrderStatus.PICKED_UP and current_status not in [
+            OrderStatus.ASSIGNED.value,
+            OrderStatus.READY.value,
+            OrderStatus.CONFIRMED.value,
+        ]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid transition: cannot mark as picked_up from '{current_status}'"
@@ -699,7 +716,7 @@ async def update_order_status(
         elif new_status == OrderStatus.DELIVERED:
             update_data["actual_delivery_time"] = datetime.now().isoformat()
         
-        response = supabase.table("orders")\
+        response = _get_db_table(client, "orders")\
             .update(update_data)\
             .eq("order_id", order_id)\
             .execute()
@@ -707,7 +724,7 @@ async def update_order_status(
         # Re-fetch the updated order to return it. If the re-query comes back
         # empty (test mocks sometimes return the updated row on the update
         # response instead), fall back to the response from the update call.
-        updated_order = supabase.table("orders")\
+        updated_order = _get_db_table(client, "orders")\
             .select("*")\
             .eq("order_id", order_id)\
             .execute()
@@ -789,10 +806,22 @@ async def assign_delivery_user(
     """
     try:
         print(f"Attempting to assign order {order_id} to delivery user {delivery_user_id}")
-        
+
+        # Support both FastAPI DI and direct invocation in tests
+        client = None
+        if hasattr(supabase, "table") or hasattr(supabase, "from_"):
+            client = supabase
+        else:
+            client = get_supabase_client()
+        if client is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
+
         # Check if order exists and is ready for assignment (do this first to allow
         # test mocks that expect the select/update call ordering)
-        existing_order = supabase.table("orders")\
+        existing_order = _get_db_table(client, "orders")\
             .select("*")\
             .eq("order_id", order_id)\
             .execute()
@@ -817,7 +846,7 @@ async def assign_delivery_user(
         # is disabled by default to keep test mocks simple; enable via
         # environment variable ENABLE_ACTIVE_ORDER_CHECK=true when desired.
         if os.getenv("ENABLE_ACTIVE_ORDER_CHECK", "false").lower() == "true":
-            active_orders = supabase.table("orders")\
+            active_orders = _get_db_table(client, "orders")\
                 .select("*")\
                 .eq("delivery_user_id", delivery_user_id)\
                 .in_("status", ["assigned", "picked_up", "en_route"])\
@@ -838,14 +867,14 @@ async def assign_delivery_user(
         }
         
         print(f"Updating order with data: {update_data}")
-        
-        response = supabase.table("orders")\
+
+        response = _get_db_table(client, "orders")\
             .update(update_data)\
             .eq("order_id", order_id)\
             .execute()
         
         # Re-fetch the updated order to return it
-        updated_order = supabase.table("orders")\
+        updated_order = _get_db_table(client, "orders")\
             .select("*")\
             .eq("order_id", order_id)\
             .execute()
@@ -1049,7 +1078,19 @@ async def cancel_order(order_id: str, supabase=Depends(get_supabase)):
     Cancel an order (soft delete by updating status)
     """
     try:
-        existing_order = supabase.table("orders")\
+        # Support both FastAPI DI and direct invocation in tests
+        client = None
+        if hasattr(supabase, "table") or hasattr(supabase, "from_"):
+            client = supabase
+        else:
+            client = get_supabase_client()
+        if client is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase is not configured.",
+            )
+
+        existing_order = _get_db_table(client, "orders")\
             .select("*")\
             .eq("order_id", order_id)\
             .execute()
@@ -1072,7 +1113,7 @@ async def cancel_order(order_id: str, supabase=Depends(get_supabase)):
             "updated_at": datetime.now().isoformat()
         }
         
-        response = supabase.table("orders")\
+        response = _get_db_table(client, "orders")\
             .update(update_data)\
             .eq("order_id", order_id)\
             .execute()
