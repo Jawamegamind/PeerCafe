@@ -2,12 +2,9 @@
 Tests for Pydantic models
 """
 
-from datetime import datetime
-
 import pytest
 from pydantic import ValidationError
 
-from models.delivery_model import Location
 from models.login_model import LoginRequestModel
 from models.order_model import (
     DeliveryAddress,
@@ -17,6 +14,7 @@ from models.order_model import (
     OrderStatus,
     OrderUpdate,
 )
+from models.delivery_model import Location
 from models.restaurant_model import Restaurant, RestaurantCreate
 from models.user_model import User
 
@@ -33,8 +31,8 @@ class TestUserModel:
         assert user.last_name == "Doe"
         assert user.email == "john.doe@example.com"
         assert user.phone == "+1234567890"
-        assert user.is_admin == False
-        assert user.is_active == True
+        assert not user.is_admin
+        assert user.is_active
         assert user.password == "secure_password_123"
 
     def test_user_missing_required_fields(self):
@@ -69,8 +67,8 @@ class TestUserModel:
         sample_user_data["is_active"] = False
 
         user = User(**sample_user_data)
-        assert user.is_admin == True
-        assert user.is_active == False
+        assert user.is_admin
+        assert not user.is_active
 
     def test_user_model_dict_conversion(self, sample_user_data):
         """Test converting user model to dictionary"""
@@ -92,7 +90,7 @@ class TestRestaurantModel:
         assert restaurant.name == "Mario's Pizza"
         assert restaurant.description == "Authentic Italian pizza"
         assert restaurant.cuisine_type == "Italian"
-        assert restaurant.is_active == True  # Default value
+        assert restaurant.is_active  # Default value
         assert restaurant.rating == 0.0  # Default value
 
     def test_restaurant_with_optional_fields(self):
@@ -252,8 +250,8 @@ class TestModelValidation:
 
         user = User(**user_data)
         # Should coerce strings to booleans
-        assert user.is_admin == False
-        assert user.is_active == True
+        assert not user.is_admin
+        assert user.is_active
 
 
 class TestOrderItemModel:

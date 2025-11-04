@@ -2,15 +2,12 @@
 Tests for order routes
 """
 
-import json
-from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
 from main import app
-from models.order_model import OrderStatus
 
 client = TestClient(app)
 
@@ -96,17 +93,33 @@ class TestOrderRoutes:
             "updated_at": "2024-01-15T10:30:00",
         }
 
+    @patch("routes.order_routes.geocode_address")
     @patch("routes.order_routes.create_supabase_client")
     def test_place_order_success(
-        self, mock_supabase_client, sample_order_create_data, mock_order_response
+        self, mock_supabase_client, mock_geocode, sample_order_create_data, mock_order_response
     ):
         """Test successful order placement"""
+        # Mock geocoding
+        mock_geocode.return_value = (37.7749, -122.4194)  # San Francisco coords
+
         # Mock Supabase client
         mock_client = Mock()
+        mock_supabase_client.return_value = mock_client
+
+        # Mock restaurant lookup (from_ chain)
+        mock_from = Mock()
+        mock_select = Mock()
+        mock_eq = Mock()
+        mock_single = Mock()
+        mock_client.from_.return_value = mock_from
+        mock_from.select.return_value = mock_select
+        mock_select.eq.return_value = mock_eq
+        mock_eq.single.return_value = mock_single
+        mock_single.execute.return_value = Mock(data={"latitude": 37.7849, "longitude": -122.4094})
+
+        # Mock table insert
         mock_table = Mock()
         mock_insert = Mock()
-
-        mock_supabase_client.return_value = mock_client
         mock_client.table.return_value = mock_table
         mock_table.insert.return_value = mock_insert
         mock_insert.execute.return_value = Mock(data=[mock_order_response])
@@ -381,7 +394,7 @@ class TestOrderRoutes:
         assert len(data) == 1
         assert data[0]["restaurant_id"] == 1
 
-    @patch("routes.order_routes.create_supabase_client")
+    @patch('routes.order_routes.create_supabase_client')
     def test_get_my_orders(self, mock_supabase_client, mock_order_response):
         """Test retrieving orders for the authenticated user via /api/orders/me"""
         mock_client = Mock()
@@ -393,9 +406,7 @@ class TestOrderRoutes:
 
         # Mock auth.get_user to return user with user_id
         mock_client.auth = Mock()
-        mock_client.auth.get_user.return_value = {
-            "data": {"user": {"user_id": "user_123"}}
-        }
+        mock_client.auth.get_user.return_value = {"data": {"user": {"user_id": "user_123"}}}
 
         mock_supabase_client.return_value = mock_client
         mock_client.table.return_value = mock_table

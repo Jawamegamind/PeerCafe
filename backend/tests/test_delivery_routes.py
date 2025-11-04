@@ -3,12 +3,9 @@ This file follows the project's existing test style: use the `client` fixture fr
 and monkeypatch module-level dependencies on `routes.delivery_routes`.
 """
 
-from unittest.mock import Mock
-
 import pytest
 
 import routes.delivery_routes as delivery_routes
-from models.delivery_model import Location
 
 
 class MockResult:

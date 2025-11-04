@@ -16,7 +16,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from database.supabase_db import create_supabase_client
-from models.order_model import Order, OrderCreate, OrderStatus, OrderUpdate
+from models.order_model import Order, OrderCreate, OrderStatus
 from utils.geocode import geocode_address
 
 router = APIRouter(prefix="/orders", tags=["orders"])
