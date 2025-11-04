@@ -246,7 +246,128 @@ async def _ensure_delivery_address(order_row: dict, supabase) -> dict:
     return order_row
 
 
-@router.get("/me", response_model=List[Order])
+def _extract_user_id_from_auth_object(user_obj):
+    """Extract user_id from various auth object shapes."""
+    if isinstance(user_obj, dict):
+        return (
+            user_obj.get("user_id")
+            or user_obj.get("id")
+            or user_obj.get("sub")
+        )
+    else:
+        return (
+            getattr(user_obj, "user_id", None)
+            or getattr(user_obj, "id", None)
+            or getattr(user_obj, "sub", None)
+        )
+
+
+def _normalize_user_object(maybe_user):
+    """Normalize user object from various Supabase response shapes."""
+    if isinstance(maybe_user, dict):
+        user_obj = (
+            maybe_user.get("data") or maybe_user.get("user") or maybe_user
+        )
+        if (
+            isinstance(user_obj, dict)
+            and "user" in user_obj
+            and isinstance(user_obj["user"], dict)
+        ):
+            user_obj = user_obj["user"]
+    else:
+        user_obj = getattr(
+            maybe_user, "user", getattr(maybe_user, "data", None)
+        )
+    return user_obj
+
+
+def _get_user_id_from_token(token, supabase):
+    """Extract user_id from JWT token using Supabase auth."""
+    try:
+        if token and hasattr(supabase, "auth") and hasattr(supabase.auth, "get_user"):
+            maybe_user = supabase.auth.get_user(token)
+            user_obj = _normalize_user_object(maybe_user)
+            if user_obj:
+                return _extract_user_id_from_auth_object(user_obj)
+    except Exception:
+        pass
+    return None
+
+
+def _coerce_number(v):
+    """Coerce value to float, returning 0.0 on error."""
+    try:
+        if v is None:
+            return 0.0
+        if isinstance(v, (int, float)):
+            return float(v)
+        return float(str(v))
+    except Exception:
+        return 0.0
+
+
+def _normalize_order_item(item):
+    """Normalize a single order item to dict format."""
+    if not isinstance(item, dict):
+        try:
+            return item.model_dump()
+        except Exception:
+            try:
+                return dict(item)
+            except Exception:
+                return {}
+    return item if item is not None else {}
+
+
+def _normalize_order_items(order_items):
+    """Normalize order items from various formats."""
+    # Handle JSON string
+    if isinstance(order_items, str):
+        try:
+            order_items = json.loads(order_items)
+        except Exception:
+            return []
+    
+    # Normalize each item
+    if not isinstance(order_items, (list, tuple)):
+        return []
+    
+    normalized = []
+    for item in order_items:
+        it = _normalize_order_item(item)
+        it["subtotal"] = _coerce_number(it.get("subtotal"))
+        normalized.append(it)
+    
+    return normalized
+
+
+async def _normalize_single_order(order, supabase):
+    """Normalize a single order object."""
+    try:
+        norm = await _ensure_delivery_address(order, supabase)
+        
+        # Normalize order_items
+        norm["order_items"] = _normalize_order_items(norm.get("order_items"))
+        
+        # Recompute subtotal
+        calculated = sum(i.get("subtotal", 0.0) for i in norm["order_items"])
+        norm["subtotal"] = round(calculated, 2)
+        
+        # Normalize delivery_address if it's a JSON string
+        da = norm.get("delivery_address")
+        if isinstance(da, str):
+            try:
+                norm["delivery_address"] = json.loads(da)
+            except Exception:
+                pass
+        
+        return norm
+    except Exception:
+        # Never fail on single order normalization
+        return norm if 'norm' in locals() else order
+
+
+@router.get("/my", response_model=list[Order])
 async def get_my_orders(
     authorization: str | None = Header(None),
     x_user_id: str | None = Header(None),
@@ -263,58 +384,11 @@ async def get_my_orders(
     is not available.
     """
     try:
+        # Extract user_id from authorization token
         user_id = None
-
-        # Try to extract token from Authorization header
-        token = None
         if authorization and authorization.startswith("Bearer "):
             token = authorization.split(" ", 1)[1]
-
-        # Use the supabase client API
-        if token and hasattr(supabase, "auth") and hasattr(supabase.auth, "get_user"):
-            try:
-                maybe_user = supabase.auth.get_user(token)
-                # Normalize possible return shapes: dicts or objects
-                user_obj = None
-                if isinstance(maybe_user, dict):
-                    # get_user may return {'data': {'user': {...}}} or {'user': {...}} or {'data': {...}}
-                    user_obj = (
-                        maybe_user.get("data") or maybe_user.get("user") or maybe_user
-                    )
-                    if (
-                        isinstance(user_obj, dict)
-                        and "user" in user_obj
-                        and isinstance(user_obj["user"], dict)
-                    ):
-                        user_obj = user_obj["user"]
-                else:
-                    user_obj = getattr(
-                        maybe_user, "user", getattr(maybe_user, "data", None)
-                    )
-
-                if user_obj:
-                    # Project uses `user_id` in the database. Prefer `user_id` explicitly
-                    # (new supabase client/user schema). Fall back to None so the
-                    # X-User-Id header will be used for development if needed.
-                    if isinstance(user_obj, dict):
-                        user_id = (
-                            user_obj.get("user_id")
-                            or user_obj.get("id")  # typical Supabase user id field
-                            or user_obj.get("sub")  # JWT subject fallback
-                        )
-                    else:
-                        user_id = (
-                            getattr(user_obj, "user_id", None)
-                            or getattr(user_obj, "id", None)
-                            or getattr(user_obj, "sub", None)
-                        )
-            except Exception:
-                # If auth lookup fails, we'll fall back to X-User-Id header below
-                user_id = None
-
-        # Developer convenience: allow X-User-Id header when token isn't present/usable
-        # if not user_id and x_user_id:
-        #     user_id = x_user_id
+            user_id = _get_user_id_from_token(token, supabase)
 
         if not user_id:
             raise HTTPException(
@@ -332,74 +406,18 @@ async def get_my_orders(
             .execute()
         )
 
-        if response.data:
-            orders = []
+        if not response.data:
+            return []
 
-            def _coerce_number(v):
-                try:
-                    if v is None:
-                        return 0.0
-                    if isinstance(v, (int, float)):
-                        return float(v)
-                    return float(str(v))
-                except Exception:
-                    return 0.0
+        # Normalize all orders
+        orders = []
+        for order in response.data:
+            normalized_order = await _normalize_single_order(order, supabase)
+            orders.append(normalized_order)
 
-            for order in response.data:
-                norm = await _ensure_delivery_address(order, supabase)
-
-                try:
-                    # Normalize order_items if stored as a JSON string
-                    oi = norm.get("order_items")
-                    if isinstance(oi, str):
-                        try:
-                            oi = json.loads(oi)
-                        except Exception:
-                            oi = []
-
-                    normalized_items = []
-                    if isinstance(oi, (list, tuple)):
-                        for it in oi:
-                            if not isinstance(it, dict):
-                                try:
-                                    it = it.model_dump()
-                                except Exception:
-                                    try:
-                                        it = dict(it)
-                                    except Exception:
-                                        it = {}
-
-                            if it is None:
-                                it = {}
-                            # Coerce subtotal to float
-                            it["subtotal"] = _coerce_number(it.get("subtotal"))
-                            normalized_items.append(it)
-                    else:
-                        normalized_items = []
-
-                    norm["order_items"] = normalized_items
-
-                    # Recompute subtotal to prevent mismatch errors
-                    calculated = sum(i.get("subtotal", 0.0) for i in normalized_items)
-                    norm["subtotal"] = round(calculated, 2)
-
-                    # delivery_address normalization if it's a JSON string
-                    da = norm.get("delivery_address")
-                    if isinstance(da, str):
-                        try:
-                            norm["delivery_address"] = json.loads(da)
-                        except Exception:
-                            pass
-                except Exception:
-                    # Never fail the entire endpoint from a single normalization error
-                    pass
-
-                orders.append(norm)
-
-            # Return a JSONResponse with encoded data to bypass FastAPI response_model
-            # re-validation which can raise on dirty/legacy rows.
-            return JSONResponse(content=jsonable_encoder(orders))
-        return []
+        # Return a JSONResponse with encoded data to bypass FastAPI response_model
+        # re-validation which can raise on dirty/legacy rows.
+        return JSONResponse(content=jsonable_encoder(orders))
 
     except HTTPException:
         raise
@@ -594,17 +612,8 @@ async def get_order_by_id(order_id: str, supabase=Depends(get_supabase)):
     Get a specific order by ID
     """
     try:
-        # Support both FastAPI DI and direct invocation in tests
-        client = None
-        if hasattr(supabase, "table") or hasattr(supabase, "from_"):
-            client = supabase
-        else:
-            client = get_supabase_client()
-        if client is None:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Supabase is not configured.",
-            )
+        # Get Supabase client
+        client = _get_supabase_client_or_dependency(supabase)
 
         response = (
             _get_db_table(client, "orders")
@@ -619,51 +628,8 @@ async def get_order_by_id(order_id: str, supabase=Depends(get_supabase)):
                 detail="Order not found",
             )
 
-        norm = await _ensure_delivery_address(response.data[0], client)
-
-        # Normalize potential stringified nested payloads and coerce numeric fields
-        try:
-            oi = norm.get("order_items")
-            if isinstance(oi, str):
-                try:
-                    oi = json.loads(oi)
-                except Exception:
-                    oi = []
-
-            normalized_items = []
-            if isinstance(oi, (list, tuple)):
-                for it in oi:
-                    if not isinstance(it, dict):
-                        try:
-                            it = it.model_dump()
-                        except Exception:
-                            try:
-                                it = dict(it)
-                            except Exception:
-                                it = {}
-                    if it is None:
-                        it = {}
-                    try:
-                        it["subtotal"] = float(it.get("subtotal", 0) or 0)
-                    except Exception:
-                        it["subtotal"] = 0.0
-                    normalized_items.append(it)
-            else:
-                normalized_items = []
-
-            norm["order_items"] = normalized_items
-            calculated = sum(i.get("subtotal", 0.0) for i in normalized_items)
-            norm["subtotal"] = round(calculated, 2)
-
-            da = norm.get("delivery_address")
-            if isinstance(da, str):
-                try:
-                    norm["delivery_address"] = json.loads(da)
-                except Exception:
-                    pass
-        except Exception:
-            pass
-
+        # Normalize and return (reuse helper)
+        norm = await _normalize_single_order(response.data[0], client)
         return Order(**norm)
 
     except HTTPException:
@@ -675,6 +641,74 @@ async def get_order_by_id(order_id: str, supabase=Depends(get_supabase)):
         )
 
 
+def _get_supabase_client_or_dependency(supabase):
+    """Get Supabase client from DI or create new one."""
+    if hasattr(supabase, "table") or hasattr(supabase, "from_"):
+        return supabase
+    client = get_supabase_client()
+    if client is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Supabase is not configured.",
+        )
+    return client
+
+
+def _validate_status_transition(new_status, current_status):
+    """Validate order status transition is allowed."""
+    if new_status == OrderStatus.PICKED_UP and current_status not in [
+        OrderStatus.ASSIGNED.value,
+        OrderStatus.READY.value,
+        OrderStatus.CONFIRMED.value,
+    ]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid transition: cannot mark as picked_up from '{current_status}'",
+        )
+    if new_status == OrderStatus.DELIVERED and current_status not in [
+        OrderStatus.PICKED_UP.value,
+        OrderStatus.EN_ROUTE.value,
+    ]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid transition: cannot mark as delivered from '{current_status}'",
+        )
+
+
+def _prepare_status_update_data(new_status, existing_row):
+    """Prepare update data dict based on new status."""
+    update_data = {
+        "status": new_status.value,
+        "updated_at": datetime.now().isoformat(),
+    }
+
+    if new_status == OrderStatus.PICKED_UP:
+        update_data["actual_pickup_time"] = datetime.now().isoformat()
+        # Generate delivery code if not present
+        try:
+            if not (existing_row and existing_row.get("delivery_code")):
+                code = f"{random.randint(100000, 999999)}"
+                update_data["delivery_code"] = code
+                update_data["delivery_code_used"] = False
+        except Exception:
+            pass
+    elif new_status == OrderStatus.DELIVERED:
+        update_data["actual_delivery_time"] = datetime.now().isoformat()
+
+    return update_data
+
+
+def _restore_missing_nested_fields(final_row, existing_order):
+    """Restore nested fields if missing from updated row."""
+    if not final_row.get("delivery_address") and getattr(existing_order, "data", None):
+        final_row["delivery_address"] = existing_order.data[0].get("delivery_address")
+
+    if not final_row.get("restaurants") and getattr(existing_order, "data", None):
+        final_row["restaurants"] = existing_order.data[0].get("restaurants")
+    
+    return final_row
+
+
 @router.patch("/{order_id}/status", response_model=Order)
 async def update_order_status(
     order_id: str, new_status: OrderStatus, supabase=Depends(get_supabase)
@@ -683,17 +717,8 @@ async def update_order_status(
     Update order status (for restaurants and delivery users)
     """
     try:
-        # Support both FastAPI DI and direct invocation in tests
-        client = None
-        if hasattr(supabase, "table") or hasattr(supabase, "from_"):
-            client = supabase
-        else:
-            client = get_supabase_client()
-        if client is None:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Supabase is not configured.",
-            )
+        # Get Supabase client
+        client = _get_supabase_client_or_dependency(supabase)
 
         # First check if order exists
         existing_order = (
@@ -708,51 +733,13 @@ async def update_order_status(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Order not found"
             )
 
-        # Validate simple state transitions
+        # Validate state transitions
         current_status = existing_order.data[0].get("status")
-        # Allow picking up from ASSIGNED, READY, or CONFIRMED (tests expect CONFIRMED -> PICKED_UP)
-        if new_status == OrderStatus.PICKED_UP and current_status not in [
-            OrderStatus.ASSIGNED.value,
-            OrderStatus.READY.value,
-            OrderStatus.CONFIRMED.value,
-        ]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid transition: cannot mark as picked_up from '{current_status}'",
-            )
-        if new_status == OrderStatus.DELIVERED and current_status not in [
-            OrderStatus.PICKED_UP.value,
-            OrderStatus.EN_ROUTE.value,
-        ]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid transition: cannot mark as delivered from '{current_status}'",
-            )
+        _validate_status_transition(new_status, current_status)
 
-        # Update the order status
-        update_data = {
-            "status": new_status.value,
-            "updated_at": datetime.now().isoformat(),
-        }
-
-        # Set actual times based on status
-        if new_status == OrderStatus.PICKED_UP:
-            update_data["actual_pickup_time"] = datetime.now().isoformat()
-            # Generate a delivery verification code at pickup if one isn't present.
-            # Use a 6-digit numeric code. Persist delivery_code and reset delivery_code_used.
-            try:
-                existing_row = (
-                    getattr(existing_order, "data", None) and existing_order.data[0]
-                )
-                if not (existing_row and existing_row.get("delivery_code")):
-                    code = f"{random.randint(100000, 999999)}"
-                    update_data["delivery_code"] = code
-                    update_data["delivery_code_used"] = False
-            except Exception:
-                # Don't fail the status update if code generation has an issue
-                pass
-        elif new_status == OrderStatus.DELIVERED:
-            update_data["actual_delivery_time"] = datetime.now().isoformat()
+        # Prepare update data
+        existing_row = getattr(existing_order, "data", None) and existing_order.data[0]
+        update_data = _prepare_status_update_data(new_status, existing_row)
 
         response = (
             _get_db_table(client, "orders")
@@ -761,9 +748,7 @@ async def update_order_status(
             .execute()
         )
 
-        # Re-fetch the updated order to return it. If the re-query comes back
-        # empty (test mocks sometimes return the updated row on the update
-        # response instead), fall back to the response from the update call.
+        # Re-fetch the updated order
         updated_order = (
             _get_db_table(client, "orders")
             .select("*")
@@ -772,10 +757,8 @@ async def update_order_status(
         )
 
         data = getattr(updated_order, "data", None)
-        # If data is missing or not an indexable list (tests may return Mocks),
-        # fall back to the update response's data when available.
         if not data or not isinstance(data, (list, tuple)):
-            # Try to surface Supabase error details when available
+            # Try to surface Supabase error details
             error_msg = None
             try:
                 error_msg = getattr(response, "error", None) or getattr(
@@ -803,42 +786,16 @@ async def update_order_status(
                 detail=f"Failed to update order status{f': {error_msg}' if error_msg else ''}",
             )
 
-        # Attempt to construct Order model defensively: merge nested JSON from
-        # the original existing_order if the updated row is missing nested fields
-        final_row = data[0]
+        # Restore missing nested fields
+        final_row = _restore_missing_nested_fields(data[0], existing_order)
+        
         try:
-            # Restore delivery_address if missing
-            if not final_row.get("delivery_address") and getattr(
-                existing_order, "data", None
-            ):
-                final_row["delivery_address"] = existing_order.data[0].get(
-                    "delivery_address"
-                )
-
-            # Restore restaurants nested payload if missing
-            if not final_row.get("restaurants") and getattr(
-                existing_order, "data", None
-            ):
-                final_row["restaurants"] = existing_order.data[0].get("restaurants")
-
             return Order(**final_row)
         except Exception as val_err:
-            # Try falling back to the update response payload if available
+            # Try falling back to the update response payload
             try:
                 if getattr(response, "data", None):
-                    fallback = response.data[0]
-                    if not fallback.get("delivery_address") and getattr(
-                        existing_order, "data", None
-                    ):
-                        fallback["delivery_address"] = existing_order.data[0].get(
-                            "delivery_address"
-                        )
-                    if not fallback.get("restaurants") and getattr(
-                        existing_order, "data", None
-                    ):
-                        fallback["restaurants"] = existing_order.data[0].get(
-                            "restaurants"
-                        )
+                    fallback = _restore_missing_nested_fields(response.data[0], existing_order)
                     return Order(**fallback)
             except Exception:
                 pass
@@ -1021,6 +978,43 @@ async def assign_delivery_user(
         )
 
 
+def _validate_delivery_code_input(payload):
+    """Validate and extract delivery code from payload."""
+    code = payload.get("delivery_code") if isinstance(payload, dict) else None
+    if not code:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing delivery_code in request body",
+        )
+    return code
+
+
+def _validate_delivery_code_match(code, stored_code):
+    """Validate that the provided code matches the stored code."""
+    if not stored_code:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No delivery code set for this order",
+        )
+    
+    if str(code).strip() != str(stored_code).strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid delivery code"
+        )
+
+
+def _validate_delivery_status_transition(current_status):
+    """Validate that order can be marked as delivered from current status."""
+    if current_status not in [
+        OrderStatus.PICKED_UP.value,
+        OrderStatus.EN_ROUTE.value,
+    ]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid transition: cannot mark as delivered from '{current_status}'",
+        )
+
+
 @router.post("/{order_id}/verify-delivery", status_code=status.HTTP_200_OK)
 async def verify_delivery_code(
     order_id: str, payload: dict, supabase=Depends(get_supabase)
@@ -1031,12 +1025,8 @@ async def verify_delivery_code(
     mark delivery_code_used = True.
     """
     try:
-        code = payload.get("delivery_code") if isinstance(payload, dict) else None
-        if not code:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Missing delivery_code in request body",
-            )
+        # Validate input
+        code = _validate_delivery_code_input(payload)
 
         # Fetch order
         existing_order = (
@@ -1049,29 +1039,12 @@ async def verify_delivery_code(
             )
 
         order_row = existing_order.data[0]
-        stored_code = order_row.get("delivery_code")
-        if not stored_code:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No delivery code set for this order",
-            )
-
-        # Simple equality check; consider hashing for production
-        if str(code).strip() != str(stored_code).strip():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid delivery code"
-            )
-
-        # Validate allowed state transition: only allow delivering from PICKED_UP or EN_ROUTE
-        current_status = order_row.get("status")
-        if current_status not in [
-            OrderStatus.PICKED_UP.value,
-            OrderStatus.EN_ROUTE.value,
-        ]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid transition: cannot mark as delivered from '{current_status}'",
-            )
+        
+        # Validate delivery code
+        _validate_delivery_code_match(code, order_row.get("delivery_code"))
+        
+        # Validate status transition
+        _validate_delivery_status_transition(order_row.get("status"))
 
         # Perform atomic update: mark code used and set delivered
         update_data = {
@@ -1087,12 +1060,13 @@ async def verify_delivery_code(
             .eq("order_id", order_id)
             .execute()
         )
+        
         # Re-fetch to return normalized payload
         updated = (
             supabase.table("orders").select("*").eq("order_id", order_id).execute()
         )
+        
         if not getattr(updated, "data", None):
-            # If update response contained the updated row, use it
             if getattr(response, "data", None):
                 updated_row = response.data[0]
             else:
@@ -1103,50 +1077,8 @@ async def verify_delivery_code(
         else:
             updated_row = updated.data[0]
 
-        # Normalize and return (reuse same normalization as get_order_by_id)
-        norm = await _ensure_delivery_address(updated_row, supabase)
-        try:
-            oi = norm.get("order_items")
-            if isinstance(oi, str):
-                try:
-                    oi = json.loads(oi)
-                except Exception:
-                    oi = []
-
-            normalized_items = []
-            if isinstance(oi, (list, tuple)):
-                for it in oi:
-                    if not isinstance(it, dict):
-                        try:
-                            it = it.model_dump()
-                        except Exception:
-                            try:
-                                it = dict(it)
-                            except Exception:
-                                it = {}
-                    if it is None:
-                        it = {}
-                    try:
-                        it["subtotal"] = float(it.get("subtotal", 0) or 0)
-                    except Exception:
-                        it["subtotal"] = 0.0
-                    normalized_items.append(it)
-            else:
-                normalized_items = []
-
-            norm["order_items"] = normalized_items
-            norm["subtotal"] = round(
-                sum(i.get("subtotal", 0.0) for i in normalized_items), 2
-            )
-            da = norm.get("delivery_address")
-            if isinstance(da, str):
-                try:
-                    norm["delivery_address"] = json.loads(da)
-                except Exception:
-                    pass
-        except Exception:
-            pass
-
+        # Normalize and return (reuse normalization helper)
+        norm = await _normalize_single_order(updated_row, supabase)
         return JSONResponse(content=jsonable_encoder(norm))
 
     except HTTPException:
