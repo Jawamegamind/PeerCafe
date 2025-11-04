@@ -102,9 +102,20 @@ const baseOrder = {
   restaurant_id: 1,
   delivery_user_id: null,
   order_items: [
-    { item_id: 1, item_name: 'Test Item', price: 10.0, quantity: 1, subtotal: 10.0 },
+    {
+      item_id: 1,
+      item_name: 'Test Item',
+      price: 10.0,
+      quantity: 1,
+      subtotal: 10.0,
+    },
   ],
-  delivery_address: { street: '1 St', city: 'City', state: 'ST', zip_code: '00000' },
+  delivery_address: {
+    street: '1 St',
+    city: 'City',
+    state: 'ST',
+    zip_code: '00000',
+  },
   payment_method: 'cash',
   subtotal: 10.0,
   tax_amount: 1.0,
@@ -144,7 +155,9 @@ beforeEach(() => {
 
   // Note: fetch will be controlled per-test using deferred promises when needed.
   // Provide a sensible default fetch mock so tests that don't override it won't fail
-  (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => mockOrder });
+  (global as any).fetch = jest
+    .fn()
+    .mockResolvedValue({ ok: true, json: async () => mockOrder });
 });
 
 afterEach(() => {
@@ -158,7 +171,10 @@ test('shows verifying message while auth is loading', () => {
   expect(screen.getByTestId('navbar')).toBeInTheDocument();
   // Resolve auth to avoid leaving a pending update after the test (prevents act warnings)
   return act(async () => {
-    authDeferred!.resolve({ data: { user: { id: 'user-123', email: 'test@example.com' } }, error: null });
+    authDeferred!.resolve({
+      data: { user: { id: 'user-123', email: 'test@example.com' } },
+      error: null,
+    });
   });
 });
 
@@ -167,11 +183,16 @@ test('fetches order with correct order id and displays items & totals', async ()
 
   // Resolve authentication so the component proceeds to fetch
   await act(async () => {
-    authDeferred!.resolve({ data: { user: { id: 'user-123', email: 'test@example.com' } }, error: null });
+    authDeferred!.resolve({
+      data: { user: { id: 'user-123', email: 'test@example.com' } },
+      error: null,
+    });
   });
 
   // Wait for authentication flow to settle (auth loading -> fetch)
-  await waitFor(() => expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled());
+  await waitFor(() =>
+    expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled()
+  );
   await waitFor(() => expect((global as any).fetch).toHaveBeenCalled());
 
   expect((global as any).fetch).toHaveBeenCalledWith(
@@ -198,7 +219,9 @@ test('redirects to login when user not authenticated', async () => {
   render(<OrderDetailsPage />);
 
   // Wait for auth to be called and component to react
-  await waitFor(() => expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled());
+  await waitFor(() =>
+    expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled()
+  );
   await waitFor(() => {
     expect(mockPush).toHaveBeenCalledWith('/login');
   });
@@ -211,17 +234,26 @@ test('shows order not found when fetch returns 404 and browse restaurants naviga
 
   // Resolve authentication so the component proceeds to fetch
   await act(async () => {
-    authDeferred!.resolve({ data: { user: { id: 'user-123', email: 'test@example.com' } }, error: null });
+    authDeferred!.resolve({
+      data: { user: { id: 'user-123', email: 'test@example.com' } },
+      error: null,
+    });
   });
 
   // Wait for authentication to finish and the fetch to run
-  await waitFor(() => expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled());
+  await waitFor(() =>
+    expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled()
+  );
   await waitFor(() => {
     expect(screen.getByText('Order Not Found')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /browse restaurants/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /browse restaurants/i })
+    ).toBeInTheDocument();
   });
 
-  await userEvent.click(screen.getByRole('button', { name: /browse restaurants/i }));
+  await userEvent.click(
+    screen.getByRole('button', { name: /browse restaurants/i })
+  );
   expect(mockPush).toHaveBeenCalledWith('/user/restaurants');
 });
 
@@ -232,26 +264,36 @@ test.each([
   ['en_route', 'On the Way', '90'],
   ['delivered', 'Delivered', '100'],
   ['cancelled', 'Cancelled', '0'],
-])('displays status label and progress for %s', async (status, label, progress) => {
-  const order = { ...baseOrder, status };
-  (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => order });
+])(
+  'displays status label and progress for %s',
+  async (status, label, progress) => {
+    const order = { ...baseOrder, status };
+    (global as any).fetch = jest
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => order });
 
-  render(<OrderDetailsPage />);
+    render(<OrderDetailsPage />);
 
-  // Resolve authentication so the component proceeds to fetch
-  await act(async () => {
-    authDeferred!.resolve({ data: { user: { id: 'user-123', email: 'test@example.com' } }, error: null });
-  });
+    // Resolve authentication so the component proceeds to fetch
+    await act(async () => {
+      authDeferred!.resolve({
+        data: { user: { id: 'user-123', email: 'test@example.com' } },
+        error: null,
+      });
+    });
 
-  // Wait for authentication to complete before asserting
-  await waitFor(() => expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled());
-  await waitFor(() => expect((global as any).fetch).toHaveBeenCalled());
+    // Wait for authentication to complete before asserting
+    await waitFor(() =>
+      expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled()
+    );
+    await waitFor(() => expect((global as any).fetch).toHaveBeenCalled());
 
-  await waitFor(() => expect(screen.getByText(label)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(label)).toBeInTheDocument());
 
-  const progressBar = screen.getByRole('progressbar');
-  expect(progressBar).toHaveAttribute('aria-valuenow', progress);
-});
+    const progressBar = screen.getByRole('progressbar');
+    expect(progressBar).toHaveAttribute('aria-valuenow', progress);
+  }
+);
 
 test('auto-refreshes order status every 30 seconds', async () => {
   jest.useFakeTimers();
@@ -259,7 +301,8 @@ test('auto-refreshes order status every 30 seconds', async () => {
   const initial = { ...baseOrder, status: 'confirmed' };
   const updated = { ...baseOrder, status: 'en_route' };
 
-  (global as any).fetch = jest.fn()
+  (global as any).fetch = jest
+    .fn()
     .mockResolvedValueOnce({ ok: true, json: async () => initial })
     .mockResolvedValueOnce({ ok: true, json: async () => updated });
 
@@ -267,7 +310,10 @@ test('auto-refreshes order status every 30 seconds', async () => {
 
   // Resolve authentication so the component proceeds to fetch
   await act(async () => {
-    authDeferred!.resolve({ data: { user: { id: 'user-123', email: 'test@example.com' } }, error: null });
+    authDeferred!.resolve({
+      data: { user: { id: 'user-123', email: 'test@example.com' } },
+      error: null,
+    });
   });
 
   // initial fetch
@@ -281,19 +327,31 @@ test('auto-refreshes order status every 30 seconds', async () => {
 
   await waitFor(() => expect((global as any).fetch).toHaveBeenCalledTimes(2));
 
-  await waitFor(() => expect(screen.getByText('On the Way')).toBeInTheDocument());
+  await waitFor(() =>
+    expect(screen.getByText('On the Way')).toBeInTheDocument()
+  );
 });
 
 test('cancel button is enabled for pending orders', async () => {
-  (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ ...baseOrder, status: 'pending' }) });
+  (global as any).fetch = jest
+    .fn()
+    .mockResolvedValue({
+      ok: true,
+      json: async () => ({ ...baseOrder, status: 'pending' }),
+    });
   render(<OrderDetailsPage />);
   // Resolve authentication so the component proceeds to fetch
   await act(async () => {
-    authDeferred!.resolve({ data: { user: { id: 'user-123', email: 'test@example.com' } }, error: null });
+    authDeferred!.resolve({
+      data: { user: { id: 'user-123', email: 'test@example.com' } },
+      error: null,
+    });
   });
 
   // Wait for auth and fetch to complete
-  await waitFor(() => expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled());
+  await waitFor(() =>
+    expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled()
+  );
   await waitFor(() => expect((global as any).fetch).toHaveBeenCalled());
   const btn = screen.getByText('Cancel Order');
   expect(btn).toBeInTheDocument();
@@ -301,14 +359,24 @@ test('cancel button is enabled for pending orders', async () => {
 });
 
 test('cancel button is disabled for preparing orders', async () => {
-  (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ ...baseOrder, status: 'preparing' }) });
+  (global as any).fetch = jest
+    .fn()
+    .mockResolvedValue({
+      ok: true,
+      json: async () => ({ ...baseOrder, status: 'preparing' }),
+    });
   render(<OrderDetailsPage />);
   // Resolve authentication so the component proceeds to fetch
   await act(async () => {
-    authDeferred!.resolve({ data: { user: { id: 'user-123', email: 'test@example.com' } }, error: null });
+    authDeferred!.resolve({
+      data: { user: { id: 'user-123', email: 'test@example.com' } },
+      error: null,
+    });
   });
   // Wait for auth and fetch to complete
-  await waitFor(() => expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled());
+  await waitFor(() =>
+    expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled()
+  );
   await waitFor(() => expect((global as any).fetch).toHaveBeenCalled());
   const btn = screen.getByText('Cancel Order');
   expect(btn).toBeInTheDocument();
@@ -316,26 +384,44 @@ test('cancel button is disabled for preparing orders', async () => {
 });
 
 test('cancel button is not shown for delivered orders', async () => {
-  (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ ...baseOrder, status: 'delivered' }) });
+  (global as any).fetch = jest
+    .fn()
+    .mockResolvedValue({
+      ok: true,
+      json: async () => ({ ...baseOrder, status: 'delivered' }),
+    });
   render(<OrderDetailsPage />);
   // Resolve authentication so the component proceeds to fetch
   await act(async () => {
-    authDeferred!.resolve({ data: { user: { id: 'user-123', email: 'test@example.com' } }, error: null });
+    authDeferred!.resolve({
+      data: { user: { id: 'user-123', email: 'test@example.com' } },
+      error: null,
+    });
   });
 
   // Wait for auth and fetch to complete
-  await waitFor(() => expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled());
+  await waitFor(() =>
+    expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled()
+  );
   await waitFor(() => expect((global as any).fetch).toHaveBeenCalled());
   expect(screen.queryByText('Cancel Order')).not.toBeInTheDocument();
 });
 
 test('back button calls router.back', async () => {
-  (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ ...baseOrder, status: 'confirmed' }) });
-    render(<OrderDetailsPage />);
+  (global as any).fetch = jest
+    .fn()
+    .mockResolvedValue({
+      ok: true,
+      json: async () => ({ ...baseOrder, status: 'confirmed' }),
+    });
+  render(<OrderDetailsPage />);
 
   // Resolve authentication so the component proceeds to fetch
   await act(async () => {
-    authDeferred!.resolve({ data: { user: { id: 'user-123', email: 'test@example.com' } }, error: null });
+    authDeferred!.resolve({
+      data: { user: { id: 'user-123', email: 'test@example.com' } },
+      error: null,
+    });
   });
 
   await waitFor(() => expect((global as any).fetch).toHaveBeenCalled());

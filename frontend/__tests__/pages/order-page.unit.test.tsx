@@ -196,9 +196,13 @@ test('shows order not found when fetch returns 404 and browse restaurants naviga
   await waitFor(() => {
     expect(screen.getByText('Order Not Found')).toBeInTheDocument();
     // shorter fallback text appears in the DOM
-    expect(screen.getByRole('button', { name: /browse restaurants/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /browse restaurants/i })
+    ).toBeInTheDocument();
   });
 
-  await userEvent.click(screen.getByRole('button', { name: /browse restaurants/i }));
+  await userEvent.click(
+    screen.getByRole('button', { name: /browse restaurants/i })
+  );
   expect(mockPush).toHaveBeenCalledWith('/user/restaurants');
 });

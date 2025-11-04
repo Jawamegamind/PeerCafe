@@ -1,5 +1,11 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from '@testing-library/react';
 import { useRouter, useParams } from 'next/navigation';
 import EditRestaurantPage from '../../app/(main)/admin/restaurants/[restaurantId]/edit/page';
 import '@testing-library/jest-dom';
