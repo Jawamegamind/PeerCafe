@@ -357,7 +357,7 @@ async def _fetch_mapbox_route(start_lng, start_lat, end_lng, end_lat):
         return response.json()
 
 
-@delivery_router.get("/deliveries/navigation/{order_id}")
+@delivery_router.get("/deliveries/active/{order_id}/navigation")
 async def get_navigation_route(
     order_id: str,
     driver_latitude: float = Query(...),

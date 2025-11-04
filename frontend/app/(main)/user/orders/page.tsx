@@ -274,15 +274,16 @@ export default function MyOrdersPage() {
                         </Box>
                       }
                       secondary={
-                        <Box>
-                          <Typography variant="body2" color="text.secondary">
+                        <Box component="span" sx={{ display: 'block' }}>
+                          <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'block' }}>
                             Placed {new Date(o.created_at).toLocaleString()}
                           </Typography>
                           {o.delivery_code && (
                             <Typography
                               variant="body2"
                               color="text.secondary"
-                              sx={{ mt: 0.5 }}
+                              component="span"
+                              sx={{ mt: 0.5, display: 'block' }}
                             >
                               Delivery code: <strong>{o.delivery_code}</strong>
                               {o.delivery_code_used ? ' (used)' : ''}

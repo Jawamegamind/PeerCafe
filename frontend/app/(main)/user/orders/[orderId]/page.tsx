@@ -139,6 +139,32 @@ export default function OrderDetailsPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [currentUser, setCurrentUser] = React.useState<any>(null);
   const [authLoading, setAuthLoading] = React.useState<boolean>(true);
+  const [cancelLoading, setCancelLoading] = React.useState<boolean>(false);
+  const [cancelError, setCancelError] = React.useState<string | null>(null);
+  // Cancel order handler
+  const handleCancelOrder = async () => {
+    if (!order) return;
+    setCancelLoading(true);
+    setCancelError(null);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/orders/${order.order_id}`,
+        {
+          method: 'DELETE',
+        }
+      );
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || 'Failed to cancel order');
+      }
+      // Update order status locally
+      setOrder({ ...order, status: 'cancelled', updated_at: new Date().toISOString() });
+    } catch (err) {
+      setCancelError(err instanceof Error ? err.message : 'Failed to cancel order');
+    } finally {
+      setCancelLoading(false);
+    }
+  };
 
   // Check authentication first
   React.useEffect(() => {
@@ -409,26 +435,29 @@ export default function OrderDetailsPage() {
                             {item.item_name}
                           </Typography>
                         }
-                        secondary={
-                          <Box>
-                            <Typography
-                              component="span"
-                              variant="body2"
-                              color="text.secondary"
-                            >
-                              ${item.price.toFixed(2)} × {item.quantity}
-                            </Typography>
-                            {item.special_instructions && (
+                          secondary={
+                            <>
                               <Typography
+                                component="span"
                                 variant="body2"
                                 color="text.secondary"
-                                sx={{ fontStyle: 'italic', mt: 0.5 }}
                               >
-                                Note: {item.special_instructions}
+                                ${item.price.toFixed(2)} × {item.quantity}
                               </Typography>
-                            )}
-                          </Box>
-                        }
+                              {item.special_instructions && (
+                                <Box component="span" sx={{ display: 'inline', fontStyle: 'italic', ml: 1 }}>
+                                  <Typography
+                                    component="span"
+                                    variant="body2"
+                                    color="text.secondary"
+                                    sx={{ fontStyle: 'italic' }}
+                                  >
+                                    Note: {item.special_instructions}
+                                  </Typography>
+                                </Box>
+                              )}
+                            </>
+                          }
                       />
                       <ListItemSecondaryAction>
                         <Typography
@@ -658,12 +687,18 @@ export default function OrderDetailsPage() {
                         color="error"
                         disabled={
                           order.status !== 'pending' &&
-                          order.status !== 'confirmed'
+                          order.status !== 'confirmed' || cancelLoading
                         }
+                        onClick={handleCancelOrder}
                       >
-                        Cancel Order
+                        {cancelLoading ? <CircularProgress size={24} /> : 'Cancel Order'}
                       </Button>
                     )}
+                  {cancelError && (
+                    <Alert severity="error" sx={{ mt: 2 }}>
+                      {cancelError}
+                    </Alert>
+                  )}
                 </Box>
               </CardContent>
             </Card>
