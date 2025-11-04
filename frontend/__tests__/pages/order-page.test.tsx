@@ -333,12 +333,10 @@ test('auto-refreshes order status every 30 seconds', async () => {
 });
 
 test('cancel button is enabled for pending orders', async () => {
-  (global as any).fetch = jest
-    .fn()
-    .mockResolvedValue({
-      ok: true,
-      json: async () => ({ ...baseOrder, status: 'pending' }),
-    });
+  (global as any).fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ ...baseOrder, status: 'pending' }),
+  });
   render(<OrderDetailsPage />);
   // Resolve authentication so the component proceeds to fetch
   await act(async () => {
@@ -359,12 +357,10 @@ test('cancel button is enabled for pending orders', async () => {
 });
 
 test('cancel button is disabled for preparing orders', async () => {
-  (global as any).fetch = jest
-    .fn()
-    .mockResolvedValue({
-      ok: true,
-      json: async () => ({ ...baseOrder, status: 'preparing' }),
-    });
+  (global as any).fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ ...baseOrder, status: 'preparing' }),
+  });
   render(<OrderDetailsPage />);
   // Resolve authentication so the component proceeds to fetch
   await act(async () => {
@@ -384,12 +380,10 @@ test('cancel button is disabled for preparing orders', async () => {
 });
 
 test('cancel button is not shown for delivered orders', async () => {
-  (global as any).fetch = jest
-    .fn()
-    .mockResolvedValue({
-      ok: true,
-      json: async () => ({ ...baseOrder, status: 'delivered' }),
-    });
+  (global as any).fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ ...baseOrder, status: 'delivered' }),
+  });
   render(<OrderDetailsPage />);
   // Resolve authentication so the component proceeds to fetch
   await act(async () => {
@@ -408,12 +402,10 @@ test('cancel button is not shown for delivered orders', async () => {
 });
 
 test('back button calls router.back', async () => {
-  (global as any).fetch = jest
-    .fn()
-    .mockResolvedValue({
-      ok: true,
-      json: async () => ({ ...baseOrder, status: 'confirmed' }),
-    });
+  (global as any).fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ ...baseOrder, status: 'confirmed' }),
+  });
   render(<OrderDetailsPage />);
 
   // Resolve authentication so the component proceeds to fetch
