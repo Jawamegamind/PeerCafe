@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database.supabase_db import create_supabase_client
 
+from database.supabase_db import create_supabase_client
 from routes.auth_routes import auth_router
-from routes.restaurant_routes import restaurant_router
+from routes.delivery_routes import delivery_router
 from routes.menu_routes import menu_router
 from routes.order_routes import router as order_router
-from routes.delivery_routes import delivery_router
+from routes.restaurant_routes import restaurant_router
 
 # Initializing the FastAPI app
 app = FastAPI()
@@ -30,10 +30,12 @@ app.include_router(menu_router, prefix="/api")
 app.include_router(order_router, prefix="/api")
 app.include_router(delivery_router, prefix="/api")
 
+
 # Basic root endpoint
 @app.get("/")
 def read_root():
     return {"message": "PeerCafe Backend is running!"}
+
 
 # Testing endpoint to fetch dummy data from Supabase
 @app.get("/test-supabase")
@@ -43,7 +45,8 @@ def test_supabase():
         return data
     except Exception as e:
         from fastapi import HTTPException, status
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail=f"Database error: {str(e)}",
         )

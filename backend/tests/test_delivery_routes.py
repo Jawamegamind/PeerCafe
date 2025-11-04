@@ -2,12 +2,13 @@
 This file follows the project's existing test style: use the `client` fixture from conftest.py
 and monkeypatch module-level dependencies on `routes.delivery_routes`.
 """
-import pytest
+
 from unittest.mock import Mock
 
-from models.delivery_model import Location
+import pytest
 
 import routes.delivery_routes as delivery_routes
+from models.delivery_model import Location
 
 
 class MockResult:
@@ -44,7 +45,9 @@ class MockSupabase:
             return MockResult(self._orders)
         if self._table == "restaurants":
             if self._in_vals:
-                filtered = [r for r in self._restaurants if r.get("id") in self._in_vals]
+                filtered = [
+                    r for r in self._restaurants if r.get("id") in self._in_vals
+                ]
                 return MockResult(filtered)
             return MockResult(self._restaurants)
         return MockResult([])
@@ -83,7 +86,9 @@ def make_dummy_async_client(responses):
 
 def _call_api(client, lat, lng):
     # Call the GET endpoint with query params so FastAPI builds Location from query
-    return client.get("/api/deliveries/ready", params={"latitude": lat, "longitude": lng})
+    return client.get(
+        "/api/deliveries/ready", params={"latitude": lat, "longitude": lng}
+    )
 
 
 def test_no_ready_orders(client, monkeypatch):
@@ -134,7 +139,12 @@ def test_ready_orders_with_distances_single_chunk(client, monkeypatch):
 
 def test_unreachable_destination(client, monkeypatch):
     orders = [
-        {"order_id": 3, "user_id": "u3", "restaurant_id": 30, "restaurants": {"latitude": 14.0, "longitude": 79.0}}
+        {
+            "order_id": 3,
+            "user_id": "u3",
+            "restaurant_id": 30,
+            "restaurants": {"latitude": 14.0, "longitude": 79.0},
+        }
     ]
     mock_supabase = MockSupabase(orders_data=orders)
     monkeypatch.setattr(delivery_routes, "supabase", mock_supabase)

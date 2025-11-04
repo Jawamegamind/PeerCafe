@@ -58,21 +58,43 @@ run_section() {
 
 backend_pytest() {
   pushd "${script_dir}/../backend" >/dev/null || return 1
-  # Prefer pytest CLI if available, else python -m pytest
-  if command -v pytest >/dev/null 2>&1; then
+  # Try local venv first, then pytest CLI, then python -m pytest fallbacks
+  if [ -x ".venv/bin/pytest" ]; then
+    .venv/bin/pytest --maxfail=1 -q --disable-warnings --cov=. --cov-report=term
+  elif command -v pytest >/dev/null 2>&1; then
     pytest --maxfail=1 -q --disable-warnings --cov=. --cov-report=term
   else
-    python -m pytest -q --maxfail=1 --disable-warnings
+    if [ -x ".venv/bin/python" ]; then
+      .venv/bin/python -m pytest -q --maxfail=1 --disable-warnings
+    elif command -v python >/dev/null 2>&1; then
+      python -m pytest -q --maxfail=1 --disable-warnings
+    elif command -v python3 >/dev/null 2>&1; then
+      python3 -m pytest -q --maxfail=1 --disable-warnings
+    else
+      echo "No Python interpreter found (python/python3). Unable to run pytest." >&2
+      popd >/dev/null || true
+      return 127
+    fi
   fi
 
   # If .coverage exists, try to show coverage report as well
   if [ -f .coverage ]; then
     echo
     echo "--- coverage report (backend) ---"
-    if command -v coverage >/dev/null 2>&1; then
+    if [ -x ".venv/bin/coverage" ]; then
+      .venv/bin/coverage report -m
+    elif command -v coverage >/dev/null 2>&1; then
       coverage report -m
     else
-      python -m coverage report -m
+      if [ -x ".venv/bin/python" ]; then
+        .venv/bin/python -m coverage report -m
+      elif command -v python >/dev/null 2>&1; then
+        python -m coverage report -m
+      elif command -v python3 >/dev/null 2>&1; then
+        python3 -m coverage report -m
+      else
+        echo "coverage not available (no coverage CLI and no python/python3 to run module)" >&2
+      fi
     fi
   fi
   popd >/dev/null || true

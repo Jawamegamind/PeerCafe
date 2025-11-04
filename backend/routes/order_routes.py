@@ -1,23 +1,26 @@
 """
 Order management routes for PeerCafe backend
 """
-from fastapi import APIRouter, HTTPException, Depends, status
-from fastapi import Header
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-from typing import List, Optional
-from datetime import datetime, timedelta
-import uuid
-from database.supabase_db import create_supabase_client
-from models.order_model import OrderCreate, Order, OrderUpdate, OrderStatus
-from utils.geocode import geocode_address
-import os
-import random
+
 import json
 import logging
+import os
+import random
 import threading
+import uuid
+from datetime import datetime, timedelta
+from typing import List, Optional
+
+from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
+
+from database.supabase_db import create_supabase_client
+from models.order_model import Order, OrderCreate, OrderStatus, OrderUpdate
+from utils.geocode import geocode_address
 
 router = APIRouter(prefix="/orders", tags=["orders"])
+
 
 def get_supabase():
     """Dependency to get Supabase client"""
@@ -107,7 +110,9 @@ def _recompute_total(o: dict):
     delivery_fee = _safe_float(o.get("delivery_fee"), 0) or 0
     tip = _safe_float(o.get("tip_amount"), 0) or 0
     discount = _safe_float(o.get("discount_amount"), 0) or 0
-    computed_total = round(o.get("subtotal", 0) + tax + delivery_fee + tip - discount, 2)
+    computed_total = round(
+        o.get("subtotal", 0) + tax + delivery_fee + tip - discount, 2
+    )
     stored_total = o.get("total_amount")
     stored_total_val = _safe_float(stored_total)
     if stored_total_val is None or abs((stored_total_val or 0) - computed_total) > 0.01:
@@ -189,9 +194,14 @@ async def _ensure_delivery_address(order_row: dict, supabase) -> dict:
     # Try to fetch user profile coords / address fields
     try:
         user_id = order_row.get("user_id")
-        if user_id and hasattr(supabase, 'from_'):
-            user_res = supabase.from_("users").select("latitude, longitude").eq("user_id", user_id).execute()
-            udata = getattr(user_res, 'data', None)
+        if user_id and hasattr(supabase, "from_"):
+            user_res = (
+                supabase.from_("users")
+                .select("latitude, longitude")
+                .eq("user_id", user_id)
+                .execute()
+            )
+            udata = getattr(user_res, "data", None)
             user_row = None
             if udata:
                 if isinstance(udata, list) and len(udata) > 0:
@@ -210,7 +220,7 @@ async def _ensure_delivery_address(order_row: dict, supabase) -> dict:
                     "city": city,
                     "state": state,
                     "zip_code": zip_code,
-                    "instructions": None
+                    "instructions": None,
                 }
                 # If user coords were available, copy to order lat/lng if missing
                 try:
@@ -231,7 +241,7 @@ async def _ensure_delivery_address(order_row: dict, supabase) -> dict:
         "city": "Unknown",
         "state": "Unknown",
         "zip_code": "00000",
-        "instructions": None
+        "instructions": None,
     }
     return order_row
 
@@ -242,7 +252,7 @@ async def get_my_orders(
     x_user_id: str | None = Header(None),
     limit: int = 20,
     offset: int = 0,
-    supabase=Depends(get_supabase)
+    supabase=Depends(get_supabase),
 ):
     """
     Get orders for the currently authenticated user.
@@ -255,7 +265,7 @@ async def get_my_orders(
     try:
         user_id = None
 
-        # Try to extract token from Authorization header 
+        # Try to extract token from Authorization header
         token = None
         if authorization and authorization.startswith("Bearer "):
             token = authorization.split(" ", 1)[1]
@@ -268,11 +278,19 @@ async def get_my_orders(
                 user_obj = None
                 if isinstance(maybe_user, dict):
                     # get_user may return {'data': {'user': {...}}} or {'user': {...}} or {'data': {...}}
-                    user_obj = maybe_user.get("data") or maybe_user.get("user") or maybe_user
-                    if isinstance(user_obj, dict) and "user" in user_obj and isinstance(user_obj["user"], dict):
+                    user_obj = (
+                        maybe_user.get("data") or maybe_user.get("user") or maybe_user
+                    )
+                    if (
+                        isinstance(user_obj, dict)
+                        and "user" in user_obj
+                        and isinstance(user_obj["user"], dict)
+                    ):
                         user_obj = user_obj["user"]
                 else:
-                    user_obj = getattr(maybe_user, "user", getattr(maybe_user, "data", None))
+                    user_obj = getattr(
+                        maybe_user, "user", getattr(maybe_user, "data", None)
+                    )
 
                 if user_obj:
                     # Project uses `user_id` in the database. Prefer `user_id` explicitly
@@ -299,15 +317,20 @@ async def get_my_orders(
         #     user_id = x_user_id
 
         if not user_id:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unable to determine user from Authorization header")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Unable to determine user from Authorization header",
+            )
 
         # Query orders for the resolved user_id
-        response = supabase.table("orders")\
-            .select("*")\
-            .eq("user_id", user_id)\
-            .order("created_at", desc=True)\
-            .range(offset, offset + limit - 1)\
+        response = (
+            supabase.table("orders")
+            .select("*")
+            .eq("user_id", user_id)
+            .order("created_at", desc=True)
+            .range(offset, offset + limit - 1)
             .execute()
+        )
 
         if response.data:
             orders = []
@@ -383,8 +406,9 @@ async def get_my_orders(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve authenticated user orders: {str(e)}"
+            detail=f"Failed to retrieve authenticated user orders: {str(e)}",
         )
+
 
 @router.post("/", response_model=Order, status_code=status.HTTP_201_CREATED)
 async def place_order(order_data: OrderCreate, supabase=Depends(get_supabase)):
@@ -395,20 +419,20 @@ async def place_order(order_data: OrderCreate, supabase=Depends(get_supabase)):
         print("Placing order with data:", order_data)
         # Generate order ID
         order_id = str(uuid.uuid4())
-        
+
         # Geocode customer delivery address to get lat/lng for navigation
         delivery_addr = order_data.delivery_address
         full_address = f"{delivery_addr.street}, {delivery_addr.city}, {delivery_addr.state} {delivery_addr.zip_code}"
         customer_lat, customer_lng = await geocode_address(full_address)
-        
+
         if not customer_lat or not customer_lng:
             print(f"Warning: Failed to geocode address: {full_address}")
             # Still allow order creation but navigation won't work until geocoded
-        
+
         # Calculate estimated times (this can be made more sophisticated later)
         estimated_pickup_time = datetime.now() + timedelta(minutes=30)
         estimated_delivery_time = datetime.now() + timedelta(minutes=60)
-        
+
         # Prepare order data for database
         order_db_data = {
             "order_id": order_id,
@@ -429,27 +453,28 @@ async def place_order(order_data: OrderCreate, supabase=Depends(get_supabase)):
             "estimated_pickup_time": estimated_pickup_time.isoformat(),
             "estimated_delivery_time": estimated_delivery_time.isoformat(),
             "created_at": datetime.now().isoformat(),
-            "updated_at": datetime.now().isoformat()
+            "updated_at": datetime.now().isoformat(),
         }
-        
+
         # Insert order into database
         response = supabase.table("orders").insert(order_db_data).execute()
-        
+
         if not response.data:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to create order"
+                detail="Failed to create order",
             )
-        
+
         # Return the created order
         created_order = response.data[0]
         return Order(**created_order)
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to place order: {str(e)}"
+            detail=f"Failed to place order: {str(e)}",
         )
+
 
 @router.get("/", response_model=List[dict])
 async def list_orders(limit: int = 1000, offset: int = 0):
@@ -485,30 +510,31 @@ async def list_orders(limit: int = 1000, offset: int = 0):
             detail=f"Failed to retrieve orders: {str(e)}",
         )
 
+
 @router.get("/sanitization-metrics", response_model=dict)
 async def sanitization_metrics():
     """Return in-memory sanitization metrics (for admin diagnostics)."""
     with _sanitization_lock:
         return dict(_sanitization_counts)
 
+
 @router.get("/user/{user_id}", response_model=List[Order])
 async def get_user_orders(
-    user_id: str, 
-    limit: int = 20, 
-    offset: int = 0,
-    supabase=Depends(get_supabase)
+    user_id: str, limit: int = 20, offset: int = 0, supabase=Depends(get_supabase)
 ):
     """
     Get orders for a specific user
     """
     try:
-        response = supabase.table("orders")\
-            .select("*")\
-            .eq("user_id", user_id)\
-            .order("created_at", desc=True)\
-            .range(offset, offset + limit - 1)\
+        response = (
+            supabase.table("orders")
+            .select("*")
+            .eq("user_id", user_id)
+            .order("created_at", desc=True)
+            .range(offset, offset + limit - 1)
             .execute()
-        
+        )
+
         if response.data:
             orders = []
             for order in response.data:
@@ -516,12 +542,13 @@ async def get_user_orders(
                 orders.append(Order(**norm))
             return orders
         return []
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve user orders: {str(e)}"
+            detail=f"Failed to retrieve user orders: {str(e)}",
         )
+
 
 @router.get("/restaurant/{restaurant_id}", response_model=List[Order])
 async def get_restaurant_orders(
@@ -529,23 +556,23 @@ async def get_restaurant_orders(
     status_filter: Optional[OrderStatus] = None,
     limit: int = 50,
     offset: int = 0,
-    supabase=Depends(get_supabase)
+    supabase=Depends(get_supabase),
 ):
     """
     Get orders for a specific restaurant (for restaurant dashboard)
     """
     try:
-        query = supabase.table("orders")\
-            .select("*")\
-            .eq("restaurant_id", restaurant_id)
-        
+        query = supabase.table("orders").select("*").eq("restaurant_id", restaurant_id)
+
         if status_filter:
             query = query.eq("status", status_filter.value)
-        
-        response = query.order("created_at", desc=True)\
-            .range(offset, offset + limit - 1)\
+
+        response = (
+            query.order("created_at", desc=True)
+            .range(offset, offset + limit - 1)
             .execute()
-        
+        )
+
         if response.data:
             orders = []
             for order in response.data:
@@ -553,12 +580,13 @@ async def get_restaurant_orders(
                 orders.append(Order(**norm))
             return orders
         return []
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve restaurant orders: {str(e)}"
+            detail=f"Failed to retrieve restaurant orders: {str(e)}",
         )
+
 
 @router.get("/{order_id}", response_model=Order)
 async def get_order_by_id(order_id: str, supabase=Depends(get_supabase)):
@@ -578,7 +606,12 @@ async def get_order_by_id(order_id: str, supabase=Depends(get_supabase)):
                 detail="Supabase is not configured.",
             )
 
-        response = _get_db_table(client, "orders").select("*").eq("order_id", order_id).execute()
+        response = (
+            _get_db_table(client, "orders")
+            .select("*")
+            .eq("order_id", order_id)
+            .execute()
+        )
 
         if not response.data:
             raise HTTPException(
@@ -641,11 +674,10 @@ async def get_order_by_id(order_id: str, supabase=Depends(get_supabase)):
             detail=f"Failed to retrieve order: {str(e)}",
         )
 
+
 @router.patch("/{order_id}/status", response_model=Order)
 async def update_order_status(
-    order_id: str,
-    new_status: OrderStatus,
-    supabase=Depends(get_supabase)
+    order_id: str, new_status: OrderStatus, supabase=Depends(get_supabase)
 ):
     """
     Update order status (for restaurants and delivery users)
@@ -664,17 +696,18 @@ async def update_order_status(
             )
 
         # First check if order exists
-        existing_order = _get_db_table(client, "orders")\
-            .select("*")\
-            .eq("order_id", order_id)\
+        existing_order = (
+            _get_db_table(client, "orders")
+            .select("*")
+            .eq("order_id", order_id)
             .execute()
-        
+        )
+
         if not existing_order.data:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Order not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Order not found"
             )
-        
+
         # Validate simple state transitions
         current_status = existing_order.data[0].get("status")
         # Allow picking up from ASSIGNED, READY, or CONFIRMED (tests expect CONFIRMED -> PICKED_UP)
@@ -685,27 +718,32 @@ async def update_order_status(
         ]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid transition: cannot mark as picked_up from '{current_status}'"
+                detail=f"Invalid transition: cannot mark as picked_up from '{current_status}'",
             )
-        if new_status == OrderStatus.DELIVERED and current_status not in [OrderStatus.PICKED_UP.value, OrderStatus.EN_ROUTE.value]:
+        if new_status == OrderStatus.DELIVERED and current_status not in [
+            OrderStatus.PICKED_UP.value,
+            OrderStatus.EN_ROUTE.value,
+        ]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid transition: cannot mark as delivered from '{current_status}'"
+                detail=f"Invalid transition: cannot mark as delivered from '{current_status}'",
             )
 
         # Update the order status
         update_data = {
             "status": new_status.value,
-            "updated_at": datetime.now().isoformat()
+            "updated_at": datetime.now().isoformat(),
         }
-        
+
         # Set actual times based on status
         if new_status == OrderStatus.PICKED_UP:
             update_data["actual_pickup_time"] = datetime.now().isoformat()
             # Generate a delivery verification code at pickup if one isn't present.
             # Use a 6-digit numeric code. Persist delivery_code and reset delivery_code_used.
             try:
-                existing_row = getattr(existing_order, 'data', None) and existing_order.data[0]
+                existing_row = (
+                    getattr(existing_order, "data", None) and existing_order.data[0]
+                )
                 if not (existing_row and existing_row.get("delivery_code")):
                     code = f"{random.randint(100000, 999999)}"
                     update_data["delivery_code"] = code
@@ -715,44 +753,54 @@ async def update_order_status(
                 pass
         elif new_status == OrderStatus.DELIVERED:
             update_data["actual_delivery_time"] = datetime.now().isoformat()
-        
-        response = _get_db_table(client, "orders")\
-            .update(update_data)\
-            .eq("order_id", order_id)\
+
+        response = (
+            _get_db_table(client, "orders")
+            .update(update_data)
+            .eq("order_id", order_id)
             .execute()
+        )
 
         # Re-fetch the updated order to return it. If the re-query comes back
         # empty (test mocks sometimes return the updated row on the update
         # response instead), fall back to the response from the update call.
-        updated_order = _get_db_table(client, "orders")\
-            .select("*")\
-            .eq("order_id", order_id)\
+        updated_order = (
+            _get_db_table(client, "orders")
+            .select("*")
+            .eq("order_id", order_id)
             .execute()
+        )
 
-        data = getattr(updated_order, 'data', None)
+        data = getattr(updated_order, "data", None)
         # If data is missing or not an indexable list (tests may return Mocks),
         # fall back to the update response's data when available.
         if not data or not isinstance(data, (list, tuple)):
             # Try to surface Supabase error details when available
             error_msg = None
             try:
-                error_msg = getattr(response, 'error', None) or getattr(response, 'message', None)
+                error_msg = getattr(response, "error", None) or getattr(
+                    response, "message", None
+                )
             except Exception:
                 error_msg = None
 
             # If the update response contains the updated row, use it
-            if getattr(response, 'data', None):
+            if getattr(response, "data", None):
                 return Order(**response.data[0])
 
-            if error_msg and isinstance(error_msg, str) and 'row level security' in error_msg.lower():
+            if (
+                error_msg
+                and isinstance(error_msg, str)
+                and "row level security" in error_msg.lower()
+            ):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"RLS blocked update: {error_msg}"
+                    detail=f"RLS blocked update: {error_msg}",
                 )
 
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to update order status{f': {error_msg}' if error_msg else ''}"
+                detail=f"Failed to update order status{f': {error_msg}' if error_msg else ''}",
             )
 
         # Attempt to construct Order model defensively: merge nested JSON from
@@ -760,23 +808,37 @@ async def update_order_status(
         final_row = data[0]
         try:
             # Restore delivery_address if missing
-            if not final_row.get("delivery_address") and getattr(existing_order, 'data', None):
-                final_row["delivery_address"] = existing_order.data[0].get("delivery_address")
+            if not final_row.get("delivery_address") and getattr(
+                existing_order, "data", None
+            ):
+                final_row["delivery_address"] = existing_order.data[0].get(
+                    "delivery_address"
+                )
 
             # Restore restaurants nested payload if missing
-            if not final_row.get("restaurants") and getattr(existing_order, 'data', None):
+            if not final_row.get("restaurants") and getattr(
+                existing_order, "data", None
+            ):
                 final_row["restaurants"] = existing_order.data[0].get("restaurants")
 
             return Order(**final_row)
         except Exception as val_err:
             # Try falling back to the update response payload if available
             try:
-                if getattr(response, 'data', None):
+                if getattr(response, "data", None):
                     fallback = response.data[0]
-                    if not fallback.get("delivery_address") and getattr(existing_order, 'data', None):
-                        fallback["delivery_address"] = existing_order.data[0].get("delivery_address")
-                    if not fallback.get("restaurants") and getattr(existing_order, 'data', None):
-                        fallback["restaurants"] = existing_order.data[0].get("restaurants")
+                    if not fallback.get("delivery_address") and getattr(
+                        existing_order, "data", None
+                    ):
+                        fallback["delivery_address"] = existing_order.data[0].get(
+                            "delivery_address"
+                        )
+                    if not fallback.get("restaurants") and getattr(
+                        existing_order, "data", None
+                    ):
+                        fallback["restaurants"] = existing_order.data[0].get(
+                            "restaurants"
+                        )
                     return Order(**fallback)
             except Exception:
                 pass
@@ -784,7 +846,7 @@ async def update_order_status(
             # If construction still fails, surface a clear error for debugging
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to construct Order model after status update: {str(val_err)}"
+                detail=f"Failed to construct Order model after status update: {str(val_err)}",
             )
 
     except HTTPException:
@@ -792,20 +854,21 @@ async def update_order_status(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update order status: {str(e)}"
+            detail=f"Failed to update order status: {str(e)}",
         )
+
 
 @router.patch("/{order_id}/assign-delivery", response_model=Order)
 async def assign_delivery_user(
-    order_id: str,
-    delivery_user_id: str,
-    supabase=Depends(get_supabase)
+    order_id: str, delivery_user_id: str, supabase=Depends(get_supabase)
 ):
     """
     Assign a delivery user to an order
     """
     try:
-        print(f"Attempting to assign order {order_id} to delivery user {delivery_user_id}")
+        print(
+            f"Attempting to assign order {order_id} to delivery user {delivery_user_id}"
+        )
 
         # Support both FastAPI DI and direct invocation in tests
         client = None
@@ -821,118 +884,147 @@ async def assign_delivery_user(
 
         # Check if order exists and is ready for assignment (do this first to allow
         # test mocks that expect the select/update call ordering)
-        existing_order = _get_db_table(client, "orders")\
-            .select("*")\
-            .eq("order_id", order_id)\
+        existing_order = (
+            _get_db_table(client, "orders")
+            .select("*")
+            .eq("order_id", order_id)
             .execute()
-        
+        )
+
         if not existing_order.data:
             print(f"Order {order_id} not found in database")
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Order not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Order not found"
             )
-        
+
         order = existing_order.data[0]
         print(f"Found order with status: {order['status']}")
-        
-        if order["status"] not in [OrderStatus.READY.value, OrderStatus.CONFIRMED.value]:
+
+        if order["status"] not in [
+            OrderStatus.READY.value,
+            OrderStatus.CONFIRMED.value,
+        ]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Order is not ready for delivery assignment. Current status: {order['status']}"
+                detail=f"Order is not ready for delivery assignment. Current status: {order['status']}",
             )
-        
+
         # Optionally check if delivery user already has an active order. This
         # is disabled by default to keep test mocks simple; enable via
         # environment variable ENABLE_ACTIVE_ORDER_CHECK=true when desired.
         if os.getenv("ENABLE_ACTIVE_ORDER_CHECK", "false").lower() == "true":
-            active_orders = _get_db_table(client, "orders")\
-                .select("*")\
-                .eq("delivery_user_id", delivery_user_id)\
-                .in_("status", ["assigned", "picked_up", "en_route"])\
+            active_orders = (
+                _get_db_table(client, "orders")
+                .select("*")
+                .eq("delivery_user_id", delivery_user_id)
+                .in_("status", ["assigned", "picked_up", "en_route"])
                 .execute()
+            )
 
             # active_orders.data may be a list or a Mock in tests; check truthily
-            if getattr(active_orders, 'data', None):
+            if getattr(active_orders, "data", None):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Driver already has an active delivery. Complete current delivery before accepting new orders."
+                    detail="Driver already has an active delivery. Complete current delivery before accepting new orders.",
                 )
 
         # Assign delivery user and update status
         update_data = {
             "delivery_user_id": delivery_user_id,
             "status": OrderStatus.ASSIGNED.value,
-            "updated_at": datetime.now().isoformat()
+            "updated_at": datetime.now().isoformat(),
         }
-        
+
         print(f"Updating order with data: {update_data}")
 
-        response = _get_db_table(client, "orders")\
-            .update(update_data)\
-            .eq("order_id", order_id)\
+        response = (
+            _get_db_table(client, "orders")
+            .update(update_data)
+            .eq("order_id", order_id)
             .execute()
-        
-        # Re-fetch the updated order to return it
-        updated_order = _get_db_table(client, "orders")\
-            .select("*")\
-            .eq("order_id", order_id)\
-            .execute()
+        )
 
-        data = getattr(updated_order, 'data', None)
+        # Re-fetch the updated order to return it
+        updated_order = (
+            _get_db_table(client, "orders")
+            .select("*")
+            .eq("order_id", order_id)
+            .execute()
+        )
+
+        data = getattr(updated_order, "data", None)
         if not data or not isinstance(data, (list, tuple)):
             # If the update response contained the updated row, return that
-            if getattr(response, 'data', None):
-                print(f"Successfully assigned order {order_id} to driver {delivery_user_id}")
+            if getattr(response, "data", None):
+                print(
+                    f"Successfully assigned order {order_id} to driver {delivery_user_id}"
+                )
                 return Order(**response.data[0])
 
             print(f"Failed to update order {order_id}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to assign delivery user"
+                detail="Failed to assign delivery user",
             )
 
         # Ensure nested fields (like delivery_address) are present for Pydantic
         final_row = data[0]
         try:
             # If the updated row dropped nested JSON, merge from the original fetched order
-            if not final_row.get("delivery_address") and getattr(existing_order, 'data', None):
-                final_row["delivery_address"] = existing_order.data[0].get("delivery_address")
+            if not final_row.get("delivery_address") and getattr(
+                existing_order, "data", None
+            ):
+                final_row["delivery_address"] = existing_order.data[0].get(
+                    "delivery_address"
+                )
 
-            print(f"Successfully assigned order {order_id} to driver {delivery_user_id}")
+            print(
+                f"Successfully assigned order {order_id} to driver {delivery_user_id}"
+            )
             return Order(**final_row)
         except Exception as val_err:
             # Try falling back to the update response payload if available
-            print(f"Order model validation failed on updated row, attempting fallback: {str(val_err)}")
-            if getattr(response, 'data', None):
+            print(
+                f"Order model validation failed on updated row, attempting fallback: {str(val_err)}"
+            )
+            if getattr(response, "data", None):
                 fallback = response.data[0]
-                if not fallback.get("delivery_address") and getattr(existing_order, 'data', None):
-                    fallback["delivery_address"] = existing_order.data[0].get("delivery_address")
+                if not fallback.get("delivery_address") and getattr(
+                    existing_order, "data", None
+                ):
+                    fallback["delivery_address"] = existing_order.data[0].get(
+                        "delivery_address"
+                    )
                 try:
                     return Order(**fallback)
                 except Exception as val_err2:
                     print(f"Fallback also failed: {str(val_err2)}")
 
-            print(f"Failed to construct Order model after assignment for order {order_id}")
+            print(
+                f"Failed to construct Order model after assignment for order {order_id}"
+            )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to assign delivery user: validation error: {str(val_err)}"
+                detail=f"Failed to assign delivery user: validation error: {str(val_err)}",
             )
-        
+
     except HTTPException:
         raise
     except Exception as e:
         print(f"Error in assign_delivery_user: {str(e)}")
         import traceback
+
         traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to assign delivery user: {str(e)}"
+            detail=f"Failed to assign delivery user: {str(e)}",
         )
 
 
 @router.post("/{order_id}/verify-delivery", status_code=status.HTTP_200_OK)
-async def verify_delivery_code(order_id: str, payload: dict, supabase=Depends(get_supabase)):
+async def verify_delivery_code(
+    order_id: str, payload: dict, supabase=Depends(get_supabase)
+):
     """
     Verify a delivery code for an order. If the code matches, mark the order
     as delivered (set status to DELIVERED), set actual_delivery_time, and
@@ -941,48 +1033,73 @@ async def verify_delivery_code(order_id: str, payload: dict, supabase=Depends(ge
     try:
         code = payload.get("delivery_code") if isinstance(payload, dict) else None
         if not code:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing delivery_code in request body")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing delivery_code in request body",
+            )
 
         # Fetch order
-        existing_order = supabase.table("orders")\
-            .select("*")\
-            .eq("order_id", order_id)\
-            .execute()
+        existing_order = (
+            supabase.table("orders").select("*").eq("order_id", order_id).execute()
+        )
 
         if not existing_order.data:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Order not found"
+            )
 
         order_row = existing_order.data[0]
         stored_code = order_row.get("delivery_code")
         if not stored_code:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No delivery code set for this order")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No delivery code set for this order",
+            )
 
         # Simple equality check; consider hashing for production
         if str(code).strip() != str(stored_code).strip():
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid delivery code")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid delivery code"
+            )
 
         # Validate allowed state transition: only allow delivering from PICKED_UP or EN_ROUTE
         current_status = order_row.get("status")
-        if current_status not in [OrderStatus.PICKED_UP.value, OrderStatus.EN_ROUTE.value]:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid transition: cannot mark as delivered from '{current_status}'")
+        if current_status not in [
+            OrderStatus.PICKED_UP.value,
+            OrderStatus.EN_ROUTE.value,
+        ]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid transition: cannot mark as delivered from '{current_status}'",
+            )
 
         # Perform atomic update: mark code used and set delivered
         update_data = {
             "status": OrderStatus.DELIVERED.value,
             "delivery_code_used": True,
             "actual_delivery_time": datetime.now().isoformat(),
-            "updated_at": datetime.now().isoformat()
+            "updated_at": datetime.now().isoformat(),
         }
 
-        response = supabase.table("orders").update(update_data).eq("order_id", order_id).execute()
+        response = (
+            supabase.table("orders")
+            .update(update_data)
+            .eq("order_id", order_id)
+            .execute()
+        )
         # Re-fetch to return normalized payload
-        updated = supabase.table("orders").select("*").eq("order_id", order_id).execute()
-        if not getattr(updated, 'data', None):
+        updated = (
+            supabase.table("orders").select("*").eq("order_id", order_id).execute()
+        )
+        if not getattr(updated, "data", None):
             # If update response contained the updated row, use it
-            if getattr(response, 'data', None):
+            if getattr(response, "data", None):
                 updated_row = response.data[0]
             else:
-                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to mark order delivered")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to mark order delivered",
+                )
         else:
             updated_row = updated.data[0]
 
@@ -1018,7 +1135,9 @@ async def verify_delivery_code(order_id: str, payload: dict, supabase=Depends(ge
                 normalized_items = []
 
             norm["order_items"] = normalized_items
-            norm["subtotal"] = round(sum(i.get("subtotal", 0.0) for i in normalized_items), 2)
+            norm["subtotal"] = round(
+                sum(i.get("subtotal", 0.0) for i in normalized_items), 2
+            )
             da = norm.get("delivery_address")
             if isinstance(da, str):
                 try:
@@ -1033,7 +1152,11 @@ async def verify_delivery_code(order_id: str, payload: dict, supabase=Depends(ge
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to verify delivery code: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to verify delivery code: {str(e)}",
+        )
+
 
 @router.get("/delivery-user/{delivery_user_id}", response_model=List[Order])
 async def get_delivery_user_orders(
@@ -1041,23 +1164,27 @@ async def get_delivery_user_orders(
     status_filter: Optional[OrderStatus] = None,
     limit: int = 20,
     offset: int = 0,
-    supabase=Depends(get_supabase)
+    supabase=Depends(get_supabase),
 ):
     """
     Get orders assigned to a specific delivery user
     """
     try:
-        query = supabase.table("orders")\
-            .select("*")\
+        query = (
+            supabase.table("orders")
+            .select("*")
             .eq("delivery_user_id", delivery_user_id)
-        
+        )
+
         if status_filter:
             query = query.eq("status", status_filter.value)
-        
-        response = query.order("created_at", desc=True)\
-            .range(offset, offset + limit - 1)\
+
+        response = (
+            query.order("created_at", desc=True)
+            .range(offset, offset + limit - 1)
             .execute()
-        
+        )
+
         if response.data:
             orders = []
             for order in response.data:
@@ -1065,12 +1192,13 @@ async def get_delivery_user_orders(
                 orders.append(Order(**norm))
             return orders
         return []
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve delivery user orders: {str(e)}"
+            detail=f"Failed to retrieve delivery user orders: {str(e)}",
         )
+
 
 @router.delete("/{order_id}", status_code=status.HTTP_200_OK)
 async def cancel_order(order_id: str, supabase=Depends(get_supabase)):
@@ -1090,46 +1218,52 @@ async def cancel_order(order_id: str, supabase=Depends(get_supabase)):
                 detail="Supabase is not configured.",
             )
 
-        existing_order = _get_db_table(client, "orders")\
-            .select("*")\
-            .eq("order_id", order_id)\
+        existing_order = (
+            _get_db_table(client, "orders")
+            .select("*")
+            .eq("order_id", order_id)
             .execute()
-        
+        )
+
         if not existing_order.data:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Order not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Order not found"
             )
-        
+
         order = existing_order.data[0]
-        if order["status"] in [OrderStatus.DELIVERED.value, OrderStatus.CANCELLED.value]:
+        if order["status"] in [
+            OrderStatus.DELIVERED.value,
+            OrderStatus.CANCELLED.value,
+        ]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot cancel order that is already delivered or cancelled"
+                detail="Cannot cancel order that is already delivered or cancelled",
             )
-        
+
         update_data = {
             "status": OrderStatus.CANCELLED.value,
-            "updated_at": datetime.now().isoformat()
+            "updated_at": datetime.now().isoformat(),
         }
-        
-        response = _get_db_table(client, "orders")\
-            .update(update_data)\
-            .eq("order_id", order_id)\
+
+        response = (
+            _get_db_table(client, "orders")
+            .update(update_data)
+            .eq("order_id", order_id)
             .execute()
-        
+        )
+
         if not response.data:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to cancel order"
+                detail="Failed to cancel order",
             )
-        
+
         return {"message": "Order cancelled successfully", "order_id": order_id}
-        
+
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to cancel order: {str(e)}"
+            detail=f"Failed to cancel order: {str(e)}",
         )

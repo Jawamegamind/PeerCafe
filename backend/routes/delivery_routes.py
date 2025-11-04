@@ -1,10 +1,12 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+import asyncio
+import os
+
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from database.supabase_db import create_supabase_client
 from models.delivery_model import Location
 from utils.geocode import geocode_address
-import os
-import httpx
-import asyncio
 
 delivery_router = APIRouter()
 supabase = create_supabase_client()
@@ -12,8 +14,12 @@ supabase = create_supabase_client()
 MAPBOX_TOKEN = os.environ.get("MAPBOX_TOKEN")
 MAX_DEST_PER_MATRIX = int(os.environ.get("MAX_DEST_PER_MATRIX", 24))
 
-def location_from_query(latitude: float = Query(...), longitude: float = Query(...)) -> Location:
+
+def location_from_query(
+    latitude: float = Query(...), longitude: float = Query(...)
+) -> Location:
     return Location(latitude=latitude, longitude=longitude)
+
 
 @delivery_router.get("/deliveries/ready", response_model=list)
 async def fetch_ready_orders(source: Location = Depends(location_from_query)):
@@ -21,18 +27,19 @@ async def fetch_ready_orders(source: Location = Depends(location_from_query)):
     try:
         # In Python use None (not null) and the PostgREST client exposes `is_` (with underscore)
         # because `is` is a Python keyword. Use `is_` to test IS NULL.
-        result = supabase.from_("orders").select(
-            "order_id, user_id, restaurant_id, restaurants(name, latitude, longitude, address), delivery_fee, tip_amount, estimated_pickup_time, estimated_delivery_time, latitude, longitude, status"
-            ).eq(
-                "status", "ready"
-            ).is_(
-                "delivery_user_id", None
-            ).execute()
+        result = (
+            supabase.from_("orders")
+            .select(
+                "order_id, user_id, restaurant_id, restaurants(name, latitude, longitude, address), delivery_fee, tip_amount, estimated_pickup_time, estimated_delivery_time, latitude, longitude, status"
+            )
+            .eq("status", "ready")
+            .is_("delivery_user_id", None)
+            .execute()
+        )
         orders = result.data or []
 
         if orders == []:
             return []
-
 
         restaurant_ids = []
         restaurant_coords_by_id = {}
@@ -54,7 +61,6 @@ async def fetch_ready_orders(source: Location = Depends(location_from_query)):
                 # If parsing fails, treat as missing coords and continue
                 pass
 
-
         dests = []
         for rid in restaurant_ids:
             coords = restaurant_coords_by_id.get(rid)
@@ -67,7 +73,14 @@ async def fetch_ready_orders(source: Location = Depends(location_from_query)):
         dests = [ri for ri in dests if ri["lat"] is not None and ri["lng"] is not None]
 
         # Helper to break dests into chunks of MAX_DEST_PER_MATRIX size
-        chunks = [dests[i:i + MAX_DEST_PER_MATRIX] for i in range(0, len(dests), MAX_DEST_PER_MATRIX)] if dests else []
+        chunks = (
+            [
+                dests[i : i + MAX_DEST_PER_MATRIX]
+                for i in range(0, len(dests), MAX_DEST_PER_MATRIX)
+            ]
+            if dests
+            else []
+        )
 
         distance_by_restaurant: dict[any, float] = {}  # meters
 
@@ -82,7 +95,7 @@ async def fetch_ready_orders(source: Location = Depends(location_from_query)):
                 "access_token": MAPBOX_TOKEN,
                 "sources": "0",
                 "destinations": destinations_idx,
-                "annotations": "distance,duration"  # asking for distance and duration (meters)
+                "annotations": "distance,duration",  # asking for distance and duration (meters)
             }
 
             url = f"https://api.mapbox.com/directions-matrix/v1/mapbox/driving/{coordinates_str}"
@@ -119,11 +132,17 @@ async def fetch_ready_orders(source: Location = Depends(location_from_query)):
                     durations_from_source = [None] * len(chunk)
 
                 # assign per destination in the same order
-                for item, dist_val, dur_val in zip(chunk, distances_from_source, durations_from_source):
+                for item, dist_val, dur_val in zip(
+                    chunk, distances_from_source, durations_from_source
+                ):
                     rid = item.get("restaurant_id")
                     # Mapbox may return null for unreachable destinations
-                    distance_by_restaurant[rid] = float(dist_val) if dist_val is not None else None
-                    duration_by_restaurant[rid] = float(dur_val) if dur_val is not None else None
+                    distance_by_restaurant[rid] = (
+                        float(dist_val) if dist_val is not None else None
+                    )
+                    duration_by_restaurant[rid] = (
+                        float(dur_val) if dur_val is not None else None
+                    )
 
         else:
             # no destinations; nothing to compute
@@ -142,7 +161,7 @@ async def fetch_ready_orders(source: Location = Depends(location_from_query)):
                 o_enriched = dict(o)
                 o_enriched["distance_to_restaurant"] = None
                 o_enriched["duration_to_restaurant"] = None
-            
+
             else:
 
                 o_enriched = dict(o)
@@ -175,23 +194,28 @@ async def fetch_ready_orders(source: Location = Depends(location_from_query)):
 async def get_navigation_route(
     order_id: str,
     driver_latitude: float = Query(...),
-    driver_longitude: float = Query(...)
+    driver_longitude: float = Query(...),
 ):
     """Get turn-by-turn navigation route for active delivery.
     Returns route from driver → restaurant (if not picked up yet)
     or restaurant → customer (if already picked up)."""
     try:
         # Fetch order details
-        result = supabase.from_("orders").select(
-            "order_id, user_id, status, restaurant_id, restaurants(name, latitude, longitude, address), latitude, longitude, delivery_address"
-        ).eq("order_id", order_id).execute()
-        
+        result = (
+            supabase.from_("orders")
+            .select(
+                "order_id, user_id, status, restaurant_id, restaurants(name, latitude, longitude, address), latitude, longitude, delivery_address"
+            )
+            .eq("order_id", order_id)
+            .execute()
+        )
+
         if not result.data or len(result.data) == 0:
             raise HTTPException(status_code=404, detail="Order not found")
-        
+
         order = result.data[0]
         order_status = order.get("status")
-        
+
         # Get coordinates
         restaurant_info = order.get("restaurants") or {}
         restaurant_name = restaurant_info.get("name", "Restaurant")
@@ -203,7 +227,12 @@ async def get_navigation_route(
         try:
             lat_raw = restaurant_info.get("latitude")
             lng_raw = restaurant_info.get("longitude")
-            if lat_raw is not None and lng_raw is not None and lat_raw != "" and lng_raw != "":
+            if (
+                lat_raw is not None
+                and lng_raw is not None
+                and lat_raw != ""
+                and lng_raw != ""
+            ):
                 restaurant_lat = float(lat_raw)
                 restaurant_lng = float(lng_raw)
         except (TypeError, ValueError):
@@ -216,7 +245,12 @@ async def get_navigation_route(
         try:
             cust_lat_raw = order.get("latitude")
             cust_lng_raw = order.get("longitude")
-            if cust_lat_raw is not None and cust_lng_raw is not None and cust_lat_raw != "" and cust_lng_raw != "":
+            if (
+                cust_lat_raw is not None
+                and cust_lng_raw is not None
+                and cust_lat_raw != ""
+                and cust_lng_raw != ""
+            ):
                 customer_lat = float(cust_lat_raw)
                 customer_lng = float(cust_lng_raw)
         except (TypeError, ValueError):
@@ -239,7 +273,11 @@ async def get_navigation_route(
         # Fallback: attempt to geocode customer/delivery address if coords missing
         if (customer_lat is None or customer_lng is None) and customer_address:
             # customer_address may be a string or a dict; prefer string
-            addr_str = customer_address if isinstance(customer_address, str) else str(customer_address)
+            addr_str = (
+                customer_address
+                if isinstance(customer_address, str)
+                else str(customer_address)
+            )
             try:
                 lat, lng = await geocode_address(addr_str)
                 if lat is not None and lng is not None:
@@ -254,8 +292,13 @@ async def get_navigation_route(
             try:
                 user_id = order.get("user_id")
                 if user_id:
-                    user_res = supabase.from_("users").select("latitude, longitude").eq("user_id", user_id).execute()
-                    udata = getattr(user_res, 'data', None)
+                    user_res = (
+                        supabase.from_("users")
+                        .select("latitude, longitude")
+                        .eq("user_id", user_id)
+                        .execute()
+                    )
+                    udata = getattr(user_res, "data", None)
                     user_row = None
                     if udata:
                         # user_res.data may be a list or a dict depending on client behavior
@@ -268,10 +311,22 @@ async def get_navigation_route(
                         try:
                             u_lat = user_row.get("latitude")
                             u_lng = user_row.get("longitude")
-                            if u_lat is not None and u_lng is not None and u_lat != "" and u_lng != "":
+                            if (
+                                u_lat is not None
+                                and u_lng is not None
+                                and u_lat != ""
+                                and u_lng != ""
+                            ):
                                 customer_lat = float(u_lat)
                                 customer_lng = float(u_lng)
-                                print("Navigation debug: used user profile coords as fallback", {"user_id": user_id, "customer_lat": customer_lat, "customer_lng": customer_lng})
+                                print(
+                                    "Navigation debug: used user profile coords as fallback",
+                                    {
+                                        "user_id": user_id,
+                                        "customer_lat": customer_lat,
+                                        "customer_lng": customer_lng,
+                                    },
+                                )
                         except (TypeError, ValueError):
                             pass
             except Exception:
@@ -283,7 +338,11 @@ async def get_navigation_route(
         if restaurant_lat is None or restaurant_lng is None:
             # restaurant_address may be a string or structured data; prefer string
             try:
-                addr_str = restaurant_address if isinstance(restaurant_address, str) else str(restaurant_address)
+                addr_str = (
+                    restaurant_address
+                    if isinstance(restaurant_address, str)
+                    else str(restaurant_address)
+                )
                 if addr_str:
                     lat, lng = await geocode_address(addr_str)
                     if lat is not None and lng is not None:
@@ -295,19 +354,24 @@ async def get_navigation_route(
 
         # After attempting geocode, if still missing then fail with debug info
         if restaurant_lat is None or restaurant_lng is None:
-            print("Navigation debug: restaurant coords missing after geocode attempt", {
-                "order": order,
-                "restaurant_info": restaurant_info,
-                "restaurant_address": restaurant_address,
-                "restaurant_lat": restaurant_lat,
-                "restaurant_lng": restaurant_lng
-            })
-            raise HTTPException(status_code=400, detail="Restaurant location not available")
+            print(
+                "Navigation debug: restaurant coords missing after geocode attempt",
+                {
+                    "order": order,
+                    "restaurant_info": restaurant_info,
+                    "restaurant_address": restaurant_address,
+                    "restaurant_lat": restaurant_lat,
+                    "restaurant_lng": restaurant_lng,
+                },
+            )
+            raise HTTPException(
+                status_code=400, detail="Restaurant location not available"
+            )
 
         # NOTE: customer coordinates are only strictly required when routing to the customer
         # (i.e. when the order is already picked up). For assigned orders (driver -> restaurant)
         # we don't require customer coordinates and will not fail early.
-        
+
         # Determine which route to show based on order status
         if order_status == "assigned":
             # Show driver → restaurant route
@@ -326,20 +390,25 @@ async def get_navigation_route(
         else:
             raise HTTPException(
                 status_code=400,
-                detail=f"Order status '{order_status}' does not require navigation"
+                detail=f"Order status '{order_status}' does not require navigation",
             )
 
         # If we're routing to the customer, ensure customer coords are available
         if route_type == "to_customer":
             if customer_lat is None or customer_lng is None:
-                print("Navigation debug: customer coords missing for to_customer route", {
-                    "order": order,
-                    "customer_address": customer_address,
-                    "customer_lat": customer_lat,
-                    "customer_lng": customer_lng
-                }) 
-                raise HTTPException(status_code=400, detail="Customer location not geocoded")
-        
+                print(
+                    "Navigation debug: customer coords missing for to_customer route",
+                    {
+                        "order": order,
+                        "customer_address": customer_address,
+                        "customer_lat": customer_lat,
+                        "customer_lng": customer_lng,
+                    },
+                )
+                raise HTTPException(
+                    status_code=400, detail="Customer location not geocoded"
+                )
+
         # Fetch route from Mapbox Directions API
         url = f"https://api.mapbox.com/directions/v5/mapbox/driving/{start_lng},{start_lat};{end_lng},{end_lat}"
         params = {
@@ -348,33 +417,34 @@ async def get_navigation_route(
             "overview": "full",
             "steps": "true",
             "banner_instructions": "true",
-            "voice_instructions": "true"
+            "voice_instructions": "true",
         }
-        
+
         async with httpx.AsyncClient(timeout=20.0) as client:
             response = await client.get(url, params=params)
             response.raise_for_status()
             data = response.json()
-        
+
         if not data.get("routes") or len(data["routes"]) == 0:
             raise HTTPException(status_code=404, detail="No route found")
-        
+
         route = data["routes"][0]
         leg = route["legs"][0] if route.get("legs") else {}
-        
+
         return {
             "order_id": order_id,
             "order_status": order_status,
             "route_type": route_type,
-            "origin": {
-                "latitude": start_lat,
-                "longitude": start_lng
-            },
+            "origin": {"latitude": start_lat, "longitude": start_lng},
             "destination": {
                 "name": destination_name,
-                "address": destination_address if isinstance(destination_address, str) else str(destination_address),
+                "address": (
+                    destination_address
+                    if isinstance(destination_address, str)
+                    else str(destination_address)
+                ),
                 "latitude": end_lat,
-                "longitude": end_lng
+                "longitude": end_lng,
             },
             "route": {
                 "distance_meters": route.get("distance"),
@@ -382,15 +452,17 @@ async def get_navigation_route(
                 "duration_seconds": route.get("duration"),
                 "duration_minutes": round(route.get("duration", 0) / 60.0, 1),
                 "geometry": route.get("geometry"),
-                "steps": leg.get("steps", [])
-            }
+                "steps": leg.get("steps", []),
+            },
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
         print(f"Error fetching navigation route: {e}")
         import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Failed to fetch navigation: {str(e)}")
 
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500, detail=f"Failed to fetch navigation: {str(e)}"
+        )
