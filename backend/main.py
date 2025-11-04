@@ -27,7 +27,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/api")
 app.include_router(restaurant_router, prefix="/api")
 app.include_router(menu_router, prefix="/api")
-app.include_router(order_router, prefix="/api")
+app.include_router(order_router, prefix="/api/orders")
 app.include_router(delivery_router, prefix="/api")
 
 

@@ -29,9 +29,7 @@ import {
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY || '';
 const backend_url =
-  process.env.NEXT_PUBLIC_BACKEND_API_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  'http://localhost:8000';
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 interface NavigationMapProps {
   orderId: string;
@@ -116,7 +114,7 @@ export default function NavigationMap({
     try {
       setLoading(true);
       const response = await axios.get(
-        `${backend_url}/api/deliveries/active/${orderId}/navigation`,
+        `${backend_url}/deliveries/active/${orderId}/navigation`,
         {
           params: {
             driver_latitude: driverLocation.latitude,
@@ -402,7 +400,7 @@ export default function NavigationMap({
                       setVerifyLoading(true);
                       try {
                         await axios.post(
-                          `${backend_url}/api/orders/${orderId}/verify-delivery`,
+                          `${backend_url}/orders/${orderId}/verify-delivery`,
                           { delivery_code: deliveryCode.trim() }
                         );
                         // success: call provided callback

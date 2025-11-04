@@ -32,7 +32,7 @@ import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY || '';
-const backend_url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+const backend_url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 const supabase = createClient();
 
@@ -201,7 +201,7 @@ export default function DeliveryPage() {
       // API call to fetch ready orders from backend based on user's location
       axios
         .get(
-          `${backend_url}/api/deliveries/ready?latitude=${lat}&longitude=${long}`
+          `${backend_url}/deliveries/ready?latitude=${lat}&longitude=${long}`
         )
         .then(response => {
           setReadyOrders(response.data);
@@ -236,7 +236,7 @@ export default function DeliveryPage() {
 
       // Call the API to assign the order to this delivery user
       const response = await axios.patch(
-        `${backend_url}/api/orders/${order.order_id}/assign-delivery`,
+        `${backend_url}/orders/${order.order_id}/assign-delivery`,
         null,
         {
           params: {
@@ -288,7 +288,7 @@ export default function DeliveryPage() {
 
     try {
       await axios.patch(
-        `${backend_url}/api/orders/${activeOrder.order_id}/status?new_status=picked_up`
+        `${backend_url}/orders/${activeOrder.order_id}/status?new_status=picked_up`
       );
       setActiveOrder(prev => (prev ? { ...prev, status: 'picked_up' } : null));
       alert('Order marked as picked up!');
@@ -303,7 +303,7 @@ export default function DeliveryPage() {
 
     try {
       await axios.patch(
-        `${backend_url}/api/orders/${activeOrder.order_id}/status?new_status=delivered`
+        `${backend_url}/orders/${activeOrder.order_id}/status?new_status=delivered`
       );
       alert('Order delivered successfully!');
       setActiveOrder(null);

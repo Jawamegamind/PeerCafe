@@ -147,7 +147,7 @@ function DashboardContent() {
                 fontSize: '0.85rem',
               }}
             >
-              Coming Soon...
+
             </p>
           </div>
 

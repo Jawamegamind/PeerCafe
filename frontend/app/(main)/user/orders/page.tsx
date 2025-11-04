@@ -45,7 +45,7 @@ interface OrderListItem {
 }
 
 const backendUrl =
-  process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8000';
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 function statusChip(status: OrderStatus) {
   const map: Record<
@@ -99,7 +99,7 @@ export default function MyOrdersPage() {
         }
 
         setLoading(true);
-        const res = await fetch(`${backendUrl}/api/orders/me?limit=50`, {
+        const res = await fetch(`${backendUrl}/orders/me?limit=50`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (!res.ok) {

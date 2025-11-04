@@ -19,7 +19,7 @@ from database.supabase_db import create_supabase_client
 from models.order_model import Order, OrderCreate, OrderStatus
 from utils.geocode import geocode_address
 
-router = APIRouter(prefix="/orders", tags=["orders"])
+router = APIRouter(tags=["orders"])
 
 
 def get_supabase():

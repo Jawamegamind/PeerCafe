@@ -17,9 +17,7 @@ import NavigationMap from '../NavigationMap';
 import { createClient } from '@/utils/supabase/client';
 
 const backend_url =
-  process.env.NEXT_PUBLIC_BACKEND_API_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  'http://localhost:8000';
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 interface ActiveOrder {
   order_id: string;
@@ -125,7 +123,7 @@ export default function DeliveryNavigationPage() {
     if (!activeOrder) return;
     try {
       await axios.patch(
-        `${backend_url}/api/orders/${activeOrder.order_id}/status?new_status=picked_up`
+        `${backend_url}/orders/${activeOrder.order_id}/status?new_status=picked_up`
       );
       setActiveOrder(prev => (prev ? { ...prev, status: 'picked_up' } : prev));
     } catch {

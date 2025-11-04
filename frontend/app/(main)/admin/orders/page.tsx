@@ -23,6 +23,7 @@ import {
   Alert,
 } from '@mui/material';
 import Navbar from '../../../_components/navbar';
+import { API_BASE } from '@/utils/api';
 import { useRouter } from 'next/navigation';
 
 interface OrderItem {
@@ -65,9 +66,7 @@ const STATUS_PRIORITY = [
 
 export default function AdminOrdersPage() {
   const router = useRouter();
-  // API base can be configured via NEXT_PUBLIC_API_URL (e.g. http://localhost:8000/api)
-  const API_BASE =
-    process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+  // API base is centralized in utils/api
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [restaurants, setRestaurants] = React.useState<Restaurant[]>([]);
   const [loading, setLoading] = React.useState(true);
