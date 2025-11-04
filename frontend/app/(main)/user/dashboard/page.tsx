@@ -2,9 +2,14 @@
 
 import * as React from 'react';
 import Navbar from "../../../_components/navbar";
-import { Black_Han_Sans } from 'next/font/google';
+import { useSearchParams } from 'next/navigation';
 
 export default function UserDashboard() {
+  const searchParams = useSearchParams();
+  const errorParam = searchParams?.get('error');
+
+  const showAccessDenied = errorParam === 'insufficient_permissions';
+
   return (
     <>
       <Navbar />
@@ -33,6 +38,22 @@ export default function UserDashboard() {
           Your gateway to delicious local restaurants
         </p>
         
+        {/* Access control message (e.g., redirected from admin area) */}
+        {showAccessDenied && (
+          <div style={{
+            maxWidth: '720px',
+            marginBottom: '20px',
+            padding: '16px',
+            borderRadius: '8px',
+            border: '2px solid #e2e8f0',
+            backgroundColor: '#fff7f7',
+            color: '#b91c1c',
+          }}>
+            <div style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '6px' }}>🚫 Access Denied</div>
+            <div>You don't have permission to access admin areas. Contact an administrator if you believe this is an error.</div>
+          </div>
+        )}
+
         {/* Quick Actions */}
         <div style={{
           display: 'grid',
@@ -91,6 +112,7 @@ export default function UserDashboard() {
             <p style={{ margin: '0', color: '#64748b', fontSize: '0.9rem' }}>
               View your recent and active orders
             </p>
+            <p style={{ margin: '6px 0 0', color: '#9aa4b2', fontSize: '0.85rem' }}>Coming Soon...</p>
           </div>
 
           <div style={{
@@ -118,6 +140,7 @@ export default function UserDashboard() {
             <p style={{ margin: '0', color: '#64748b', fontSize: '0.9rem' }}>
               Discover nearby orders and deliver them to earn awesome rewards!
             </p>
+            <p style={{ margin: '6px 0 0', color: '#9aa4b2', fontSize: '0.85rem' }}>Coming Soon...</p>
           </div>
         </div>
         
