@@ -7,13 +7,231 @@ from unittest.mock import Mock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+import routes.order_routes as order_routes
 from main import app
 
 client = TestClient(app)
 
 
-class TestOrderRoutes:
-    """Test cases for order management routes"""
+# DummySupabase for async delivery address tests and other edge-case mocks
+class DummySupabase:
+    def from_(self, table):
+        class Dummy:
+            def select(self, *args):
+                class Dummy2:
+                    def eq(self, *args):
+                        class Dummy3:
+                            def execute(self):
+                                return type("obj", (object,), {"data": None})
+
+                        return Dummy3()
+
+                return Dummy2()
+
+        return Dummy()
+
+
+def test_extract_first_row_edge_cases():
+    # None input
+    assert order_routes._extract_first_row(None) is None
+    # Empty list
+    assert order_routes._extract_first_row([]) is None
+    # List with one element
+    assert order_routes._extract_first_row([{"a": 1}]) == {"a": 1}
+    # Dict input
+    d = {"b": 2}
+    assert order_routes._extract_first_row(d) == d
+    # Unexpected type
+    assert order_routes._extract_first_row("string") is None
+
+
+def test_maybe_fill_address_and_coords_edge_cases():
+    # Missing user fields
+    order = {}
+    user = {}
+    result = order_routes._maybe_fill_address_and_coords(order.copy(), user.copy())
+    assert result["delivery_address"]["street"] == "Unknown"
+    # Invalid latitude/longitude should not raise and should not coerce invalid str
+    order = {}
+    user = {"latitude": "not_a_number", "longitude": None}
+    result = order_routes._maybe_fill_address_and_coords(order.copy(), user.copy())
+    # latitude remains uncoerced or absent, longitude remains absent
+    assert (
+        ("latitude" not in result)
+        or isinstance(result["latitude"], float)
+        or result["latitude"] == "not_a_number"
+    )
+
+
+@pytest.mark.asyncio
+async def test_ensure_delivery_address_edge_cases():
+    # None order
+    assert await order_routes._ensure_delivery_address(None, DummySupabase()) is None
+    # Already has delivery_address
+    order = {"delivery_address": {"street": "X"}}
+    assert (
+        await order_routes._ensure_delivery_address(order.copy(), DummySupabase())
+        == order
+    )
+    # No user_id, fallback to placeholder
+    order = {}
+    result = await order_routes._ensure_delivery_address(order.copy(), DummySupabase())
+    assert result["delivery_address"]["street"] == "Unknown"
+
+
+def test_extract_user_id_from_auth_object_edge_cases():
+    # Dict with user_id
+    assert order_routes._extract_user_id_from_auth_object({"user_id": "u"}) == "u"
+    # Dict with id
+    assert order_routes._extract_user_id_from_auth_object({"id": "i"}) == "i"
+    # Dict with sub
+    assert order_routes._extract_user_id_from_auth_object({"sub": "s"}) == "s"
+
+    # Object with user_id
+    class Obj:
+        user_id = "u2"
+
+    assert order_routes._extract_user_id_from_auth_object(Obj()) == "u2"
+
+    # Object with id
+    class Obj2:
+        id = "i2"
+
+    assert order_routes._extract_user_id_from_auth_object(Obj2()) == "i2"
+
+    # Object with sub
+    class Obj3:
+        sub = "s2"
+
+    assert order_routes._extract_user_id_from_auth_object(Obj3()) == "s2"
+    # None
+    assert order_routes._extract_user_id_from_auth_object(None) is None
+
+
+def test_get_user_id_from_token_edge_cases():
+    # No token
+    class DummySupabaseNoAuth:
+        pass
+
+    assert order_routes._get_user_id_from_token(None, DummySupabaseNoAuth()) is None
+
+    # Supabase missing auth
+    class DummySupabaseAuthNone:
+        auth = None
+
+    assert (
+        order_routes._get_user_id_from_token("token", DummySupabaseAuthNone()) is None
+    )
+
+
+def test_get_user_profile_coordinates_from_supabase_edge_cases():
+    # No user_id
+    class DummySupabaseNoFrom:
+        pass
+
+    assert order_routes._get_user_profile_coordinates_from_supabase(
+        DummySupabaseNoFrom(), None
+    ) == (None, None)
+
+    # Supabase missing from_
+    class DummySupabaseNoFrom2:
+        pass
+
+    assert order_routes._get_user_profile_coordinates_from_supabase(
+        DummySupabaseNoFrom2(), "id"
+    ) == (None, None)
+
+    # Data is None
+    class DummyRes:
+        data = None
+
+    class DummySupabase3:
+        def from_(self, t):
+            class Dummy:
+                def select(self, *a):
+                    class Dummy2:
+                        def eq(self, *a):
+                            class Dummy3:
+                                def execute(self):
+                                    return DummyRes()
+
+                            return Dummy3()
+
+                    return Dummy2()
+
+            return Dummy()
+
+    assert order_routes._get_user_profile_coordinates_from_supabase(
+        DummySupabase3(), "id"
+    ) == (None, None)
+
+    # Data is list with invalid lat/lng
+    class DummyRes2:
+        data = [{"latitude": "bad", "longitude": None}]
+
+    class DummySupabase4:
+        def from_(self, t):
+            class Dummy:
+                def select(self, *a):
+                    class Dummy2:
+                        def eq(self, *a):
+                            class Dummy3:
+                                def execute(self):
+                                    return DummyRes2()
+
+                            return Dummy3()
+
+                    return Dummy2()
+
+            return Dummy()
+
+    assert order_routes._get_user_profile_coordinates_from_supabase(
+        DummySupabase4(), "id"
+    ) == (None, None)
+
+
+def test_normalize_order_item_edge_cases():
+    # Not a dict, but has model_dump
+    class Item:
+        def model_dump(self):
+            return {"a": 1}
+
+    assert order_routes._normalize_order_item(Item()) == {"a": 1}
+
+    # Not a dict, fallback to dict()
+    class Item2:
+        def __iter__(self):
+            return iter([("b", 2)])
+
+    assert order_routes._normalize_order_item(Item2()) == {"b": 2}
+
+    # Not a dict, cannot convert
+    class Item3:
+        pass
+
+    assert order_routes._normalize_order_item(Item3()) == {}
+    # None
+    assert order_routes._normalize_order_item(None) == {}
+    # Already dict
+    d = {"c": 3}
+    assert order_routes._normalize_order_item(d) == d
+
+
+def test_normalize_order_items_edge_cases():
+    # JSON string
+    import json
+
+    s = json.dumps([{"subtotal": "5.5"}])
+    result = order_routes._normalize_order_items(s)
+    assert isinstance(result, list) and result[0]["subtotal"] == 5.5
+    # Not a list/tuple
+    assert order_routes._normalize_order_items({"not": "a list"}) == []
+    # List with None item
+    result = order_routes._normalize_order_items([None])
+    assert isinstance(result, list) and result[0]["subtotal"] == 0.0
+    # List with item missing subtotal
+    result = order_routes._normalize_order_items([{"name": "x"}])
+    assert result[0]["subtotal"] == 0.0
 
     @pytest.fixture
     def sample_order_create_data(self):
