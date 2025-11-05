@@ -457,8 +457,6 @@ describe('NavigationMap Edge Cases', () => {
    * if environment variables aren't properly set up.
    */
   describe('Environment Variable Edge Cases', () => {
-    });
-
     /**
      * Test: Missing Mapbox API Key
      * 
