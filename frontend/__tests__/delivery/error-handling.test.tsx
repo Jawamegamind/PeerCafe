@@ -92,6 +92,11 @@ describe('Error Handling and Edge Cases', () => {
   });
 
   describe('Error Boundary', () => {
+    /*
+     Description: Verifies that the error boundary renders a fallback UI when a child component throws.
+     Setup: Render ErrorThrowingComponent with shouldThrow=true inside TestErrorBoundary.
+     Expectation: An element with role="alert" appears with the heading and the specific error message.
+    */
     it('catches and displays errors from child components', () => {
       render(
         <TestErrorBoundary>
@@ -104,6 +109,11 @@ describe('Error Handling and Edge Cases', () => {
       expect(screen.getByText('Error: Test error')).toBeInTheDocument();
     });
 
+    /*
+     Description: Ensures normal rendering when no error is thrown by the child component.
+     Setup: Render ErrorThrowingComponent with shouldThrow=false inside TestErrorBoundary.
+     Expectation: The child content "No error" is present and no alert is rendered.
+    */
     it('renders children normally when no error occurs', () => {
       render(
         <TestErrorBoundary>
@@ -117,11 +127,21 @@ describe('Error Handling and Edge Cases', () => {
   });
 
   describe('Network Error Handling', () => {
+    /*
+     Description: Confirms the component shows a loading indicator before async work completes.
+     Setup: Render NetworkErrorComponent with simulateError=false.
+     Expectation: Initial state displays "Loading...".
+    */
     it('displays loading state initially', () => {
       render(<NetworkErrorComponent simulateError={false} />);
       expect(screen.getByText('Loading...')).toBeInTheDocument();
     });
 
+    /*
+     Description: Validates error UI when the simulated fetch fails.
+     Setup: Render NetworkErrorComponent with simulateError=true.
+     Expectation: After loading, an element with role="alert" appears containing "Error: Network error".
+    */
     it('displays error message on network failure', async () => {
       render(<NetworkErrorComponent simulateError={true} />);
 
@@ -130,6 +150,11 @@ describe('Error Handling and Edge Cases', () => {
       expect(screen.getByText('Error: Network error')).toBeInTheDocument();
     });
 
+    /*
+     Description: Ensures success data is rendered after a successful fetch.
+     Setup: Render NetworkErrorComponent with simulateError=false.
+     Expectation: After loading completes, text "Data: Success data" is shown.
+    */
     it('displays success data on successful fetch', async () => {
       render(<NetworkErrorComponent simulateError={false} />);
 
@@ -180,6 +205,11 @@ describe('Error Handling and Edge Cases', () => {
       );
     };
 
+    /*
+     Description: Checks validation for an empty email field.
+     Setup: Render TestForm and submit without entering an email.
+     Expectation: An error element appears containing "Email is required".
+    */
     it('validates empty email field', async () => {
       render(<TestForm />);
 
@@ -191,6 +221,11 @@ describe('Error Handling and Edge Cases', () => {
       );
     });
 
+    /*
+     Description: Handles invalid email format entry and submit without crashing.
+     Setup: Type an invalid email and click submit.
+     Expectation: Input value remains as typed; button remains in the document (component stays usable).
+    */
     it('validates invalid email format', async () => {
       const user = userEvent.setup();
       render(<TestForm />);
@@ -226,6 +261,11 @@ describe('Error Handling and Edge Cases', () => {
       );
     };
 
+    /*
+     Description: Verifies modal accessibility attributes when opened.
+     Setup: Click the "Open Modal" button to render the modal.
+     Expectation: The dialog is present with aria-label="Test Modal" and aria-modal="true".
+    */
     it('handles modal accessibility correctly', async () => {
       const user = userEvent.setup();
       render(<AccessibilityTestComponent />);
@@ -258,11 +298,21 @@ describe('Error Handling and Edge Cases', () => {
       return <div data-testid="data-display">{renderData()}</div>;
     };
 
+    /*
+     Description: Ensures component renders a friendly message for null input.
+     Setup: Render DataDisplayComponent with data={null}.
+     Expectation: Displays text "No data".
+    */
     it('handles null data', () => {
       render(<DataDisplayComponent data={null} />);
       expect(screen.getByTestId('data-display')).toHaveTextContent('No data');
     });
 
+    /*
+     Description: Ensures component renders a friendly message for undefined input.
+     Setup: Render DataDisplayComponent with data={undefined}.
+     Expectation: Displays text "Undefined data".
+    */
     it('handles undefined data', () => {
       render(<DataDisplayComponent data={undefined} />);
       expect(screen.getByTestId('data-display')).toHaveTextContent(
@@ -270,6 +320,11 @@ describe('Error Handling and Edge Cases', () => {
       );
     });
 
+    /*
+     Description: Ensures component handles an empty array gracefully.
+     Setup: Render DataDisplayComponent with data={[]}.
+     Expectation: Displays text "Empty array".
+    */
     it('handles empty array', () => {
       render(<DataDisplayComponent data={[]} />);
       expect(screen.getByTestId('data-display')).toHaveTextContent(
@@ -277,6 +332,11 @@ describe('Error Handling and Edge Cases', () => {
       );
     });
 
+    /*
+     Description: Ensures component handles an empty object gracefully.
+     Setup: Render DataDisplayComponent with data={{}}.
+     Expectation: Displays text "Empty object".
+    */
     it('handles empty object', () => {
       render(<DataDisplayComponent data={{}} />);
       expect(screen.getByTestId('data-display')).toHaveTextContent(
@@ -284,6 +344,11 @@ describe('Error Handling and Edge Cases', () => {
       );
     });
 
+    /*
+     Description: Ensures component handles a whitespace-only string input.
+     Setup: Render DataDisplayComponent with data="   ".
+     Expectation: Displays text "Empty string".
+    */
     it('handles empty string', () => {
       render(<DataDisplayComponent data="   " />);
       expect(screen.getByTestId('data-display')).toHaveTextContent(
