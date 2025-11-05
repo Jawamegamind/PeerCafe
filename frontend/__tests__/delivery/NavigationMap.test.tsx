@@ -46,7 +46,6 @@ jest.mock('@/utils/supabase/client', () => ({
 }));
 
 // Mock Material-UI to avoid rendering issues
-/* eslint-disable @typescript-eslint/no-unused-vars */
 jest.mock('@mui/material', () => ({
   Box: ({ children, sx, ref, ...props }: any) => {
     const cleanProps = { ...props };
