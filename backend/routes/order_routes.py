@@ -11,6 +11,7 @@ import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional
 
+import httpx
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
@@ -20,6 +21,7 @@ from models.order_model import Order, OrderCreate, OrderStatus
 from utils.geocode import geocode_address
 
 router = APIRouter(tags=["orders"])
+MAPBOX_TOKEN = os.environ.get("MAPBOX_TOKEN")
 
 
 def get_supabase():
@@ -336,6 +338,67 @@ def _coerce_number(v):
         return 0.0
 
 
+def _build_directions_url_and_params(rest_lon, rest_lat, cust_lon, cust_lat):
+    """Build Mapbox Directions API URL and params for a point-to-point route.
+
+    Arguments are in (lon, lat) order to match Mapbox's expected coordinate ordering.
+    Returns (url, params).
+    """
+    url = f"https://api.mapbox.com/directions/v5/mapbox/driving/{rest_lon},{rest_lat};{cust_lon},{cust_lat}"
+    params = {
+        "access_token": MAPBOX_TOKEN,
+        "geometries": "geojson",
+        "overview": "simplified",
+    }
+    return url, params
+
+
+async def _fetch_directions_distance_duration(rest_lon, rest_lat, cust_lon, cust_lat):
+    """Fetch directions from Mapbox and return (distance_meters, duration_seconds).
+
+    Returns (None, None) on error or when no route is available.
+    """
+    url, params = _build_directions_url_and_params(
+        rest_lon, rest_lat, cust_lon, cust_lat
+    )
+    try:
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            resp = await client.get(url, params=params)
+            resp.raise_for_status()
+            directions_data = resp.json()
+            if directions_data.get("routes") and len(directions_data["routes"]) > 0:
+                route = directions_data["routes"][0]
+                distance = route.get("distance")
+                duration = route.get("duration")
+                return distance, duration
+    except httpx.HTTPError as http_err:
+        print(f"HTTP error occurred while fetching directions: {http_err}")
+    except Exception as e:
+        print(f"Error parsing directions response: {e}")
+    return None, None
+
+
+def _convert_distance_and_duration(distance_meters, duration_seconds):
+    """Convert raw distance in meters to miles (rounded 2 decimals)
+    and duration in seconds to minutes (rounded 2 decimals).
+
+    Returns (distance_miles, duration_minutes) where either may be None.
+    """
+    distance_miles = None
+    duration_minutes = None
+    try:
+        if distance_meters is not None:
+            distance_miles = round(float(distance_meters) / 1609.34, 2)
+    except Exception:
+        distance_miles = None
+    try:
+        if duration_seconds is not None:
+            duration_minutes = round(float(duration_seconds) / 60.0, 2)
+    except Exception:
+        duration_minutes = None
+    return distance_miles, duration_minutes
+
+
 def _normalize_order_item(item):
     """Normalize a single order item to dict format."""
     if not isinstance(item, dict):
@@ -493,6 +556,34 @@ async def place_order(order_data: OrderCreate, supabase=Depends(get_supabase)):
         estimated_pickup_time = datetime.now() + timedelta(minutes=30)
         estimated_delivery_time = datetime.now() + timedelta(minutes=60)
 
+        # Fetch restaurant location (to calculate distance and duration to from restaurant to delivery address)
+        restaurant_location = (
+            supabase.from_("restaurants")
+            .select("latitude, longitude")
+            .eq("restaurant_id", order_data.restaurant_id)
+            .single()
+            .execute()
+        )
+
+        # Calculate distance and duration from restaurant to delivery address
+        distance = None
+        duration = None
+        if (
+            restaurant_location.data
+            and restaurant_location.data.get("latitude") is not None
+            and restaurant_location.data.get("longitude") is not None
+        ):
+            rest_lat = restaurant_location.data["latitude"]
+            rest_lon = restaurant_location.data["longitude"]
+
+            # Fetch raw meters/seconds from Mapbox (helpers handle errors)
+            meters, seconds = await _fetch_directions_distance_duration(
+                rest_lon, rest_lat, customer_lng, customer_lat
+            )
+
+            # Convert to miles/minutes for storage
+            distance, duration = _convert_distance_and_duration(meters, seconds)
+
         # Prepare order data for database
         order_db_data = {
             "order_id": order_id,
@@ -514,6 +605,8 @@ async def place_order(order_data: OrderCreate, supabase=Depends(get_supabase)):
             "estimated_delivery_time": estimated_delivery_time.isoformat(),
             "created_at": datetime.now().isoformat(),
             "updated_at": datetime.now().isoformat(),
+            "duration_restaurant_delivery": duration,
+            "distance_restaurant_delivery": distance,
         }
 
         # Insert order into database
