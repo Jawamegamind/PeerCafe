@@ -4,9 +4,6 @@ and monkeypatch module-level dependencies on `routes.delivery_routes`.
 """
 
 import pytest
-from unittest.mock import Mock
-
-from models.delivery_model import Location
 
 import routes.delivery_routes as delivery_routes
 
@@ -202,7 +199,11 @@ def test_ready_orders_chunking_multiple_matrix_calls(client, monkeypatch):
                 "order_id": 100 + i,
                 "user_id": f"u{i}",
                 "restaurant_id": 200 + i,
-                "restaurants": {"name": f"R{i}", "latitude": 10.0 + i, "longitude": 20.0 + i},
+                "restaurants": {
+                    "name": f"R{i}",
+                    "latitude": 10.0 + i,
+                    "longitude": 20.0 + i,
+                },
             }
         )
 
@@ -238,8 +239,18 @@ def test_ready_orders_chunking_multiple_matrix_calls(client, monkeypatch):
 def test_malformed_restaurant_coords_handled_gracefully(client, monkeypatch):
     # Orders include one with malformed coords (strings) which should be treated as missing
     orders = [
-        {"order_id": 10, "user_id": "u10", "restaurant_id": 50, "restaurants": {"latitude": "not-a-number", "longitude": 70.0}},
-        {"order_id": 11, "user_id": "u11", "restaurant_id": 51, "restaurants": {"latitude": 15.0, "longitude": 75.0}},
+        {
+            "order_id": 10,
+            "user_id": "u10",
+            "restaurant_id": 50,
+            "restaurants": {"latitude": "not-a-number", "longitude": 70.0},
+        },
+        {
+            "order_id": 11,
+            "user_id": "u11",
+            "restaurant_id": 51,
+            "restaurants": {"latitude": 15.0, "longitude": 75.0},
+        },
     ]
 
     mock_supabase = MockSupabase(orders_data=orders)

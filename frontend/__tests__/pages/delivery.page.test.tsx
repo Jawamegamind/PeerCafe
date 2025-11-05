@@ -84,7 +84,13 @@ const mockReadyOrders = [
       address: '123 Pizza St',
     },
     customer: { first_name: 'Alice', last_name: 'Anderson' },
-    delivery_address: { street: '123 Pizza St', city: 'Raleigh', state: 'NC', zip_code: '27601', instructions: '' },
+    delivery_address: {
+      street: '123 Pizza St',
+      city: 'Raleigh',
+      state: 'NC',
+      zip_code: '27601',
+      instructions: '',
+    },
     distance_to_restaurant: 1609.34,
     duration_to_restaurant: 600,
     distance_to_restaurant_miles: 1.0,
@@ -108,7 +114,13 @@ const mockReadyOrders = [
       address: '456 Sushi Ave',
     },
     customer: { first_name: 'Bob', last_name: 'Baker' },
-    delivery_address: { street: '456 Sushi Ave', city: 'Raleigh', state: 'NC', zip_code: '27602', instructions: '' },
+    delivery_address: {
+      street: '456 Sushi Ave',
+      city: 'Raleigh',
+      state: 'NC',
+      zip_code: '27602',
+      instructions: '',
+    },
     distance_to_restaurant: 1207.0,
     duration_to_restaurant: 480,
     distance_to_restaurant_miles: 0.75,
@@ -132,7 +144,13 @@ const mockReadyOrders = [
       address: '789 Taco Rd',
     },
     customer: { first_name: 'Carlos', last_name: 'Cortez' },
-    delivery_address: { street: '789 Taco Rd', city: 'Raleigh', state: 'NC', zip_code: '27603', instructions: '' },
+    delivery_address: {
+      street: '789 Taco Rd',
+      city: 'Raleigh',
+      state: 'NC',
+      zip_code: '27603',
+      instructions: '',
+    },
     distance_to_restaurant: null,
     duration_to_restaurant: null,
     distance_to_restaurant_miles: null,
@@ -156,7 +174,13 @@ const mockReadyOrders = [
       address: '101 Burger Blvd',
     },
     customer: { first_name: 'Diana', last_name: 'Dawson' },
-    delivery_address: { street: '101 Burger Blvd', city: 'Raleigh', state: 'NC', zip_code: '27604', instructions: '' },
+    delivery_address: {
+      street: '101 Burger Blvd',
+      city: 'Raleigh',
+      state: 'NC',
+      zip_code: '27604',
+      instructions: '',
+    },
     distance_to_restaurant: 800.0,
     duration_to_restaurant: 300,
     distance_to_restaurant_miles: 0.5,
@@ -245,7 +269,8 @@ beforeAll(() => {
   global._originalFetch = global.fetch;
   // @ts-ignore
   global.fetch = jest.fn(async (input: RequestInfo | string) => {
-    const url = typeof input === 'string' ? input : String((input as Request).url);
+    const url =
+      typeof input === 'string' ? input : String((input as Request).url);
     // Respond with a minimal, valid Mapbox Directions response
     if (url.includes('api.mapbox.com/directions/v5')) {
       return {
@@ -256,7 +281,13 @@ beforeAll(() => {
             {
               distance: 1000,
               duration: 600,
-              geometry: { type: 'LineString', coordinates: [[-78.64, 35.78], [-78.65, 35.79]] },
+              geometry: {
+                type: 'LineString',
+                coordinates: [
+                  [-78.64, 35.78],
+                  [-78.65, 35.79],
+                ],
+              },
             },
           ],
         }),
@@ -269,7 +300,15 @@ beforeAll(() => {
         status: 200,
         json: async () => ({
           matchings: [
-            { geometry: { type: 'LineString', coordinates: [[-78.64, 35.78], [-78.65, 35.79]] } },
+            {
+              geometry: {
+                type: 'LineString',
+                coordinates: [
+                  [-78.64, 35.78],
+                  [-78.65, 35.79],
+                ],
+              },
+            },
           ],
           tracepoints: [
             { location: [-78.64, 35.78] },
@@ -381,12 +420,17 @@ describe('Delivery Page', () => {
     for (const o of mockReadyOrders) {
       const fee = o.delivery_fee;
       // Accept either single-decimal or two-decimal rendering (e.g. $7.5 or $7.50)
-  const oneDec = String(fee && (fee as any).toFixed ? (fee as any).toFixed(1) : fee);
-  const twoDec = String(fee && (fee as any).toFixed ? (fee as any).toFixed(2) : fee);
-  const feeRegex = new RegExp(`\\$${oneDec.replace('.', '\\.')}`);
-  // Try two-decimal too
-  const feeRegex2 = new RegExp(`\\$${twoDec.replace('.', '\\.')}`);
-      const found = !!screen.queryByText(feeRegex) || !!screen.queryByText(feeRegex2);
+      const oneDec = String(
+        fee && (fee as any).toFixed ? (fee as any).toFixed(1) : fee
+      );
+      const twoDec = String(
+        fee && (fee as any).toFixed ? (fee as any).toFixed(2) : fee
+      );
+      const feeRegex = new RegExp(`\\$${oneDec.replace('.', '\\.')}`);
+      // Try two-decimal too
+      const feeRegex2 = new RegExp(`\\$${twoDec.replace('.', '\\.')}`);
+      const found =
+        !!screen.queryByText(feeRegex) || !!screen.queryByText(feeRegex2);
       expect(found).toBeTruthy();
     }
   });

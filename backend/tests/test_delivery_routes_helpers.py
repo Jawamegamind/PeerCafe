@@ -4,6 +4,7 @@ but keeps the helpers isolated so they are easy to find in the test tree.
 """
 
 import asyncio
+
 import pytest
 
 import routes.delivery_routes as delivery_routes
@@ -43,7 +44,9 @@ class MockSupabase:
             return MockResult(self._orders)
         if self._table == "restaurants":
             if self._in_vals:
-                filtered = [r for r in self._restaurants if r.get("id") in self._in_vals]
+                filtered = [
+                    r for r in self._restaurants if r.get("id") in self._in_vals
+                ]
                 return MockResult(filtered)
             return MockResult(self._restaurants)
         return MockResult([])
@@ -64,9 +67,20 @@ def make_dummy_async_client(responses):
 
         async def get(self, url, params=None):
             if not shared:
-                return type("R", (), {"raise_for_status": lambda self: None, "json": lambda self: {"distances": [], "durations": []}})()
+                return type(
+                    "R",
+                    (),
+                    {
+                        "raise_for_status": lambda self: None,
+                        "json": lambda self: {"distances": [], "durations": []},
+                    },
+                )()
             data = shared.pop(0)
-            return type("R", (), {"raise_for_status": lambda self: None, "json": lambda self, d=data: d})()
+            return type(
+                "R",
+                (),
+                {"raise_for_status": lambda self: None, "json": lambda self, d=data: d},
+            )()
 
     return DummyClient
 
@@ -82,9 +96,21 @@ def test_extract_and_prepare_destinations():
     """Test _extract_restaurant_coords and _prepare_destinations with
     valid, missing and malformed restaurant coordinates."""
     orders = [
-        {"order_id": 1, "restaurant_id": 10, "restaurants": {"latitude": 12.0, "longitude": 77.0}},
-        {"order_id": 2, "restaurant_id": 20, "restaurants": {"latitude": None, "longitude": None}},
-        {"order_id": 3, "restaurant_id": 30, "restaurants": {"latitude": "not-a-number", "longitude": 78.0}},
+        {
+            "order_id": 1,
+            "restaurant_id": 10,
+            "restaurants": {"latitude": 12.0, "longitude": 77.0},
+        },
+        {
+            "order_id": 2,
+            "restaurant_id": 20,
+            "restaurants": {"latitude": None, "longitude": None},
+        },
+        {
+            "order_id": 3,
+            "restaurant_id": 30,
+            "restaurants": {"latitude": "not-a-number", "longitude": 78.0},
+        },
     ]
 
     rids, coords_by_id = delivery_routes._extract_restaurant_coords(orders)
@@ -106,7 +132,9 @@ def test_enrich_order_with_distance_rounding_and_flags():
     distance_by_restaurant = {10: 1609.34}  # exactly 1 mile in meters
     duration_by_restaurant = {10: 600.0}  # 10 minutes
 
-    enriched = delivery_routes._enrich_order_with_distance(order, distance_by_restaurant, duration_by_restaurant)
+    enriched = delivery_routes._enrich_order_with_distance(
+        order, distance_by_restaurant, duration_by_restaurant
+    )
     assert enriched["distance_to_restaurant"] == 1609.34
     assert enriched["duration_to_restaurant"] == 600.0
     assert enriched["distance_to_restaurant_miles"] == pytest.approx(1.0, rel=1e-3)
@@ -132,7 +160,9 @@ def test_parse_coordinates_various_inputs():
 def test_get_restaurant_coordinates_with_geocode_fallback(monkeypatch):
     async def _inner():
         restaurant_info = {"latitude": 10.0, "longitude": 20.0}
-        lat, lng = await delivery_routes._get_restaurant_coordinates(restaurant_info, "Some Address")
+        lat, lng = await delivery_routes._get_restaurant_coordinates(
+            restaurant_info, "Some Address"
+        )
         assert lat == pytest.approx(10.0) and lng == pytest.approx(20.0)
 
         calls = {"count": 0}
@@ -143,7 +173,9 @@ def test_get_restaurant_coordinates_with_geocode_fallback(monkeypatch):
 
         monkeypatch.setattr(delivery_routes, "geocode_address", fake_geocode)
         restaurant_info2 = {}
-        lat2, lng2 = await delivery_routes._get_restaurant_coordinates(restaurant_info2, "Fallback Addr")
+        lat2, lng2 = await delivery_routes._get_restaurant_coordinates(
+            restaurant_info2, "Fallback Addr"
+        )
         assert calls["count"] == 1
         assert lat2 == pytest.approx(33.3) and lng2 == pytest.approx(44.4)
 
@@ -184,11 +216,15 @@ def test_geocode_customer_address_and_profile_fallback(monkeypatch):
         monkeypatch.setattr(delivery_routes, "supabase", SimpleUserSupabase())
 
         order_with_coords = {"latitude": 7.7, "longitude": 6.6, "user_id": "u1"}
-        lat_a, lng_a = await delivery_routes._get_customer_coordinates(order_with_coords, None)
+        lat_a, lng_a = await delivery_routes._get_customer_coordinates(
+            order_with_coords, None
+        )
         assert lat_a == pytest.approx(7.7) and lng_a == pytest.approx(6.6)
 
         order_no_coords = {"user_id": "u1"}
-        lat_b, lng_b = await delivery_routes._get_customer_coordinates(order_no_coords, None)
+        lat_b, lng_b = await delivery_routes._get_customer_coordinates(
+            order_no_coords, None
+        )
         assert lat_b == pytest.approx(9.9) and lng_b == pytest.approx(8.8)
 
     asyncio.run(_inner())
@@ -252,7 +288,9 @@ def test_compute_distances_and_durations_uses_chunking(monkeypatch):
 
             monkeypatch.setattr(delivery_routes, "_fetch_matrix_for_chunk", fake_fetch)
 
-            distances, durations = await delivery_routes._compute_distances_and_durations(0.0, 0.0, dests)
+            distances, durations = (
+                await delivery_routes._compute_distances_and_durations(0.0, 0.0, dests)
+            )
             assert distances[1] == pytest.approx(100.0)
             assert distances[2] == pytest.approx(200.0)
             assert distances[3] == pytest.approx(300.0)
