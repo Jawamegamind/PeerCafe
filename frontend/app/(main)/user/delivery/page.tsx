@@ -221,7 +221,13 @@ export default function DeliveryPage() {
           `${backend_url}/deliveries/ready?latitude=${lat}&longitude=${long}`
         )
         .then(response => {
-          setReadyOrders(response.data);
+          // Validate that response.data is an array before setting state
+          if (Array.isArray(response.data)) {
+            setReadyOrders(response.data);
+          } else {
+            // Handle malformed response
+            setReadyOrders([]);
+          }
         })
         .catch(() => {
           // Error fetching ready orders
@@ -661,15 +667,15 @@ export default function DeliveryPage() {
               fontSize: '1.5rem',
             }}
           >
-            {readyOrders.restaurants.name.charAt(0).toUpperCase()}
+            {readyOrders.restaurants?.name?.charAt(0)?.toUpperCase() || '?'}
           </Avatar>
 
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="h6" fontWeight="bold" noWrap>
-              {readyOrders.restaurants.name}
+              {readyOrders.restaurants?.name || 'Unknown Restaurant'}
             </Typography>
             <Typography variant="body2" color="text.secondary" noWrap>
-              {readyOrders.restaurants.address}
+              {readyOrders.restaurants?.address || 'Address not available'}
             </Typography>
           </Box>
         </Box>
@@ -723,16 +729,16 @@ export default function DeliveryPage() {
             sx={{ display: 'flex', alignItems: 'center' }}
           >
             📦 Deliver To:{' '}
-            {readyOrders.customer.first_name +
+            {(readyOrders.customer?.first_name || 'Customer') +
               ' ' +
-              readyOrders.customer.last_name}
+              (readyOrders.customer?.last_name || '')}
             {/* 📦 Deliver To: John Doe Placeholder name */}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {readyOrders.delivery_address.street},{' '}
-            {readyOrders.delivery_address.city},{' '}
-            {readyOrders.delivery_address.state}{' '}
-            {readyOrders.delivery_address.zip_code}
+            {readyOrders.delivery_address?.street || 'Address'},{' '}
+            {readyOrders.delivery_address?.city || 'City'},{' '}
+            {readyOrders.delivery_address?.state || 'State'}{' '}
+            {readyOrders.delivery_address?.zip_code || ''}
             {/* 456 Elm St, Raleigh, NC Placeholder address */}
           </Typography>
         </Box>
@@ -744,7 +750,8 @@ export default function DeliveryPage() {
           </Typography>
           <Typography variant="body2" color="text.secondary">
             ⏱ ETA:{' '}
-            {readyOrders.estimated_delivery_time == undefined
+            {readyOrders.estimated_delivery_time == undefined ||
+            readyOrders.estimated_delivery_time == null
               ? '--'
               : readyOrders.estimated_delivery_time.substring(11, 16)}
           </Typography>
