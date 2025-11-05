@@ -7,7 +7,6 @@ import axios from 'axios';
 // Mock dependencies
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
-
 jest.mock('mapbox-gl', () => ({
   accessToken: '',
   Map: jest.fn(() => ({
@@ -47,6 +46,7 @@ jest.mock('@/utils/supabase/client', () => ({
 }));
 
 // Mock Material-UI to avoid rendering issues
+/* eslint-disable @typescript-eslint/no-unused-vars */
 jest.mock('@mui/material', () => ({
   Box: ({ children, sx, ref, ...props }: any) => {
     const cleanProps = { ...props };
@@ -62,8 +62,17 @@ jest.mock('@mui/material', () => ({
     delete cleanProps.sx;
     return <div {...cleanProps}>{children}</div>;
   },
-  CardContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  Typography: ({ children, variant, color, fontWeight, gutterBottom, ...props }: any) => {
+  CardContent: ({ children, ...props }: any) => (
+    <div {...props}>{children}</div>
+  ),
+  Typography: ({
+    children,
+    variant,
+    color,
+    fontWeight,
+    gutterBottom,
+    ...props
+  }: any) => {
     const cleanProps = { ...props };
     delete cleanProps.variant;
     delete cleanProps.color;
@@ -71,7 +80,15 @@ jest.mock('@mui/material', () => ({
     delete cleanProps.gutterBottom;
     return <div {...cleanProps}>{children}</div>;
   },
-  Button: ({ children, onClick, disabled, fullWidth, variant, color, ...props }: any) => {
+  Button: ({
+    children,
+    onClick,
+    disabled,
+    fullWidth,
+    variant,
+    color,
+    ...props
+  }: any) => {
     const cleanProps = { ...props };
     delete cleanProps.fullWidth;
     delete cleanProps.variant;
@@ -105,10 +122,23 @@ jest.mock('@mui/material', () => ({
         {children}
       </div>
     ) : null,
-  DialogTitle: ({ children }: any) => <h2 data-testid="dialog-title">{children}</h2>,
-  DialogContent: ({ children }: any) => <div data-testid="dialog-content">{children}</div>,
-  DialogActions: ({ children }: any) => <div data-testid="dialog-actions">{children}</div>,
-  TextField: ({ onChange, value, label, inputProps, fullWidth, ...props }: any) => {
+  DialogTitle: ({ children }: any) => (
+    <h2 data-testid="dialog-title">{children}</h2>
+  ),
+  DialogContent: ({ children }: any) => (
+    <div data-testid="dialog-content">{children}</div>
+  ),
+  DialogActions: ({ children }: any) => (
+    <div data-testid="dialog-actions">{children}</div>
+  ),
+  TextField: ({
+    onChange,
+    value,
+    label,
+    inputProps,
+    fullWidth,
+    ...props
+  }: any) => {
     const cleanProps = { ...props };
     delete cleanProps.fullWidth;
     delete cleanProps.inputProps;
@@ -132,7 +162,13 @@ jest.mock('@mui/material', () => ({
     );
   },
 }));
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
+jest.mock('@mui/icons-material', () => ({
+  Navigation: () => <span>NavIcon</span>,
+  Restaurant: () => <span>RestaurantIcon</span>,
+  Home: () => <span>HomeIcon</span>,
+}));
 jest.mock('@mui/icons-material', () => ({
   Navigation: () => <span>NavIcon</span>,
   Restaurant: () => <span>RestaurantIcon</span>,
@@ -141,16 +177,16 @@ jest.mock('@mui/icons-material', () => ({
 
 /**
  * NavigationMap Edge Cases Test Suite
- * 
+ *
  * This test suite comprehensively tests edge cases and error scenarios for the NavigationMap component,
  * which is responsible for displaying turn-by-turn navigation for delivery drivers.
- * 
+ *
  * The component integrates with:
  * - Browser Geolocation API for driver location tracking
  * - Mapbox API for route rendering and turn-by-turn directions
  * - Backend API for fetching navigation routes and verifying deliveries
  * - Supabase for real-time order status updates
- * 
+ *
  * Tests cover scenarios including API failures, missing permissions, network errors,
  * and various user interaction patterns to ensure robust error handling.
  */
@@ -231,7 +267,7 @@ describe('NavigationMap Edge Cases', () => {
 
   /**
    * Geolocation Edge Cases
-   * 
+   *
    * Tests the component's behavior when the browser's Geolocation API
    * is unavailable or returns various error states. These scenarios can occur
    * when users deny location permissions, use browsers without geolocation support,
@@ -240,7 +276,7 @@ describe('NavigationMap Edge Cases', () => {
   describe('Geolocation Edge Cases', () => {
     /**
      * Test: Missing Geolocation API
-     * 
+     *
      * Verifies that the component handles gracefully when the browser doesn't
      * support the Geolocation API (older browsers or restricted environments).
      * Expected: Component should display loading state without crashing.
@@ -257,7 +293,7 @@ describe('NavigationMap Edge Cases', () => {
 
     /**
      * Test: Geolocation Permission Denied
-     * 
+     *
      * Tests the scenario where the user explicitly denies location permission.
      * This is the most common geolocation error (error code 1).
      * Expected: Component should handle the error without crashing and continue
@@ -280,7 +316,7 @@ describe('NavigationMap Edge Cases', () => {
 
     /**
      * Test: Geolocation Position Unavailable
-     * 
+     *
      * Tests when the device cannot determine its location (error code 2).
      * This can happen due to GPS signal loss, poor network connectivity,
      * or when location services are disabled at the device level.
@@ -303,7 +339,7 @@ describe('NavigationMap Edge Cases', () => {
 
     /**
      * Test: Geolocation Timeout
-     * 
+     *
      * Tests when the location request times out (error code 3).
      * This occurs when the device takes too long to acquire a GPS fix,
      * typically due to weak satellite signals or slow network responses.
@@ -327,7 +363,7 @@ describe('NavigationMap Edge Cases', () => {
 
   /**
    * API Edge Cases
-   * 
+   *
    * Tests the component's resilience to various API failures when fetching
    * navigation routes from the backend. These tests simulate real-world
    * network conditions and server errors to ensure the component handles
@@ -345,7 +381,7 @@ describe('NavigationMap Edge Cases', () => {
 
     /**
      * Test: Network Error During Route Fetch
-     * 
+     *
      * Simulates a complete network failure when fetching the navigation route.
      * This could occur due to loss of internet connectivity, DNS failures,
      * or unreachable backend servers.
@@ -363,7 +399,7 @@ describe('NavigationMap Edge Cases', () => {
 
     /**
      * Test: 404 Error - Order Not Found
-     * 
+     *
      * Tests the scenario where the order ID doesn't exist in the database.
      * This can happen if the order was deleted, the ID is invalid, or there's
      * a data synchronization issue.
@@ -383,7 +419,7 @@ describe('NavigationMap Edge Cases', () => {
 
     /**
      * Test: 400 Error - Invalid Order Status
-     * 
+     *
      * Tests when the backend rejects the navigation request because the order
      * is in an invalid status (e.g., already delivered, cancelled, or pending).
      * Only orders in 'assigned' or 'picked_up' status should have navigation.
@@ -406,7 +442,7 @@ describe('NavigationMap Edge Cases', () => {
 
     /**
      * Test: 500 Internal Server Error
-     * 
+     *
      * Simulates a backend server error during route fetching.
      * This could be caused by database issues, unhandled exceptions,
      * or problems with external APIs (like Mapbox) on the server side.
@@ -429,7 +465,7 @@ describe('NavigationMap Edge Cases', () => {
 
     /**
      * Test: Request Timeout Error
-     * 
+     *
      * Tests when the API request exceeds the configured timeout period (20 seconds).
      * This can happen with slow network connections or when the server is
      * overloaded and takes too long to respond.
@@ -451,7 +487,7 @@ describe('NavigationMap Edge Cases', () => {
 
   /**
    * Environment Variable Edge Cases
-   * 
+   *
    * Tests the component's behavior when required environment variables
    * are missing or misconfigured. These scenarios can occur during deployment
    * if environment variables aren't properly set up.
@@ -459,7 +495,7 @@ describe('NavigationMap Edge Cases', () => {
   describe('Environment Variable Edge Cases', () => {
     /**
      * Test: Missing Mapbox API Key
-     * 
+     *
      * Verifies that the component functions even when the Mapbox API key
      * is not configured. The map won't render properly, but the component
      * should still fetch and display route data.
@@ -486,7 +522,7 @@ describe('NavigationMap Edge Cases', () => {
 
     /**
      * Test: Missing API URL
-     * 
+     *
      * Tests the component's behavior when the backend API URL environment variable
      * is not set. The component should fallback to the default localhost URL.
      * Expected: Component should use fallback URL (http://localhost:8000) and
@@ -516,7 +552,7 @@ describe('NavigationMap Edge Cases', () => {
 
   /**
    * Delivery Code Verification Edge Cases
-   * 
+   *
    * Tests the complete delivery verification flow, including the dialog interactions
    * for entering a delivery PIN code. These tests ensure secure delivery confirmation
    * by validating that drivers must enter the correct PIN provided to the customer.
@@ -548,7 +584,7 @@ describe('NavigationMap Edge Cases', () => {
 
     /**
      * Test: Empty Delivery Code Validation
-     * 
+     *
      * Tests that the component properly validates and shows an error message
      * when the driver attempts to submit the delivery verification dialog
      * without entering a delivery code.
@@ -567,18 +603,24 @@ describe('NavigationMap Edge Cases', () => {
       );
 
       // Wait for route data to load and Mark Delivered button to appear
-      await waitFor(() => {
-        expect(screen.getByText(/mark delivered/i)).toBeInTheDocument();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(screen.getByText(/mark delivered/i)).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
 
       // Click Mark Delivered button
       const markDeliveredButton = screen.getByText(/mark delivered/i);
       await user.click(markDeliveredButton);
 
       // Wait for dialog to appear
-      await waitFor(() => {
-        expect(screen.getByTestId('delivery-dialog')).toBeInTheDocument();
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          expect(screen.getByTestId('delivery-dialog')).toBeInTheDocument();
+        },
+        { timeout: 1000 }
+      );
 
       // Verify dialog content
       expect(screen.getByText(/enter delivery code/i)).toBeInTheDocument();
@@ -588,16 +630,19 @@ describe('NavigationMap Edge Cases', () => {
       await user.click(verifyButton);
 
       // Check for error message
-      await waitFor(() => {
-        expect(
-          screen.getByText(/please enter the delivery code/i)
-        ).toBeInTheDocument();
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          expect(
+            screen.getByText(/please enter the delivery code/i)
+          ).toBeInTheDocument();
+        },
+        { timeout: 1000 }
+      );
     });
 
     /**
      * Test: Invalid Delivery Code
-     * 
+     *
      * Tests when the driver enters an incorrect delivery PIN code.
      * The backend should reject the request with a 400 error, and the
      * component should display the error message to the driver.
@@ -622,18 +667,24 @@ describe('NavigationMap Edge Cases', () => {
       );
 
       // Wait for Mark Delivered button
-      await waitFor(() => {
-        expect(screen.getByText(/mark delivered/i)).toBeInTheDocument();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(screen.getByText(/mark delivered/i)).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
 
       // Open dialog
       const markDeliveredButton = screen.getByText(/mark delivered/i);
       await user.click(markDeliveredButton);
 
       // Wait for dialog
-      await waitFor(() => {
-        expect(screen.getByTestId('delivery-dialog')).toBeInTheDocument();
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          expect(screen.getByTestId('delivery-dialog')).toBeInTheDocument();
+        },
+        { timeout: 1000 }
+      );
 
       // Enter invalid code
       const codeInput = screen.getByLabelText(/delivery code/i);
@@ -644,14 +695,19 @@ describe('NavigationMap Edge Cases', () => {
       await user.click(verifyButton);
 
       // Wait for error message
-      await waitFor(() => {
-        expect(screen.getByText(/invalid delivery code/i)).toBeInTheDocument();
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          expect(
+            screen.getByText(/invalid delivery code/i)
+          ).toBeInTheDocument();
+        },
+        { timeout: 1000 }
+      );
     });
 
     /**
      * Test: Network Error During Verification
-     * 
+     *
      * Tests handling of network failures while submitting the delivery code.
      * This could occur due to poor connectivity or server unavailability.
      * Expected: Component should display an error alert and allow retry.
@@ -670,18 +726,24 @@ describe('NavigationMap Edge Cases', () => {
       );
 
       // Wait for Mark Delivered button
-      await waitFor(() => {
-        expect(screen.getByText(/mark delivered/i)).toBeInTheDocument();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(screen.getByText(/mark delivered/i)).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
 
       // Open dialog
       const markDeliveredButton = screen.getByText(/mark delivered/i);
       await user.click(markDeliveredButton);
 
       // Wait for dialog
-      await waitFor(() => {
-        expect(screen.getByTestId('delivery-dialog')).toBeInTheDocument();
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          expect(screen.getByTestId('delivery-dialog')).toBeInTheDocument();
+        },
+        { timeout: 1000 }
+      );
 
       // Enter code
       const codeInput = screen.getByLabelText(/delivery code/i);
@@ -692,14 +754,17 @@ describe('NavigationMap Edge Cases', () => {
       await user.click(verifyButton);
 
       // Wait for error alert to appear
-      await waitFor(() => {
-        expect(screen.getByRole('alert')).toBeInTheDocument();
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          expect(screen.getByRole('alert')).toBeInTheDocument();
+        },
+        { timeout: 1000 }
+      );
     });
 
     /**
      * Test: Dialog Close Prevention During Verification
-     * 
+     *
      * Tests that the cancel button is disabled while the delivery verification
      * request is in progress, preventing accidental dialog dismissal.
      * Expected: Cancel button should be disabled during the async verification call.
@@ -708,11 +773,9 @@ describe('NavigationMap Edge Cases', () => {
       const user = userEvent.setup();
 
       // Mock a delayed response (will resolve after we check button state)
-      let resolvePromise: any;
       mockedAxios.post.mockImplementation(
         () =>
           new Promise(resolve => {
-            resolvePromise = resolve;
             setTimeout(() => resolve({ data: { status: 'delivered' } }), 500);
           })
       );
@@ -726,18 +789,24 @@ describe('NavigationMap Edge Cases', () => {
       );
 
       // Wait for Mark Delivered button
-      await waitFor(() => {
-        expect(screen.getByText(/mark delivered/i)).toBeInTheDocument();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(screen.getByText(/mark delivered/i)).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
 
       // Open dialog
       const markDeliveredButton = screen.getByText(/mark delivered/i);
       await user.click(markDeliveredButton);
 
       // Wait for dialog
-      await waitFor(() => {
-        expect(screen.getByTestId('delivery-dialog')).toBeInTheDocument();
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          expect(screen.getByTestId('delivery-dialog')).toBeInTheDocument();
+        },
+        { timeout: 1000 }
+      );
 
       // Enter code
       const codeInput = screen.getByLabelText(/delivery code/i);
@@ -748,15 +817,18 @@ describe('NavigationMap Edge Cases', () => {
       await user.click(verifyButton);
 
       // Immediately check that cancel button is disabled during loading
-      await waitFor(() => {
-        const cancelButton = screen.getByText(/cancel/i);
-        expect(cancelButton).toBeDisabled();
-      }, { timeout: 200 });
+      await waitFor(
+        () => {
+          const cancelButton = screen.getByText(/cancel/i);
+          expect(cancelButton).toBeDisabled();
+        },
+        { timeout: 200 }
+      );
     });
 
     /**
      * Test: Whitespace Trimming in Delivery Code
-     * 
+     *
      * Tests that leading and trailing whitespace is automatically removed from
      * the delivery code input before verification. This prevents user input errors.
      * Expected: "  1234  " should be sent to backend as "1234".
@@ -777,18 +849,24 @@ describe('NavigationMap Edge Cases', () => {
       );
 
       // Wait for Mark Delivered button
-      await waitFor(() => {
-        expect(screen.getByText(/mark delivered/i)).toBeInTheDocument();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(screen.getByText(/mark delivered/i)).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
 
       // Open dialog
       const markDeliveredButton = screen.getByText(/mark delivered/i);
       await user.click(markDeliveredButton);
 
       // Wait for dialog
-      await waitFor(() => {
-        expect(screen.getByTestId('delivery-dialog')).toBeInTheDocument();
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          expect(screen.getByTestId('delivery-dialog')).toBeInTheDocument();
+        },
+        { timeout: 1000 }
+      );
 
       // Enter code with whitespace
       const codeInput = screen.getByLabelText(/delivery code/i);
@@ -799,12 +877,15 @@ describe('NavigationMap Edge Cases', () => {
       await user.click(verifyButton);
 
       // Verify the API was called with trimmed code
-      await waitFor(() => {
-        expect(mockedAxios.post).toHaveBeenCalledWith(
-          expect.stringContaining('/orders/'),
-          { delivery_code: '123456' } // Should be trimmed
-        );
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          expect(mockedAxios.post).toHaveBeenCalledWith(
+            expect.stringContaining('/orders/'),
+            { delivery_code: '123456' } // Should be trimmed
+          );
+        },
+        { timeout: 1000 }
+      );
     });
   });
 
@@ -820,7 +901,7 @@ describe('NavigationMap Edge Cases', () => {
 
     /**
      * Test: Missing Map Container Ref
-     * 
+     *
      * Tests that the component gracefully handles when the map container DOM element
      * is not yet available during map initialization. This edge case can occur during
      * rapid component mounting/unmounting or when refs are not ready.
@@ -844,7 +925,7 @@ describe('NavigationMap Edge Cases', () => {
 
     /**
      * Test: Route Data Without Steps
-     * 
+     *
      * Tests that the component can handle route data that has an empty steps array.
      * This might occur with very short routes or malformed API responses.
      * Expected: Turn-by-turn directions should not be displayed when steps are empty.
@@ -869,7 +950,7 @@ describe('NavigationMap Edge Cases', () => {
 
     /**
      * Test: Route Data With Null Geometry
-     * 
+     *
      * Tests that the component can handle route data where geometry is null or missing.
      * This might occur with API errors or routes that couldn't be calculated.
      * Expected: Map should render without crashing, though the route line won't be displayed.
@@ -883,7 +964,9 @@ describe('NavigationMap Edge Cases', () => {
         },
       };
 
-      mockedAxios.get.mockResolvedValueOnce({ data: routeDataWithNullGeometry });
+      mockedAxios.get.mockResolvedValueOnce({
+        data: routeDataWithNullGeometry,
+      });
 
       render(<NavigationMap {...defaultProps} />);
 
@@ -896,7 +979,7 @@ describe('NavigationMap Edge Cases', () => {
   describe('Component Lifecycle Edge Cases', () => {
     /**
      * Test: Rapid Prop Changes
-     * 
+     *
      * Tests that the component can handle multiple rapid prop updates without crashing
      * or leaving behind stale state. This simulates real-world scenarios where order
      * status updates quickly (picked_up -> en_route -> delivered).
@@ -919,15 +1002,9 @@ describe('NavigationMap Edge Cases', () => {
       });
 
       // Rapidly change status
-      rerender(
-        <NavigationMap {...defaultProps} orderStatus="picked_up" />
-      );
-      rerender(
-        <NavigationMap {...defaultProps} orderStatus="en_route" />
-      );
-      rerender(
-        <NavigationMap {...defaultProps} orderStatus="delivered" />
-      );
+      rerender(<NavigationMap {...defaultProps} orderStatus="picked_up" />);
+      rerender(<NavigationMap {...defaultProps} orderStatus="en_route" />);
+      rerender(<NavigationMap {...defaultProps} orderStatus="delivered" />);
 
       await waitFor(() => {
         expect(mockedAxios.get).toHaveBeenCalledTimes(4); // Initial + 3 changes
@@ -936,7 +1013,7 @@ describe('NavigationMap Edge Cases', () => {
 
     /**
      * Test: Unmount Before Async Operations Complete
-     * 
+     *
      * Tests that the component properly cleans up when unmounted while async operations
      * (like route fetching) are still in progress. This prevents memory leaks and
      * "Can't perform a React state update on an unmounted component" warnings.
@@ -976,7 +1053,7 @@ describe('NavigationMap Edge Cases', () => {
 
     /**
      * Test: Multiple Simultaneous Route Fetches
-     * 
+     *
      * Tests that the component handles race conditions when multiple route fetch
      * requests are triggered in rapid succession. This can occur when geolocation
      * updates rapidly or when props change quickly.
@@ -1017,7 +1094,7 @@ describe('NavigationMap Edge Cases', () => {
   describe('Callback Edge Cases', () => {
     /**
      * Test: onOrderUpdated Callback Throwing Error
-     * 
+     *
      * Tests that the component gracefully handles when the onOrderUpdated callback
      * function throws an error. This ensures the component remains stable even if
      * parent components have buggy callback implementations.
