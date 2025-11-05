@@ -161,7 +161,7 @@ async def fetch_ready_orders(source: Location = Depends(location_from_query)):
         result = (
             supabase.from_("orders")
             .select(
-                "order_id, user_id, restaurant_id, restaurants(name, latitude, longitude, address), delivery_fee, tip_amount, estimated_pickup_time, estimated_delivery_time, latitude, longitude, status"
+                "order_id, user_id, restaurant_id, restaurants(name, latitude, longitude, address), customer:user_id(first_name, last_name), delivery_address , delivery_fee, tip_amount, estimated_pickup_time, estimated_delivery_time, latitude, longitude, status, distance_restaurant_delivery, duration_restaurant_delivery"
             )
             .eq("status", "ready")
             .is_("delivery_user_id", None)

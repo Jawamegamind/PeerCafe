@@ -83,6 +83,8 @@ const mockReadyOrders = [
       longitude: -78.64,
       address: '123 Pizza St',
     },
+    customer: { first_name: 'Alice', last_name: 'Anderson' },
+    delivery_address: { street: '123 Pizza St', city: 'Raleigh', state: 'NC', zip_code: '27601', instructions: '' },
     distance_to_restaurant: 1609.34,
     duration_to_restaurant: 600,
     distance_to_restaurant_miles: 1.0,
@@ -105,6 +107,8 @@ const mockReadyOrders = [
       longitude: -78.65,
       address: '456 Sushi Ave',
     },
+    customer: { first_name: 'Bob', last_name: 'Baker' },
+    delivery_address: { street: '456 Sushi Ave', city: 'Raleigh', state: 'NC', zip_code: '27602', instructions: '' },
     distance_to_restaurant: 1207.0,
     duration_to_restaurant: 480,
     distance_to_restaurant_miles: 0.75,
@@ -127,6 +131,8 @@ const mockReadyOrders = [
       longitude: -78.66,
       address: '789 Taco Rd',
     },
+    customer: { first_name: 'Carlos', last_name: 'Cortez' },
+    delivery_address: { street: '789 Taco Rd', city: 'Raleigh', state: 'NC', zip_code: '27603', instructions: '' },
     distance_to_restaurant: null,
     duration_to_restaurant: null,
     distance_to_restaurant_miles: null,
@@ -149,6 +155,8 @@ const mockReadyOrders = [
       longitude: -78.67,
       address: '101 Burger Blvd',
     },
+    customer: { first_name: 'Diana', last_name: 'Dawson' },
+    delivery_address: { street: '101 Burger Blvd', city: 'Raleigh', state: 'NC', zip_code: '27604', instructions: '' },
     distance_to_restaurant: 800.0,
     duration_to_restaurant: 300,
     distance_to_restaurant_miles: 0.5,
@@ -231,11 +239,62 @@ beforeAll(() => {
       success({ coords: { latitude: 35.7796, longitude: -78.6382 } })
     ),
   };
+  // Prevent any real network calls to Mapbox during tests by mocking fetch.
+  // This ensures map-matching and directions calls never hit the real API.
+  // @ts-ignore
+  global._originalFetch = global.fetch;
+  // @ts-ignore
+  global.fetch = jest.fn(async (input: RequestInfo | string) => {
+    const url = typeof input === 'string' ? input : String((input as Request).url);
+    // Respond with a minimal, valid Mapbox Directions response
+    if (url.includes('api.mapbox.com/directions/v5')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          routes: [
+            {
+              distance: 1000,
+              duration: 600,
+              geometry: { type: 'LineString', coordinates: [[-78.64, 35.78], [-78.65, 35.79]] },
+            },
+          ],
+        }),
+      };
+    }
+    // Respond with a minimal, valid Mapbox Map Matching response
+    if (url.includes('api.mapbox.com/matching/v5')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          matchings: [
+            { geometry: { type: 'LineString', coordinates: [[-78.64, 35.78], [-78.65, 35.79]] } },
+          ],
+          tracepoints: [
+            { location: [-78.64, 35.78] },
+            { location: [-78.65, 35.79] },
+          ],
+        }),
+      };
+    }
+
+    // Default: return empty successful response
+    return { ok: true, status: 200, json: async () => ({}) };
+  });
 });
 
 afterAll(() => {
   // @ts-ignore
   delete global.navigator.geolocation;
+  // Restore original fetch if it existed
+  // @ts-ignore
+  if (global._originalFetch) {
+    // @ts-ignore
+    global.fetch = global._originalFetch;
+    // @ts-ignore
+    delete global._originalFetch;
+  }
 });
 
 // Ensure mock call counts don't accumulate between tests
@@ -244,8 +303,10 @@ beforeEach(() => {
 });
 
 describe('Delivery Page', () => {
-  it('renders without crashing', () => {
+  it('renders without crashing', async () => {
     render(<DeliveryPage />);
+    // wait for component effects (geolocation + axios mock) to settle
+    await screen.findByText(/Bella Italia/i);
     expect(document.body).toBeTruthy();
   });
 
@@ -316,10 +377,17 @@ describe('Delivery Page', () => {
     expect(screen.getByText(/Taco Haven/i)).toBeInTheDocument();
     expect(screen.getByText(/The Burger Joint/i)).toBeInTheDocument();
 
-    // Compensation values (rendered directly from numbers)
-    expect(screen.getByText(/\$7.5/)).toBeInTheDocument();
-    expect(screen.getByText(/\$6.25/)).toBeInTheDocument();
-    expect(screen.getByText(/\$5.75/)).toBeInTheDocument();
-    expect(screen.getByText(/\$4.95/)).toBeInTheDocument();
+    // Compensation values: assert each mocked order's fee is visible in some reasonable format
+    for (const o of mockReadyOrders) {
+      const fee = o.delivery_fee;
+      // Accept either single-decimal or two-decimal rendering (e.g. $7.5 or $7.50)
+  const oneDec = String(fee && (fee as any).toFixed ? (fee as any).toFixed(1) : fee);
+  const twoDec = String(fee && (fee as any).toFixed ? (fee as any).toFixed(2) : fee);
+  const feeRegex = new RegExp(`\\$${oneDec.replace('.', '\\.')}`);
+  // Try two-decimal too
+  const feeRegex2 = new RegExp(`\\$${twoDec.replace('.', '\\.')}`);
+      const found = !!screen.queryByText(feeRegex) || !!screen.queryByText(feeRegex2);
+      expect(found).toBeTruthy();
+    }
   });
 });

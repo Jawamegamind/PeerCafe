@@ -55,6 +55,22 @@ interface Order {
     address: string;
   };
 
+  customer: {
+    first_name: string;
+    last_name: string;
+  };
+
+  delivery_address: {
+    city: string;
+    state: string;
+    street: string;
+    zip_code: string;
+    instructions: string;
+  }
+
+  distance_restaurant_delivery: number;
+  duration_restaurant_delivery: number;
+
   distance_to_restaurant: number;
   duration_to_restaurant: number;
   distance_to_restaurant_miles: number;
@@ -680,16 +696,16 @@ export default function DeliveryPage() {
             🧭 Restaurant → Customer
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {/* {readyOrders.DeliveryToRestaurant} miles | {readyOrders.timeToCustomer} min */}
-            3.5 miles | 15 min {/* Placeholder values */}
+            {readyOrders.distance_restaurant_delivery} miles | {readyOrders.duration_restaurant_delivery} min
+            {/* 3.5 miles | 15 min Placeholder values */}
           </Typography>
         </Box>
         <Divider sx={{ my: 1.5 }} />
         {/* Totals */}
         <Box sx={{ mb: 1 }}>
           <Typography fontWeight="bold" sx={{ color: 'success.main' }}>
-            {/* Total: {readyOrders.totalDistance} miles | {readyOrders.totalTime} min */}
-            Total: 7.2 miles | 30 min {/* Placeholder values */}
+            Total: {readyOrders.distance_restaurant_delivery + readyOrders.distance_to_restaurant_miles} miles | {readyOrders.duration_restaurant_delivery + readyOrders.duration_to_restaurant_minutes} min
+            {/* Total: 7.2 miles | 30 min Placeholder values */}
           </Typography>
         </Box>
         <Divider sx={{ my: 1.5 }} />
@@ -699,12 +715,12 @@ export default function DeliveryPage() {
             fontWeight="bold"
             sx={{ display: 'flex', alignItems: 'center' }}
           >
-            {/* 📦 Deliver To: {readyOrders.customer.name} */}
-            📦 Deliver To: John Doe {/* Placeholder name */}
+            📦 Deliver To: {readyOrders.customer.first_name + ' ' + readyOrders.customer.last_name}
+            {/* 📦 Deliver To: John Doe Placeholder name */}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {/* {readyOrders.customer.address} */}
-            456 Elm St, Raleigh, NC {/* Placeholder address */}
+            {readyOrders.delivery_address.street}, {readyOrders.delivery_address.city}, {readyOrders.delivery_address.state} {readyOrders.delivery_address.zip_code}
+            {/* 456 Elm St, Raleigh, NC Placeholder address */}
           </Typography>
         </Box>
         <Divider sx={{ my: 1.5 }} />
