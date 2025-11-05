@@ -75,18 +75,10 @@ describe('ResponsiveAppBar Component', () => {
         first_name: 'Test',
         last_name: 'User',
         email: 'test@example.com',
+        phone: '1234567890',
         is_admin: false,
         is_active: true,
       },
-      error: null,
-    });
-    // Reset Supabase mocks to default values
-    mockSupabaseClient.auth.getUser.mockResolvedValue({
-      data: { user: { id: 'test-user-id', email: 'test@example.com' } },
-      error: null,
-    });
-    mockSingle.mockResolvedValue({
-      data: { IsAdmin: false },
       error: null,
     });
   });
@@ -94,8 +86,9 @@ describe('ResponsiveAppBar Component', () => {
   it('renders the navbar with correct branding', async () => {
     await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
-    // Check for PeerCafe branding (desktop view)
-    expect(screen.getByText('PeerCafe')).toBeInTheDocument();
+    // Check for PeerCafe branding (both desktop and mobile views exist in DOM)
+    const logoElements = screen.getAllByText('PeerCafe');
+    expect(logoElements.length).toBeGreaterThanOrEqual(2); // Desktop and mobile versions
   });
 
   it('displays navigation menu items on desktop', async () => {
@@ -129,42 +122,104 @@ describe('ResponsiveAppBar Component', () => {
     expect(screen.getByRole('menu')).toBeInTheDocument();
   });
 
-  it('navigates to home page when Home button is clicked', async () => {
-    await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
-
-    const homeButton = screen.getByRole('button', { name: /home/i });
-    fireEvent.click(homeButton);
-
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/homepage');
-    });
-  });
-
-  it('navigates to profile page when Profile icon is clicked', async () => {
-    // Mock successful user data fetch for regular user
-    const mockUserData = {
-      user_id: 'test-user-id',
-      IsAdmin: false,
-      name: 'Test User',
-    };
-
+  it('navigates to user dashboard when regular user clicks Home button', async () => {
+    // Mock regular user with complete user data
     mockSupabaseClient.auth.getUser.mockResolvedValue({
       data: { user: { id: 'test-user-id' } },
       error: null,
     });
 
     mockSingle.mockResolvedValue({
-      data: mockUserData,
+      data: {
+        user_id: 'test-user-id',
+        first_name: 'Test',
+        last_name: 'User',
+        email: 'test@example.com',
+        phone: '1234567890',
+        is_admin: false,
+        is_active: true,
+      },
+      error: null,
+    });
+
+    await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+
+    // Wait for user data to load
+    await waitFor(() => {
+      expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled();
+      expect(mockFrom).toHaveBeenCalledWith('users');
+    });
+
+    const homeButton = screen.getByRole('button', { name: /home/i });
+    fireEvent.click(homeButton);
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/user/dashboard');
+    });
+  });
+
+  it('navigates to admin dashboard when admin user clicks Home button', async () => {
+    // Mock admin user with complete user data
+    mockSupabaseClient.auth.getUser.mockResolvedValue({
+      data: { user: { id: 'admin-user-id' } },
+      error: null,
+    });
+
+    mockSingle.mockResolvedValue({
+      data: {
+        user_id: 'admin-user-id',
+        first_name: 'Admin',
+        last_name: 'User',
+        email: 'admin@example.com',
+        phone: '0987654321',
+        is_admin: true,
+        is_active: true,
+      },
+      error: null,
+    });
+
+    await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
+
+    // Wait for user data to load
+    await waitFor(() => {
+      expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled();
+      expect(mockFrom).toHaveBeenCalledWith('users');
+    });
+
+    const homeButton = screen.getByRole('button', { name: /home/i });
+    fireEvent.click(homeButton);
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/admin/dashboard');
+    });
+  });
+
+  it('navigates to profile page when Profile icon is clicked', async () => {
+    // Mock successful user data fetch for regular user
+    mockSupabaseClient.auth.getUser.mockResolvedValue({
+      data: { user: { id: 'test-user-id' } },
+      error: null,
+    });
+
+    mockSingle.mockResolvedValue({
+      data: {
+        user_id: 'test-user-id',
+        first_name: 'Test',
+        last_name: 'User',
+        email: 'test@example.com',
+        phone: '1234567890',
+        is_admin: false,
+        is_active: true,
+      },
       error: null,
     });
 
     await render(<ResponsiveAppBar />, { wrapper: TestWrapper });
 
     // Wait for the component to load user data first
-    // Wait for the component to load user data (auth.getUser and DB single)
     await waitFor(() => {
       expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled();
-      expect(mockSingle).toHaveBeenCalled();
+      expect(mockFrom).toHaveBeenCalledWith('users');
     });
 
     const profileButton = screen.getByRole('button', { name: /profile/i });
@@ -180,22 +235,21 @@ describe('ResponsiveAppBar Component', () => {
     jest.clearAllMocks();
 
     // Mock successful user data fetch for admin user
-    const mockAdminUserData = {
-      user_id: 'admin-user-id',
-      first_name: 'Admin',
-      last_name: 'User',
-      email: 'admin@example.com',
-      is_admin: true,
-      is_active: true,
-    };
-
     mockSupabaseClient.auth.getUser.mockResolvedValue({
       data: { user: { id: 'admin-user-id' } },
       error: null,
     });
 
     mockSingle.mockResolvedValue({
-      data: mockAdminUserData,
+      data: {
+        user_id: 'admin-user-id',
+        first_name: 'Admin',
+        last_name: 'User',
+        email: 'admin@example.com',
+        phone: '0987654321',
+        is_admin: true,
+        is_active: true,
+      },
       error: null,
     });
 
@@ -204,7 +258,7 @@ describe('ResponsiveAppBar Component', () => {
     // Wait for the component to load user data first and verify it's loaded
     await waitFor(() => {
       expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled();
-      expect(mockSingle).toHaveBeenCalled();
+      expect(mockFrom).toHaveBeenCalledWith('users');
     });
 
     // Add a small delay to ensure state updates are complete
@@ -246,6 +300,12 @@ describe('ResponsiveAppBar Component', () => {
     // Menu should be visible
     expect(screen.getByRole('menu')).toBeInTheDocument();
 
+    // Wait for user data to load first
+    await waitFor(() => {
+      expect(mockSupabaseClient.auth.getUser).toHaveBeenCalled();
+      expect(mockFrom).toHaveBeenCalledWith('users');
+    });
+
     // Click outside (on backdrop) - this would normally close the menu
     // We'll test by clicking on a menu item
     const homeItem = screen
@@ -255,8 +315,8 @@ describe('ResponsiveAppBar Component', () => {
       fireEvent.click(homeItem);
     }
 
-    // Verify navigation occurred
-    expect(mockPush).toHaveBeenCalledWith('/homepage');
+    // Verify navigation occurred to user dashboard (regular user)
+    expect(mockPush).toHaveBeenCalledWith('/user/dashboard');
   });
 
   it('renders correctly on different screen sizes', async () => {
@@ -298,6 +358,7 @@ describe('ResponsiveAppBar Component', () => {
         first_name: 'Admin',
         last_name: 'User',
         email: 'admin@example.com',
+        phone: '0987654321',
         is_admin: true,
         is_active: true,
       },

@@ -25,4 +25,6 @@ per-file-ignores =
     __init__.py:F403
     # Allow higher complexity in order_routes since it's tracked for refactor later
     # (removed — complexity now handled by refactor)
+    # Tests can be more verbose/complex; ignore complexity in this specific test module
+    tests/test_order_routes.py:C901
 max-complexity = 10

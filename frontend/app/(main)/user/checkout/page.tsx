@@ -521,6 +521,7 @@ export default function CheckoutPage() {
                       <MenuItem value="NY">New York</MenuItem>
                       <MenuItem value="TX">Texas</MenuItem>
                       <MenuItem value="FL">Florida</MenuItem>
+                      <MenuItem value="NC">North Carolina</MenuItem>
                       {/* Add more states as needed */}
                     </Select>
                   </FormControl>
