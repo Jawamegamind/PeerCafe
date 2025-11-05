@@ -129,7 +129,19 @@ function ResponsiveAppBar() {
         router.push('/login');
       }
     } else if (page === 'Home') {
-      router.push('/homepage');
+      // router.push('/homepage');
+      // Check the user role before navigating to the appropriate homepage
+      if (user) {
+        if (user.is_admin === true) {
+          router.push('/admin/dashboard'); // Admin dashboard route
+        } else {
+          router.push('/user/dashboard'); // Regular user dashboard route
+        }
+      } else {
+        // eslint-disable-next-line no-console
+        console.error('No user data found');
+        router.push('/login');
+      }
     }
   };
 
@@ -229,7 +241,7 @@ function ResponsiveAppBar() {
               textDecoration: 'none',
             }}
           >
-            AI LMS
+            PeerCafe
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }} />
           <Box
