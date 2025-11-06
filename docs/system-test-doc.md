@@ -1,5 +1,5 @@
 
-##PeerCafe System Tests 7/7 Passing
+## PeerCafe System Tests 7/7 Passing
 
 1. Normal Authentication \- passing  
 - Preconditions  
