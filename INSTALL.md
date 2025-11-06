@@ -73,6 +73,7 @@ Create a `.env` file in the `backend/` directory:
 # Supabase Configuration
 PROJECT_URL=https://your-project-id.supabase.co
 API_KEY=your-supabase-anon-key
+MAPBOX_TOKEN=your_mapbox_key
 ```
 Both the variables and their values can be found in the project setting. Navigate to API keys and copy the anon public key as the API_KEY
 
@@ -86,6 +87,8 @@ Create a `.env.local` file in the `frontend/` directory:
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+NEXT_PUBLIC_MAPBOX_API_KEY=your_mapbox_key
+NEXT_PUBLIC_BACKEND_API_URL=http://localhost:8000/api/
 
 # Optional: API Base URL (if different from default)
 # NEXT_PUBLIC_API_URL=http://localhost:8000
