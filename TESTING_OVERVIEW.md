@@ -242,6 +242,38 @@ This document provides a comprehensive overview of all test cases in the PeerCaf
 
 ---
 
+### Delivery / Driver Routes
+**Files:** `backend/routes/delivery_routes.py`, `backend/tests/test_delivery_routes.py`, `backend/tests/test_delivery_routes_helpers.py`
+
+#### ⭐ CRITICAL / HIGH Tests
+
+| Test Name | Purpose | Importance |
+|-----------|---------|-----------|
+| `test_get_ready_deliveries_no_orders` | Verifies API returns empty list when no ready orders | **HIGH** |
+| `test_get_ready_deliveries_with_distances_single_chunk` | Ensures ready orders are enriched with distance/duration using Mapbox Matrix when dest count fits in one matrix call | **CRITICAL** |
+| `test_get_ready_deliveries_chunking_across_multiple_matrix_calls` | Validates chunking logic when many destinations require multiple Mapbox matrix requests | **HIGH** |
+| `test_get_ready_deliveries_unreachable_destination` | Ensures unreachable restaurants (no route) are marked and do not crash the endpoint | **HIGH** |
+| `test_delivery_helpers_parse_coordinates` | Unit tests for defensive coordinate parsing helper | **HIGH** |
+| `test_delivery_helpers_geocode_fallback` | Tests geocode fallback when restaurant coordinates missing | **HIGH** |
+| `test_navigation_endpoint_maps_directions` | Verifies navigation endpoint returns route geometry/distance/duration via Mapbox Directions | **HIGH** |
+
+#### Description
+
+Backend delivery tests focus on enriching ready orders with road distances and durations, and ensuring the driver-facing endpoints behave correctly under edge conditions. Key behaviors covered:
+
+- Matrix integration and chunking:
+  - Tests mock the httpx AsyncClient used to call Mapbox's `directions-matrix` API and verify that destinations are split into chunks when exceeding the Mapbox limit, and results are correctly mapped back to restaurant IDs.
+- Defensive parsing and fallbacks:
+  - Helpers parse latitude/longitude defensively (ignore null/malformed values). When restaurant coordinates are missing, the system attempts geocoding or falls back to the user's profile coordinates.
+- Unreachable destinations and malformed responses:
+  - Tests ensure unreachable destinations (no route) don't crash enrichment and are flagged (e.g., `restaurant_reachable_by_road=false`). Malformed matrix responses are handled gracefully.
+- Navigation endpoint:
+  - Tests mock Mapbox Directions API and verify endpoint returns distance/duration and GeoJSON-like geometry for navigation in the frontend.
+- Helper unit tests:
+  - A separate helpers test file (`test_delivery_routes_helpers.py`) contains small, focused unit tests for: preparing destination lists, computing distance/duration maps, parsing coordinates, geocode/user-profile fallback, and enrichment of order objects.
+
+---
+
 ### Database
 **File:** `backend/tests/test_database.py`
 
@@ -648,6 +680,76 @@ Tests exist for:
 - **Login Actions** - User login form submission and validation
 - **Register Actions** - User registration form submission and validation  
 - **Restaurants** - Restaurant data fetching and filtering actions
+
+### Delivery Page (`frontend/__tests__/pages/delivery.page.test.tsx`)
+
+**Rendering & Map Integration:**
+- **`renders without crashing`** ⭐ CRITICAL
+  - Basic smoke test ensuring delivery page renders and map initialization code runs
+  - Expected: Page renders and user/restaurant text appears
+- **`initializes the map and creates markers/popups`** ⭐ HIGH
+  - Verifies Mapbox map initialization (mocked), marker/popups and fitBounds calls
+  - Expected: Map constructor called, markers/popups created
+- **`displays restaurant names and compensation values`** ⭐ HIGH
+  - Verifies each ready order card displays expected restaurant name and fee text
+
+**Interactions & Edge Cases:**
+- **`accepts an order when Accept & Deliver is clicked`** ⭐ CRITICAL
+  - Tests API call to assign delivery (axios.patch) and UI updates (button disabled, alert)
+  - Expected: axios.patch called and alert called with confirmation
+- **`shows an alert when accepting an order fails (server error)`** ⭐ HIGH
+  - Ensures server-side error detail is surfaced via alert
+  - Expected: Alert displays server-provided error message
+- **`prevents double submission when accepting an order (button disabled)`** ⭐ HIGH
+  - Verifies UI disables the accept button while the accept request is in-flight to prevent duplicate assignments
+  - Expected: Only one axios.patch call even with rapid clicks
+- **`handles no ready orders gracefully`** ⭐ HIGH
+  - Tests rendering when backend returns empty list
+  - Expected: No order cards shown and no crash
+- **`continues rendering when geolocation is unavailable`** ⭐ HIGH
+  - Simulates geolocation permission denied and ensures UI still loads orders
+  - Expected: Orders displayed using fallback behavior
+- **`handles axios errors without crashing`** ⭐ HIGH
+  - Ensures frontend handles network/axios failures without throwing
+  - Expected: No crash and sensible UI state
+- **`handles Mapbox fetch failure gracefully`** ⭐ HIGH
+  - Ensures map/matching/directions fetch failures don't crash the page
+  - Expected: Orders still render; map logic handles failure
+- **`renders when orders are missing delivery_address fields`** ⭐ HIGH
+  - Ensures missing optional delivery_address doesn't crash rendering
+  - Expected: Card renders with fallback address text
+
+### Frontend Delivery Tests (additional folder: `frontend/__tests__/delivery`)
+
+The `frontend/__tests__/delivery` folder contains focused suites for edge cases, error handling, and interaction flows. These tests exercise the Delivery UI and the NavigationMap component more deeply than the page-level smoke tests.
+
+Files and highlights:
+
+- `delivery/delivery-page.test.tsx` — DeliveryPage edge-case and resilience tests
+  - Authentication edge cases: null user, expired session (alerts and access denial)
+  - Geolocation edge cases: permission denied, unavailable, timeout, missing API
+  - API failure scenarios: network errors, 500/404 responses, timeouts, malformed JSON
+  - Order acceptance edge cases: network errors during accept, already-assigned races, not-ready status, duplicate rapid clicks prevention
+  - Data validation: missing restaurant/customer data, null distance/duration, invalid coordinates
+  - Map rendering and lifecycle: missing container ref, missing Mapbox token, waits for geolocation before rendering, map cleanup on unmount
+
+- `delivery/NavigationMap.test.tsx` — NavigationMap unit/edge tests
+  - Geolocation errors and missing API checks (permission denied, position unavailable, timeout)
+  - API edge cases when fetching navigation routes (network errors, 404/400/500/timeouts)
+  - Environment variable fallbacks (missing Mapbox key / missing API_URL)
+  - Delivery code verification dialog: empty code validation, invalid code errors, network errors during verification, dialog disable during verification, trimming whitespace
+  - Map rendering edge cases for NavigationMap: missing container ref, null geometry, no steps
+  - Lifecycle/race conditions: rapid prop updates, simultaneous route fetches, unmount before async completion
+
+- `delivery/error-handling.test.tsx` — Small focused tests for error boundaries and data handling
+  - ErrorBoundary behavior: fallback UI when children throw, normal rendering otherwise
+  - Network error UI: loading state, error alerts, successful fetch handling
+  - Form validation edge cases: empty email, invalid email format handling
+  - Accessibility and data handling: modal aria attributes, null/undefined/empty data rendering
+
+Importance: Most of these tests are HIGH or CRITICAL for driver UX because they validate robust behavior in the face of device permissions, network failures, or malformed backend data.
+
+
 
 ---
 
