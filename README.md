@@ -141,7 +141,6 @@ PeerCafe is a modern peer-to-peer delivery platform that connects users who need
 | mypy | >=1.0.0 | Static type checker |
 | pylint | >=2.17.0 | Code linter |
 | bandit | >=1.7.0 | Security vulnerability scanner |
-| pre-commit | >=3.0.0 | Git hooks framework |
 
 ## ✨ Features
 
