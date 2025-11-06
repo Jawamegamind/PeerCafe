@@ -70,6 +70,79 @@ PeerCafe is a modern peer-to-peer delivery platform that connects users who need
 - **Real-time:** Supabase Realtime
 - **File Storage:** Supabase Storage
 
+## 📦 Dependencies
+
+### Frontend Dependencies
+
+#### Production Dependencies
+| Package | Version | Purpose |
+|---------|---------|---------|
+| next | 15.5.4 | React framework with App Router |
+| react | 19.1.0 | UI library |
+| react-dom | 19.1.0 | React DOM rendering |
+| @mui/material | ^7.3.4 | Material-UI component library |
+| @mui/icons-material | ^7.3.4 | Material-UI icons |
+| @mui/material-nextjs | ^7.3.3 | Material-UI Next.js integration |
+| @emotion/react | ^11.14.0 | CSS-in-JS library (MUI dependency) |
+| @emotion/styled | ^11.14.1 | Styled components for Emotion |
+| @emotion/cache | ^11.14.0 | Emotion cache for SSR |
+| @supabase/supabase-js | ^2.75.0 | Supabase client library |
+| @supabase/ssr | ^0.7.0 | Supabase SSR helpers |
+| axios | ^1.12.2 | HTTP client |
+| mapbox-gl | ^3.15.0 | Mapbox maps integration |
+
+#### Development Dependencies
+| Package | Version | Purpose |
+|---------|---------|---------|
+| typescript | ^5 | TypeScript language |
+| @types/node | ^20 | Node.js type definitions |
+| @types/react | ^19 | React type definitions |
+| @types/react-dom | ^19 | React DOM type definitions |
+| eslint | ^9.38.0 | JavaScript/TypeScript linter |
+| eslint-config-next | ^16.0.0 | Next.js ESLint configuration |
+| @typescript-eslint/parser | ^8.46.2 | TypeScript parser for ESLint |
+| @typescript-eslint/eslint-plugin | ^8.46.2 | TypeScript ESLint rules |
+| prettier | ^3.6.2 | Code formatter |
+| jest | ^29.7.0 | Testing framework |
+| @testing-library/react | ^16.3.0 | React testing utilities |
+| @testing-library/jest-dom | ^6.9.1 | Custom Jest matchers for DOM |
+| @testing-library/user-event | ^14.6.1 | User interaction simulation |
+| jest-environment-jsdom | ^29.7.0 | Jest DOM environment |
+| @types/jest | ^29.5.14 | Jest type definitions |
+| identity-obj-proxy | ^3.0.0 | Mock CSS modules in tests |
+| ts-node | ^10.9.2 | TypeScript execution for Node.js |
+
+### Backend Dependencies
+
+#### Core Dependencies
+| Package | Version | Purpose |
+|---------|---------|---------|
+| python | 3.10 | Python runtime |
+| fastapi[all] | latest | Web framework with async support |
+| uvicorn[standard] | latest | ASGI server |
+| supabase | latest | Supabase Python client |
+| bcrypt | latest | Password hashing |
+| pydantic | latest | Data validation |
+| httpx | latest | Async HTTP client |
+
+#### Testing Dependencies
+| Package | Version | Purpose |
+|---------|---------|---------|
+| pytest | latest | Testing framework |
+| pytest-cov | latest | Coverage reporting |
+| pytest-asyncio | latest | Async test support |
+
+#### Code Quality Tools
+| Package | Version | Purpose |
+|---------|---------|---------|
+| black | >=23.0.0 | Code formatter |
+| isort | >=5.0.0 | Import statement sorter |
+| flake8 | >=6.0.0 | Style guide enforcement |
+| mypy | >=1.0.0 | Static type checker |
+| pylint | >=2.17.0 | Code linter |
+| bandit | >=1.7.0 | Security vulnerability scanner |
+| pre-commit | >=3.0.0 | Git hooks framework |
+
 ## ✨ Features
 
 - [x] User Authentication (Sign up, Login, Logout)
