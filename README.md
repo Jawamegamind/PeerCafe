@@ -72,12 +72,56 @@ PeerCafe is a modern peer-to-peer delivery platform that connects users who need
 
 ## ✨ Features
 
-- [ ] User Authentication (Sign up, Login, Logout)
-- [ ] User Dashboard
-- [ ] Delivery Request Creation
-- [ ] Delivery Acceptance System
-- [ ] Real-time Order Tracking
-- [ ] User Profiles and Ratings
+- [x] User Authentication (Sign up, Login, Logout)
+- [x] User Dashboard
+- [x] Restaurant Discovery System
+- [x] Core Ordering System (Browse, Select, Cart, Checkout)
+- [x] Staff Fulfillment Dashboard (Order Management)
+- [x] Student Rider Module (Delivery Interface)
+- [x] Secure Handoff Flow (OTP Verification)
+- [x] Real-time Order Tracking
+- [x] User Profiles and Ratings
+
+## 🗺️ Project Roadmap
+
+### Current Milestones (Delivered)
+
+**Core Ordering System**
+- Complete user flow from restaurant discovery to order placement and checkout
+
+**Staff Fulfillment Dashboard**
+- Admin interface for viewing orders, managing acceptance, and updating status
+- Restaurant and menu item management
+
+**Student Rider Module**
+- Delivery rider view with order details and delivery locations
+- Orders sorted by nearest first (FIFO)
+
+**Secure Handoff Flow**
+- OTP generation for secure order handoff between delivery riders and users
+
+### Proposed Features (Future Development)
+
+**LLM-driven Automated Inventory Management**
+- AI-powered backend calls for automatic inventory deduction based on order recipes
+- Smart ingredient management for menu items
+
+**Incentive Management for Delivery Drivers**
+- Loyalty points system per delivery
+- Discount redemption for future orders
+- Peer-to-peer delivery ecosystem promotion
+
+**Human-in-the-Loop Allergen Filters**
+- AI-powered allergen detection with LLM API calls
+- Conversational allergen filtering based on user input
+
+**LLM-driven Restaurant Recommendation**
+- Intelligent restaurant suggestion system using AI
+- Personalized recommendations based on user preferences
+
+**Sustainability Features**
+- "Green Delivery" bundling for nearby customers
+- Proximity-based order grouping to reduce carbon footprint
 
 ## 📚 API Documentation
 
