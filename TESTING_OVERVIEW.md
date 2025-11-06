@@ -13,6 +13,7 @@ This document provides a comprehensive overview of all test cases in the PeerCaf
    - [Restaurant Routes](#restaurant-routes)
    - [Menu Routes](#menu-routes)
    - [Order Routes](#order-routes)
+   - [Delivery routes](#delivery-routes)
    - [Database](#database)
    - [Models](#models)
    - [Main Application](#main-application)
@@ -242,7 +243,7 @@ This document provides a comprehensive overview of all test cases in the PeerCaf
 
 ---
 
-### Delivery / Driver Routes
+### Delivery Routes
 **Files:** `backend/routes/delivery_routes.py`, `backend/tests/test_delivery_routes.py`, `backend/tests/test_delivery_routes_helpers.py`
 
 #### ⭐ CRITICAL / HIGH Tests
