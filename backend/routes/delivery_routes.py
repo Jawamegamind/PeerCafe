@@ -64,12 +64,25 @@ async def _fetch_matrix_for_chunk(src_lng, src_lat, chunk):
     coordinates_str = ";".join(f"{lng},{lat}" for lng, lat in coordinates)
     destinations_idx = ";".join(str(i) for i in range(1, len(coordinates)))
 
-    params = {
-        "access_token": MAPBOX_TOKEN,
-        "sources": "0",
-        "destinations": destinations_idx,
-        "annotations": "distance,duration",
-    }
+    params = {}
+
+    # Different params if only one destination (no need to specify sources/destinations)
+    # Need to do this because Mapbox API gives 422 error for single destination
+    if len(chunk) == 1:
+        params = {
+            # "sources": "0",
+            "annotations": "distance,duration",  # asking for distance and duration (meters),
+            "access_token": MAPBOX_TOKEN,
+        }
+
+    else:
+
+        params = {
+            "sources": "0",
+            "annotations": "distance,duration",  # asking for distance and duration (meters),
+            "destinations": destinations_idx,
+            "access_token": MAPBOX_TOKEN,
+        }
 
     url = (
         f"https://api.mapbox.com/directions-matrix/v1/mapbox/driving/{coordinates_str}"
@@ -78,7 +91,14 @@ async def _fetch_matrix_for_chunk(src_lng, src_lat, chunk):
         async with httpx.AsyncClient(timeout=20.0) as client:
             resp = await client.get(url, params=params)
             resp.raise_for_status()
-            return resp.json()
+            results = resp.json()
+            if len(chunk) == 1:
+                # results = resp.json()
+                # flatten distances/durations to single value lists
+                results["distances"] = [[results["distances"][0][1]]]
+                results["durations"] = [[results["durations"][0][1]]]
+            return results
+            # return resp.json()
     except httpx.HTTPError as http_err:
         print(f"HTTP error occurred while fetching matrix: {http_err}")
         return {}
