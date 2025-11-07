@@ -38,6 +38,8 @@ Watch our application demo to see PeerCafe in action:
 
 ## [➡️ High Level Flow View](./docs/Flow.md)
 
+## [➡️ Testing Overview](./TESTING_OVERVIEW.md)
+
 ## 📋 Table of Contents
 
 - [About the Project](#about-the-project)
