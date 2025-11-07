@@ -26,6 +26,14 @@
 
 A peer-to-peer delivery system developed as part of CSC 510: Software Engineering offered at NC State University.
 
+## 🎥 Demo Video
+
+Watch our application demo to see PeerCafe in action:
+
+[![PeerCafe Demo Video](https://img.shields.io/badge/▶️_Watch_Demo-Google_Drive-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1UPR52DoR89xgoR_5pQuA8tIa7FZLWx4t/view)
+
+*Click the badge above to watch our comprehensive demo video showcasing the full platform functionality.*
+
 ## [➡️ Quick Start: Installation & Setup](./INSTALL.md)
 
 ## [➡️ High Level Flow View](./docs/Flow.md)
